@@ -1066,7 +1066,8 @@ body:not(.use-custom-cursor) .cursor-trail {
 }
 .hero-profile-frame img {
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   object-position: center;
 }
@@ -1486,6 +1487,115 @@ textarea:focus-visible,
   .cursor,
   .cursor-trail {
     display: none !important;
+  }
+}
+
+/* ======================== HERO LAYOUT BREAKPOINT FIX ======================== */
+@media (min-width: 1024px) {
+  #hero {
+    min-height: 100vh;
+    justify-content: center;
+    padding-top: 104px;
+    padding-bottom: 72px;
+  }
+
+  .hero-shell {
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 430px);
+    align-items: center;
+    gap: clamp(36px, 5vw, 78px);
+  }
+
+  .hero-copy {
+    text-align: left;
+    max-width: 680px;
+  }
+
+  .hero-profile {
+    justify-self: end;
+    width: min(34vw, 430px);
+    margin-inline: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #hero {
+    min-height: auto;
+    justify-content: center;
+    padding-top: 96px;
+    padding-bottom: 56px;
+  }
+
+  .hero-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 350px);
+    align-items: center;
+    gap: 24px;
+  }
+
+  .hero-copy {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .hero-profile {
+    justify-self: end;
+    width: min(40vw, 330px);
+    margin-inline: 0;
+  }
+
+  .hero-scroll,
+  .hero-stats {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  #hero {
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: 88px;
+    padding-bottom: 44px;
+  }
+
+  .hero-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .hero-copy {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .hero-name {
+    font-size: clamp(26px, 8.2vw, 44px);
+  }
+
+  .hero-nickname {
+    font-size: clamp(40px, 12vw, 64px);
+  }
+
+  .hero-desc {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-ctas,
+  .hero-sub-ctas {
+    justify-content: center;
+  }
+
+  .hero-profile {
+    justify-self: center;
+    width: min(82vw, 320px);
+    max-width: 320px;
+    margin-inline: auto;
+  }
+
+  .hero-profile-frame {
+    width: 100%;
   }
 }
 
