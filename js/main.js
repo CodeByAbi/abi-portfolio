@@ -230,6 +230,31 @@ const projectData = {
     proof: [
       { label: 'GitHub', href: 'https://github.com/CodeByAbi' }
     ]
+  },
+  p5: {
+    title: 'Demolabs Chatbot',
+    sub: 'RAG · Text-to-SQL · Feature Key',
+    problem: 'Business users need fast and accurate answers from complex datasets, but manual SQL and chart preparation slow down decisions.',
+    solution: 'Built an end-to-end AI-powered data assistant that transforms natural language queries into executable SQL and context-aware visualizations using RAG with vector similarity search.',
+    arch: 'Semantic intent detection + data-shape parsing for adaptive chart generation, backed by Celery async tasks, Redis conversation memory, and Azure Blob Storage signed URLs for chart delivery.',
+    tradeoff: 'Balanced adaptive chart automation with deterministic post-processing so generated outputs remain accurate, explainable, and stable at scale.',
+    result: 'Delivered automated insights generation with structured LLM outputs and robust processing pipelines that support trend and ranking analysis without explicit chart requests.',
+    proof: [
+      { label: 'Demo Video', href: 'assets/vid/demolabs%20chatbot%20video.mp4' },
+      { label: 'Request Demo', href: '#contact' }
+    ]
+  },
+  p6: {
+    title: 'Sentiment Analysis Telco Tweets',
+    sub: 'NLP · Twitter Text Classification',
+    problem: 'Telecommunication providers need a reliable way to understand customer perception from high-volume social media conversations.',
+    solution: 'Built a sentiment analysis workflow on Telco tweets labeled as positive, negative, and neutral to classify customer opinions with machine learning.',
+    arch: 'Python text preprocessing and feature extraction pipeline with supervised classifiers trained and evaluated on labeled Twitter data.',
+    tradeoff: 'Balanced model complexity and interpretability by benchmarking multiple classifiers and selecting a configuration with stable class-wise performance.',
+    result: 'Produced actionable sentiment classification outputs with class-level metrics to support service quality and customer experience analysis.',
+    proof: [
+      { label: 'GitHub', href: 'https://github.com/CodeByAbi/Sentiment-Analysis-Telco-Tweets' }
+    ]
   }
 };
 
