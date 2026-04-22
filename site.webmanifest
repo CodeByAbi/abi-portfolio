@@ -1,0 +1,12 @@
+{
+  "name": "Abira Wisnunggal | AI Engineer",
+  "short_name": "Abi Portfolio",
+  "description": "AI Engineer portfolio — RAG, ML, and production AI systems.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f7f4",
+  "theme_color": "#1a1918",
+  "icons": [
+    { "src": "assets/img/aw-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

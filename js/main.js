@@ -190,6 +190,11 @@ const projectData = {
     arch: 'Python data pipeline with preprocessing, training, and evaluation stages using Pandas and Scikit-learn.',
     tradeoff: 'Balanced higher model complexity with interpretability by combining tree-based and linear baselines before selecting final behavior.',
     result: 'Delivered a reproducible pipeline with benchmark tracking for precision/recall and clearer decision support outputs.',
+    lessons: [
+      'Class imbalance skewed early recall — stratified cross-validation fixed this without oversampling noise.',
+      'Switching from logistic regression to gradient boosting improved minority-class recall significantly; the non-linear boundary mattered.',
+      'Imputation strategy (median vs. KNN) had more impact on final accuracy than model choice at this data scale.'
+    ],
     proof: [
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/Rainfall-Prediction-in-Australia' }
     ]
@@ -202,6 +207,11 @@ const projectData = {
     arch: 'LangChain orchestration + FastAPI service + queue workers + searchable storage for chunk retrieval and response synthesis.',
     tradeoff: 'Optimized retrieval depth and context window size to balance response quality, speed, and token cost.',
     result: 'Established production-ready foundation with measurable monitoring points for quality and response efficiency.',
+    lessons: [
+      'Chunk size tuning had more effect on retrieval quality than swapping embedding models — start with chunking, not models.',
+      'Intent routing before retrieval eliminated a class of irrelevant context windows that were silently degrading answers.',
+      'Cache warmup scheduling via Celery beat prevented latency spikes on cold first requests in production.'
+    ],
     proof: [
       { label: 'Flagship Case Study', href: 'case-study-smartfaq.html' },
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/faq-chatbot' }
@@ -215,8 +225,13 @@ const projectData = {
     arch: 'Data cleaning and feature preparation in Pandas followed by baseline and tuned regression evaluation in Scikit-learn.',
     tradeoff: 'Prioritized model interpretability for stakeholders over black-box complexity to keep outputs actionable.',
     result: 'Produced benchmarked pricing estimates with repeatable evaluation steps for iteration and refinement.',
+    lessons: [
+      'Outlier luxury properties inflated MAE — removing verified out-of-scope listings improved benchmark relevance, not just metrics.',
+      'Log-transforming the price target made residuals near-normal and improved R² without any model change.',
+      'Location features (subdistrict encoding) contributed more predictive signal than building area alone.'
+    ],
     proof: [
-      { label: 'GitHub', href: 'https://github.com/CodeByAbi' }
+      { label: 'GitHub', href: 'https://github.com/CodeByAbi/house-price-prediction' }
     ]
   },
   p4: {
@@ -227,8 +242,13 @@ const projectData = {
     arch: 'Python data preparation pipeline feeding dashboard views with state-level trend and segmentation breakdowns.',
     tradeoff: 'Balanced dashboard complexity with readability by prioritizing high-impact slices and drill-down clarity.',
     result: 'Created reusable dashboard storytelling structure for policy, market, and growth discussions.',
+    lessons: [
+      'Pre-aggregating in Python before Tableau was significantly faster than relying on Tableau blended data sources.',
+      'Per-capita normalization told a completely different regional story than raw EV counts — always normalize before comparing regions.',
+      'Starting with the stakeholder question ("which states are under-served?") shaped better filter choices than starting with the data columns.'
+    ],
     proof: [
-      { label: 'GitHub', href: 'https://github.com/CodeByAbi' }
+      { label: 'GitHub', href: 'https://github.com/CodeByAbi/ev-data-analysis' }
     ]
   },
   p5: {
@@ -239,6 +259,11 @@ const projectData = {
     arch: 'Semantic intent detection + data-shape parsing for adaptive chart generation, backed by Celery async tasks, Redis conversation memory, and Azure Blob Storage signed URLs for chart delivery.',
     tradeoff: 'Balanced adaptive chart automation with deterministic post-processing so generated outputs remain accurate, explainable, and stable at scale.',
     result: 'Delivered automated insights generation with structured LLM outputs and robust processing pipelines that support trend and ranking analysis without explicit chart requests.',
+    lessons: [
+      'SQL hallucinations were the hardest failure mode — schema-grounded post-validation caught ~90% of invalid queries before execution.',
+      'Redis TTL tuning for conversation memory was non-obvious: too short broke multi-turn context, too long wasted memory on dead sessions.',
+      'Async chart delivery via signed Azure Blob URLs removed a blocking bottleneck; users got faster text responses while charts rendered in background.'
+    ],
     proof: [
       { label: 'Demo Video', href: 'assets/vid/demolabs%20chatbot%20video.mp4' },
       { label: 'Request Demo', href: '#contact' }
@@ -252,6 +277,11 @@ const projectData = {
     arch: 'Python text preprocessing and feature extraction pipeline with supervised classifiers trained and evaluated on labeled Twitter data.',
     tradeoff: 'Balanced model complexity and interpretability by benchmarking multiple classifiers and selecting a configuration with stable class-wise performance.',
     result: 'Produced actionable sentiment classification outputs with class-level metrics to support service quality and customer experience analysis.',
+    lessons: [
+      'TF-IDF outperformed word embeddings at this dataset size — simpler features generalized better on limited labeled data.',
+      'The neutral class was consistently misclassified by all models; adding more labeled neutral examples was the fix, not hyperparameter tuning.',
+      'Tweet-specific preprocessing (stripping mentions, URLs, slang normalization) improved F1 more than any model switch.'
+    ],
     proof: [
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/Sentiment-Analysis-Telco-Tweets' }
     ]
@@ -297,6 +327,11 @@ function openModal(projectId, triggerEl) {
   if (!project || !modalOverlay || !modalContent) return;
   lastFocusedEl = triggerEl || document.activeElement;
 
+  const lessonsHtml = project.lessons?.length
+    ? `<div class="modal-sh">What I Learned</div>
+       <ul class="modal-lessons">${project.lessons.map(l => `<li>${l}</li>`).join('')}</ul>`
+    : '';
+
   modalContent.innerHTML = `
     <h2 class="modal-title" id="modalTitle">${project.title}</h2>
     <div class="modal-sub">${project.sub}</div>
@@ -310,6 +345,7 @@ function openModal(projectId, triggerEl) {
     <p class="modal-p">${project.tradeoff}</p>
     <div class="modal-sh">Result</div>
     <p class="modal-p">${project.result}</p>
+    ${lessonsHtml}
     <div class="flow-wrap">
       <div class="flow-label">Proof Links</div>
       <div class="proj-proof">${renderProofLinks(project.proof)}</div>
@@ -412,33 +448,69 @@ function validateContactForm() {
 }
 
 if (contactForm) {
-  contactForm.addEventListener('submit', e => {
+  const submitBtn = contactForm.querySelector('.f-submit');
+
+  contactForm.addEventListener('submit', async e => {
     e.preventDefault();
     const values = validateContactForm();
     if (!values) return;
 
-    const subject = encodeURIComponent(`Portfolio inquiry from ${values.name}`);
-    const body = encodeURIComponent(
-      `Name: ${values.name}\nEmail: ${values.email}\n\nMessage:\n${values.message}`
-    );
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
 
-    window.location.href = `mailto:abirawisnu7@gmail.com?subject=${subject}&body=${body}`;
-    if (formStatus) {
-      formStatus.className = 'form-status success';
-      formStatus.textContent = 'Your email app has been opened. Thank you!';
+    try {
+      const res = await fetch(contactForm.action, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: values.name, email: values.email, message: values.message })
+      });
+
+      if (res.ok) {
+        if (formStatus) {
+          formStatus.className = 'form-status success';
+          formStatus.textContent = 'Message sent — I will get back to you shortly!';
+        }
+        contactForm.reset();
+        trackEvent('contact_submit', { method: 'formspree' });
+      } else {
+        throw new Error('non-ok');
+      }
+    } catch {
+      const subject = encodeURIComponent(`Portfolio inquiry from ${values.name}`);
+      const body = encodeURIComponent(`Name: ${values.name}\nEmail: ${values.email}\n\nMessage:\n${values.message}`);
+      window.location.href = `mailto:abirawisnu7@gmail.com?subject=${subject}&body=${body}`;
+      if (formStatus) {
+        formStatus.className = 'form-status success';
+        formStatus.textContent = 'Your email app has been opened. Thank you!';
+      }
+      contactForm.reset();
+      trackEvent('contact_submit', { method: 'mailto_fallback' });
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send Message →'; }
     }
-    contactForm.reset();
-    trackEvent('contact_submit');
   });
 }
 
 /* ==================== KEYBOARD + GLOBAL ESCAPE ==================== */
+function trapDrawerFocus(e) {
+  if (!navDrawer?.classList.contains('open') || e.key !== 'Tab') return;
+  const focusable = getFocusable(navDrawer);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault(); last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus();
+  }
+}
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (modalOverlay?.classList.contains('open')) closeModal();
     if (navDrawer?.classList.contains('open')) toggleDrawer(false);
   }
   trapModalFocus(e);
+  trapDrawerFocus(e);
 });
 
 /* ==================== SKILL STAGGER ==================== */
@@ -494,5 +566,135 @@ if (finePointer && !prefersReducedMotion) {
 document.querySelectorAll('.proj-proof a, .c-link, .footer-link, .hero-ctas a').forEach(link => {
   link.addEventListener('click', () => {
     trackEvent('link_click', { href: link.getAttribute('href') || '' });
+  });
+});
+
+/* ==================== RAG PLAYGROUND ==================== */
+const pgInput = document.getElementById('pgInput');
+const pgSubmit = document.getElementById('pgSubmit');
+const pgAnswerBox = document.getElementById('pgAnswerBox');
+const pgAnswerText = document.getElementById('pgAnswerText');
+const pgStepQuery = document.getElementById('pgStepQuery');
+const pgStepRetrieve = document.getElementById('pgStepRetrieve');
+const pgStepContext = document.getElementById('pgStepContext');
+const pgPipeline = document.getElementById('pgPipeline');
+
+const ragKB = [
+  {
+    keywords: ['rag', 'retrieval', 'pipeline', 'how'],
+    chunks: ['SmartFAQ architecture', 'Demolabs pipeline', 'LangChain integration'],
+    answer: 'I build RAG pipelines using LangChain for orchestration, PostgreSQL + Elasticsearch for chunk storage, and FastAPI for the service layer. The core loop is: embed the query → cosine similarity retrieval → assemble top-k chunks into a context window → generate with GPT-4o-mini. I tune chunk size, retrieval depth, and context window size independently based on answer-quality evaluation metrics.'
+  },
+  {
+    keywords: ['tech', 'stack', 'skill', 'strongest', 'best', 'use'],
+    chunks: ['Skills index', 'Project evidence', 'Nawatech internship context'],
+    answer: 'My strongest technical area is production LLM systems — specifically RAG pipelines with LangChain, FastAPI, Celery, and Elasticsearch. On the data side I am strong in Python (Pandas, Scikit-learn, PyTorch) and statistical analysis with R and SPSS. I am comfortable with Azure, Docker, PostgreSQL, and Redis from my internship at Nawatech where I built these systems end-to-end.'
+  },
+  {
+    keywords: ['smartfaq', 'chatbot', 'faq', 'flagship'],
+    chunks: ['SmartFAQ case study', 'FAQ chatbot GitHub', 'Nawatech deployment context'],
+    answer: 'SmartFAQ is my flagship project — a retrieval-augmented FAQ chatbot built for support teams drowning in repetitive queries. It uses LangChain for orchestration, FastAPI for the API layer, Celery workers for async processing, PostgreSQL for structured storage, and Elasticsearch for semantic chunk retrieval. I built intent routing before retrieval so irrelevant context windows do not pollute the generation step. The full architecture is documented in the case study page.'
+  },
+  {
+    keywords: ['work', 'experience', 'company', 'companies', 'internship', 'job', 'career'],
+    chunks: ['Nawatech experience', 'GAOTek internship', 'Gipsy Research role', 'Home Credit internship'],
+    answer: 'I have held 6 roles and internships: Machine Learning Engineer Intern at Nawatech (building production RAG systems), AI Chatbot Development Intern at GAOTek (LangChain pipelines), Data Scientist Intern at Home Credit Indonesia, Statistician at Gipsy Research, Data Analyst at PPM Al-Faqih Mandiri (1.5 years), and Web Developer Intern at PT Jaya Konsultan Indonesia. My current focus is AI engineering with production LLM systems.'
+  },
+  {
+    keywords: ['award', 'honor', 'medal', 'competition', 'achievement'],
+    chunks: ['Pesta Data Nasional certificate', 'Bank Indonesia qualification', 'IoT contest participation'],
+    answer: 'I won a Bronze Medal at Pesta Data Nasional x UIN (APTIKOM national data competition, Aug 2025), had a qualified scientific paper submission to Bank Indonesia\'s national program (Smart Invoice with OCR, Jun 2025), and participated in the International Invitational Contest of IoT Technology during China-ASEAN Education Cooperation Week (Dec 2023).'
+  }
+];
+
+function pgGetResponse(query) {
+  const q = query.toLowerCase();
+  for (const entry of ragKB) {
+    if (entry.keywords.some(k => q.includes(k))) return entry;
+  }
+  return {
+    chunks: ['About section', 'Projects index', 'Contact details'],
+    answer: 'I am Abi — an AI Engineer in training at Nusa Mandiri University, specializing in RAG pipelines, LangChain, FastAPI, and data science. I have worked across 6 roles, built 6 production-style projects, and won a national data competition. The best way to see my work is the SmartFAQ case study or my GitHub at github.com/CodeByAbi. Feel free to contact me directly at abirawisnu7@gmail.com.'
+  };
+}
+
+function pgTypeText(el, text, done) {
+  el.textContent = '';
+  let i = 0;
+  const speed = Math.max(12, Math.min(28, Math.floor(2400 / text.length)));
+  const tick = () => {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      setTimeout(tick, speed);
+    } else {
+      done?.();
+    }
+  };
+  tick();
+}
+
+function pgSetStepActive(stepEl, active) {
+  stepEl?.classList.toggle('pg-step-active', active);
+  stepEl?.classList.toggle('pg-step-done', false);
+}
+function pgSetStepDone(stepEl) {
+  stepEl?.classList.remove('pg-step-active');
+  stepEl?.classList.add('pg-step-done');
+}
+
+function pgRunPipeline(query) {
+  if (!pgPipeline) return;
+  const steps = pgPipeline.querySelectorAll('.pg-step');
+  steps.forEach(s => { s.classList.remove('pg-step-active', 'pg-step-done'); });
+  if (pgAnswerBox) pgAnswerBox.hidden = true;
+
+  const entry = pgGetResponse(query);
+
+  if (pgStepQuery) pgStepQuery.textContent = query.length > 32 ? query.slice(0, 32) + '…' : query;
+  if (pgStepRetrieve) pgStepRetrieve.textContent = `${entry.chunks.length} chunks`;
+  if (pgStepContext) pgStepContext.textContent = `${entry.chunks.join(', ').slice(0, 28)}…`;
+
+  const delay = prefersReducedMotion ? 0 : 420;
+
+  pgSetStepActive(steps[0], true);
+  setTimeout(() => {
+    pgSetStepDone(steps[0]); pgSetStepActive(steps[1], true);
+    setTimeout(() => {
+      pgSetStepDone(steps[1]); pgSetStepActive(steps[2], true);
+      setTimeout(() => {
+        pgSetStepDone(steps[2]); pgSetStepActive(steps[3], true);
+        setTimeout(() => {
+          pgSetStepDone(steps[3]); pgSetStepActive(steps[4], true);
+          setTimeout(() => {
+            pgSetStepDone(steps[4]);
+            if (pgAnswerBox && pgAnswerText) {
+              pgAnswerBox.hidden = false;
+              if (prefersReducedMotion) {
+                pgAnswerText.textContent = entry.answer;
+              } else {
+                pgTypeText(pgAnswerText, entry.answer);
+              }
+            }
+          }, delay);
+        }, delay);
+      }, delay);
+    }, delay);
+  }, delay);
+}
+
+function pgHandleSubmit() {
+  const query = pgInput?.value.trim();
+  if (!query) return;
+  pgRunPipeline(query);
+  trackEvent('rag_playground_query', { query });
+}
+
+pgSubmit?.addEventListener('click', pgHandleSubmit);
+pgInput?.addEventListener('keydown', e => { if (e.key === 'Enter') pgHandleSubmit(); });
+
+document.querySelectorAll('.pg-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    if (pgInput) pgInput.value = chip.dataset.q || '';
+    pgHandleSubmit();
   });
 });
