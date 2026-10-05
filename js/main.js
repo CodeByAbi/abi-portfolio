@@ -76,18 +76,26 @@ const navToggle = document.getElementById('navToggle');
 const navDrawer = document.getElementById('navDrawer');
 const navDrawerClose = document.getElementById('navDrawerClose');
 
-function toggleDrawer(forceOpen) {
+function toggleDrawer(forceOpen, restoreFocus = false) {
   if (!navDrawer || !navToggle) return;
   const open = typeof forceOpen === 'boolean' ? forceOpen : !navDrawer.classList.contains('open');
   navDrawer.classList.toggle('open', open);
   navDrawer.setAttribute('aria-hidden', String(!open));
   navToggle.setAttribute('aria-expanded', String(open));
   document.body.style.overflow = open ? 'hidden' : '';
+  if (open) {
+    navDrawerClose?.focus();
+  } else if (restoreFocus) {
+    // Only bounce focus back for dismissals (Escape / close button). When a nav
+    // link closed the drawer the user is scrolling to that section, and yanking
+    // focus to the toggle would scroll them back up to the navbar.
+    navToggle.focus();
+  }
 }
 
 if (navToggle && navDrawer) {
   navToggle.addEventListener('click', () => toggleDrawer());
-  navDrawerClose?.addEventListener('click', () => toggleDrawer(false));
+  navDrawerClose?.addEventListener('click', () => toggleDrawer(false, true));
   navDrawer.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', () => toggleDrawer(false));
   });
@@ -379,6 +387,8 @@ modalCloseBtn?.addEventListener('click', closeModal);
 /* ==================== CONTACT FORM ==================== */
 const contactForm = document.getElementById('contactForm');
 const formStatus = document.getElementById('formStatus');
+const formSummary = document.getElementById('formSummary');
+const formSummaryList = document.getElementById('formSummaryList');
 const nameInput = document.getElementById('contactName');
 const emailInput = document.getElementById('contactEmail');
 const messageInput = document.getElementById('contactMessage');
@@ -388,6 +398,41 @@ const fieldMap = {
   email: { input: emailInput, err: document.getElementById('emailError') },
   message: { input: messageInput, err: document.getElementById('messageError') }
 };
+
+function hideFormSummary() {
+  if (!formSummary || !formSummaryList) return;
+  formSummary.hidden = true;
+  formSummaryList.innerHTML = '';
+}
+
+/* Complements the inline errors: a keyboard-reachable list at the top of the form
+   whose items jump to the offending field. Inline .f-err text is reused as the
+   item label so the two can never drift apart. Built with DOM APIs rather than
+   innerHTML — if a message ever echoes user input, string interpolation here
+   would turn it into an injection point. */
+function showFormSummary(errors) {
+  if (!formSummary || !formSummaryList) return;
+  formSummaryList.textContent = '';
+  errors.forEach(key => {
+    const field = fieldMap[key];
+    const id = field?.input?.id;
+    if (!id) return;
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `#${id}`;
+    link.textContent = field.err?.textContent || '';
+    item.appendChild(link);
+    formSummaryList.appendChild(item);
+  });
+  formSummary.hidden = false;
+}
+
+formSummaryList?.addEventListener('click', e => {
+  const link = e.target.closest('a[href^="#"]');
+  if (!link) return;
+  const target = document.querySelector(link.getAttribute('href'));
+  if (target) { e.preventDefault(); target.focus(); }
+});
 
 function setFieldError(key, message) {
   const field = fieldMap[key];
@@ -407,6 +452,7 @@ function clearFieldError(key) {
 
 function clearAllErrors() {
   Object.keys(fieldMap).forEach(clearFieldError);
+  hideFormSummary();
   if (formStatus) {
     formStatus.className = 'form-status';
     formStatus.textContent = '';
@@ -436,7 +482,10 @@ function validateContactForm() {
   }
 
   if (errors.length) {
-    fieldMap[errors[0]].input?.focus();
+    showFormSummary(errors);
+    // Focus the summary, not the first input: a screen reader then reads the
+    // problem and the full list of failures before the user starts fixing them.
+    formSummary?.focus();
     if (formStatus) {
       formStatus.className = 'form-status error';
       formStatus.textContent = 'Please fix the highlighted fields and try again.';
@@ -507,7 +556,7 @@ function trapDrawerFocus(e) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (modalOverlay?.classList.contains('open')) closeModal();
-    if (navDrawer?.classList.contains('open')) toggleDrawer(false);
+    if (navDrawer?.classList.contains('open')) toggleDrawer(false, true);
   }
   trapModalFocus(e);
   trapDrawerFocus(e);

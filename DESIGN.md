@@ -145,7 +145,8 @@ A near-monochrome warm-neutral palette. One accent hue (gold) plus a functional 
 
 ### Tertiary (accent)
 
-- **Gold** (`#b8924a`): the single accent. `.sec-label::before` rule, `.nav-logo em` period, `.exp-company`, `.honor-org`, `.cert-issuer`, `.proj-metrics li::marker`, hover states on `.proj-cta` / `.stack-row` / `.honor-item::after`, and the global focus outline.
+- **Gold** (`#b8924a`): the single accent. `.sec-label::before` rule, `.nav-logo em` period, `.honor-pill` tint, `.proj-metrics li::marker`, hover states on `.stack-row` / `.honor-item::after`, `.hero-proof-award` fill, and the global focus outline. **Structure only** — never body or label text (see `--gold-ink`).
+- **Gold Ink** (`#8a6a24`): the text-safe step of the same hue, 5.04:1 on white. Used wherever gold *is* the text colour or sits behind white text: `.exp-company`, `.cert-issuer`, `.honor-org`, `.modal-sub`, `.about-em`, `.nav-logo em`, `.pg-disclaimer a`, `.hero-proof-award`, `.proj-card:hover .proj-cta`, and the `.pg-step-active .pg-step-ico` fill (white on `--gold` is 2.90:1). `--gold` on paper is 2.70:1 and on white 2.90:1, both failing WCAG 1.4.3. The Restrained Gold Rule is unchanged — one gold element per component — only the *step* is darker where it is set as type or used as a fill. What legitimately stays plain `--gold`: `.sec-label::before`, the `.nav-logo em` period's siblings, `.exp-list li::before` and `.proj-metrics li::marker` (list glyphs), `.honor-item::after`, `.stack-card`'s top rule, `.pg-step-active` borders, and the focus ring.
 - **Gold Light** (`#d4aa6a`): footer logo accent, `.stack-row:hover` border, and the `.footer-glow` line gradient.
 - **Verified Green** (`#22c55e`): `.cert-badge` dot, `.pg-step-done`, `.form-status.success` (`#166534` text on `#e9f8ed`), `.cert-status-verified`.
 - **Error Red** (`#b91c1c`): `.f-err`, `.f-inp.invalid` / `.f-txt.invalid` border, `.form-status.error`.
@@ -157,7 +158,21 @@ A near-monochrome warm-neutral palette. One accent hue (gold) plus a functional 
 
 **The Ink Hover Rule.** Hovering an interactive element swaps its border to `--ink` (and often its background to `--ink` with `#fff` text). Gold appears in hover only where the element has no border to recolor — `.proj-cta` text, the honor timeline dot.
 
-**The Contrast Floor Rule.** `--ink-4` (`#b0ada8`) is not legible enough for small text. A late override block in `style.css` (the "Increase micro typography readability and contrast" section at `:1339`) raises 23 metadata selectors to `11px / 0.08em` and then repaints 10 of them to `#6f6b66`. Any new metadata label should start at `11px` / `--ink-3` or darker, not copy the older `10px` / `--ink-4` pattern. Note the 10 repainted selectors do **not** include `.exp-meta`, `.exp-company`, `.exp-body-label`, `.proj-tag`, `.proj-cta`, `.cert-issuer`, `.cert-date`, `.honor-org`, `.modal-sub`, or `.stack-title` — those got the size bump but kept `--ink-4`.
+**The Contrast Floor Rule.** Three tiers now, and the split is deliberate:
+
+- `--ink-3` is **`#6f6b66`, not `#7a7772`**. The old value was 4.16:1 on paper and failed WCAG 1.4.3, yet it carried real reading copy (`.hero-desc`, `.proj-desc`, `.cert-desc`, `.exp-preview`, `.pg-step-val`, and every neutral `.proj-tag`). Darkening the *token* fixed all of them at once instead of repainting a dozen selectors. 4.93:1 on paper, 5.29:1 on white.
+- `--ink-4` (`#b0ada8`) is **decoration-only** — 2.09:1 on paper, 2.24:1 on white. It may not carry text. The override block at `:1375` repaints every metadata label that used it to `#6f6b66`. What legitimately stays `--ink-4`: `.scroll-track` (a 1px rule), `.pg-arrow` (an `aria-hidden` glyph), `.proj-img-placeholder .ph-ico` (an icon).
+- `--gold-ink` replaces `--gold` wherever gold is set as type.
+
+A late override block in `style.css` ("Increase micro typography readability and contrast") raises the metadata selectors to `11px / 0.08em` and then repaints them to `#6f6b66`. Its repaint list now also covers `.exp-body-label`, `.proj-cta`, `.cert-date`, `.stack-title`, `.honor-year`, `.honor-meta`, `.proj-img-placeholder`, and `.cert-img-placeholder`.
+
+Three traps in that block, all of which have already bitten once:
+
+- **Don't add `.proj-tag` to it.** The tinted `.proj-tag-*` variants sit later in source order at equal specificity, so a repaint rule there flattens all thirteen chip tints to grey. The neutral `.proj-tag` was fixed at its base declaration instead.
+- **The playground cannot be fixed from there at all.** The `.pg-*` block sits *below* the override block, so `.pg-step-label`, `.pg-answer-label`, and `.pg-disclaimer` lose on source order at equal specificity. They are fixed at their own declarations. Anything added after `:1497` needs the same treatment.
+- **The footer is a different surface.** `footer` is `--bg-dark` (`#111110`), so the light-surface repaint is wrong there. `.footer-copy` and `.footer-col-label` had been folded into that block and inherited `#6f6b66` — **3.57:1 on the dark ground**, a failure. Their original `rgba(255,255,255,.3/.4)` was worse at 2.68:1. They now carry `rgba(255,255,255,.5)` (→ ~`#888888`, 5.33:1) and `.footer-back` `rgba(255,255,255,.65)` (→ ~`#acacac`, 8.29:1, matching `.footer-link`). Keep any new footer metadata on a translucent white, never on the `--ink-*` ramp.
+
+`.footer-big-text` is `rgba(255,255,255,.04)` at up to 180px and measures 1.09:1. That is intentional and **exempt** — it is a decorative watermark, not content, and the real name sits in `.footer-brand`. Do not "fix" it.
 
 ## Typography
 
@@ -178,7 +193,7 @@ Implemented values are the **effective** ones after the cascade. Several hero si
 - **Body** — `#about p` and `.about-text p`: Satoshi `16px` (base) / line-height `1.82`, `--ink-2`. Longer measures are capped by container width, not by a `ch` value: `.hero-desc` `700px`, `.section-intro` `760px`, `.pg-sub` `680px`, `.hero-copy` `720px`, `.contact-sub` unconstrained inside a 1fr grid column.
 - **Dense body** — `.proj-desc` and `.honor-desc` `13.5px`/`1.7`; `.exp-preview` and `.exp-list li` `13px`/`1.65`–`1.7`; `.cert-desc` `12px`/`1.55`; `.modal-p` `14.5px`/`1.8` (→ `15px` at ≤600px); `.proj-metrics` `14px`/`1.55`.
 - **Label** — JetBrains Mono `400`, `11px`, `0.08em`, uppercase: `.sec-label`, `.nav-links a`, `.nav-btn`, `.h-stat .l`, `.exp-company`, `.exp-meta`, `.exp-body-label`, `.proj-num`, `.proj-tag`, `.proj-cta`, `.modal-bar-label`, `.modal-sub`, `.modal-sh`, `.flow-label`, `.cert-issuer`, `.cert-date`, `.honor-org`, `.c-label`, `.f-lbl`, `.footer-col-label`, `.footer-copy`, `.footer-back`.
-- **Micro label (not caught by the override)** — `.pg-step-label` `9px`/`0.1em`, `.pg-answer-label` `9px`/`0.14em`, `.pg-disclaimer` `10px`/`0.04em`, `.cert-id` `10px`/`0.05em`, `.honor-meta` `10px`/`0.05em`, `.footer-col-label` letter-spacing `0.16em`. These are the smallest type on the site and step up to `12px` at ≤600px.
+- **Micro label (not caught by the override)** — `.pg-step-label` `9px`/`0.1em`, `.pg-answer-label` `9px`/`0.14em`, `.pg-disclaimer` `10px`/`0.04em`, `.cert-id` `10px`/`0.05em`, `.honor-meta` `10px`/`0.05em`, `.footer-col-label` letter-spacing `0.16em`. These are the smallest type on the site and step up to `12px` at ≤600px. All of them now sit on `#6f6b66`, **not** `--ink-4` — at 9–10px they have no size headroom left, so colour is the only remaining lever.
 
 ### Named Rules
 
@@ -207,10 +222,13 @@ Desktop-first declarations with `max-width` overrides doing the responsive work.
 | `max-width: 767px` | `#hero` only | `.hero-shell` → flex column, `align-items: center`, `gap: 22px`; hero copy centers; `.hero-name` → `clamp(26px, 8.2vw, 44px)`, `.hero-nickname` → `clamp(40px, 12vw, 64px)`, `.hero-desc` centered; portrait `min(82vw, 320px)`, `max-width: 320px` |
 | `max-width: 600px` | site-wide (three blocks, `:819`, `:1425`, `:1702`/`:1705`) | `:819` — `.cert-grid` → 1 column, hero type → `clamp(32px, 13vw, 64px)` / `clamp(30px, 10vw, 54px)` / `clamp(17px, 6vw, 24px)`, `.footer-big-text` → `60px`. `:1425` — `section` → `68px 18px`, `#hero` → `92px / 52px`, CTAs full-width and centered, `.hero-status-badge` → `9px / .06em`, portrait → `min(86vw, 300px)` (this **overrides** the 767px value, since 600 comes later in source order), card/modal body padding → `18px`, `.exp-logo-slot` → `48px`, `.section-intro` → `13px`. `:1702`/`:1705` — `.pg-shell` → `16px`, metadata labels and chips → `12px` |
 | `min-width: 1024px` | `#hero` only | Restores `min-height: 100vh`, `justify-content: center`, `padding: 104px / 72px`, two-column shell, portrait `min(34vw, 420px)` |
+| `min-width: 1024px` and `max-height: 939px` | `.hero-proof` only | Hides the proof strip — see [Hero Proof Strip](#hero-proof-strip-heroproof) |
 | `pointer: coarse` | global | Custom cursor and trail `display: none !important` |
 | `prefers-reduced-motion: reduce` | global | See [Motion](#motion-and-the-reduced-motion-contract) |
 
 There is **no 1200px breakpoint and no 480px breakpoint** in this stylesheet. 1160px is a `max-width`, not a breakpoint. Note that `max-width: 960px` and `max-width: 767px` overlap confusingly — 767px only affects the hero, so the effective phone layout is assembled from 960 + 767 + 600 in that order.
+
+> **Headless verification gotcha, cost an hour.** `--window-size` is *not* a device viewport, and `--dump-dom` emits nothing in this Chrome build. A request for `1280,420` rendered at `1258 × 266` — a viewport height that made `min-height: 100vh` meaningless and produced a false "hero overflows" reading. Measure inside a sized `<iframe>` instead (`--allow-file-access-from-files`), and **freeze the entrance animations first** — `[data-reveal]`, `.hero-name .word span`, and the `fadeSlide` elements all begin at `translateY(16px)`, so a probe that catches them mid-flight reports a 6–10px alignment error that does not exist. `--headless=new` fails silently; plain `--headless` works.
 
 ## Elevation & Depth
 
@@ -273,7 +291,8 @@ One 10px outlier exists (`.stack-row`, from the override block). Borders are `1p
 
 - **Style:** `.f-inp`, `.f-txt`, `.pg-input` — `#ffffff` background, `1.5px solid var(--line)`, 4px radius, `padding: 12px 16px`, Satoshi `14px`, `outline: none`.
 - **Focus:** `border-color: var(--ink)` plus `box-shadow: 0 0 0 3px rgba(26,25,24,.07)`. Globally, `a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, .exp-trigger, .proj-open-btn, .nav-toggle, .nav-drawer-close` all get `outline: 3px solid var(--gold); outline-offset: 3px`.
-- **Error:** `.f-inp.invalid` / `.f-txt.invalid` → `border-color: #b91c1c` + `0 0 0 3px rgba(185,28,28,.08)`, with a sibling `.f-err` message at `12px` / `#b91c1c`. Each `.f-grp` reserves `min-height: 16px` on the error node so validation doesn't shift the layout. `.form-status` is `min-height: 22px` with `role="status"` and `aria-live="polite"`.
+- **Error:** `.f-inp.invalid` / `.f-txt.invalid` → `border-color: #b91c1c` + `0 0 0 3px rgba(185,28,28,.08)`, with a sibling `.f-err` message at `12px` / `#b91c1c`. Each `.f-grp` reserves `min-height: 16px` on the error node so validation doesn't shift the layout. Each control carries `aria-describedby` pointing at its own `.f-err`, and `aria-invalid` is toggled per field. `.form-status` is `min-height: 22px` with `role="status"` and `aria-live="polite"`.
+- **Error summary:** `.f-summary` is a `role="alert" tabindex="-1"` block above the fields, `hidden` until a submit fails. On failure `validateContactForm()` populates it with one `<a href="#fieldId">` per invalid field, reusing each `.f-err`'s text as the item label so the two can never disagree, unhides it, and **moves focus to the summary rather than to the first input** — a screen reader then reads the problem and the whole failure list before the user starts fixing fields. Clicking a summary item focuses that field. Inline errors are retained, never replaced. Cleared by `clearAllErrors()` at the top of every validation pass.
 
 ### Navigation
 
@@ -281,14 +300,14 @@ One 10px outlier exists (`.stack-row`, from the override block). Borders are `1p
 - **Logo:** Clash Display 700 `18px`, `-0.02em`, `AW` with the period in gold.
 - **Links:** JetBrains Mono `11px` / `0.1em` uppercase, `--ink-3`. Hover, `.active` (set by an `IntersectionObserver` at `threshold: 0.35` over `section[id]`), and `:focus-visible` all go to `--ink` **and** grow a 1px gold `::after` rule from `width: 0` to `100%` over `.3s var(--ease-s)`.
 - **Actions:** `.nav-link-ghost` (outlined, "Resume") and `.nav-btn` (solid ink, "Hire Me →").
-- **Mobile:** below 960px the link list and action row are `display: none` and `.nav-toggle` (40px, two 18×1.5px ink bars) appears, opening `.nav-drawer` — a `min(340px, 90vw)` right-side panel at `rgba(255,255,255,.97)` + `blur(12px)`, sliding in from `translateX(102%)` over `.28s var(--ease-s)`. Toggling sets `body { overflow: hidden }`, flips `aria-expanded` on the trigger and `aria-hidden` on the drawer.
-- **Accessibility:** a `.skip-link` is fixed at `top: -56px` and slides to `top: 16px` on `:focus-visible`. The custom cursor is gated on `pointer: fine` **and** not reduced-motion **and** no `keyboard-nav` class (added on Tab, removed on `pointerdown`), so the native cursor is restored the moment someone uses the keyboard.
+- **Mobile:** below 960px the link list and action row are `display: none` and `.nav-toggle` (40px, two 18×1.5px ink bars) appears, opening `.nav-drawer` — a `min(340px, 90vw)` right-side panel at `rgba(255,255,255,.97)` + `blur(12px)`, sliding in from `translateX(102%)` over `.28s var(--ease-s)`. Toggling sets `body { overflow: hidden }`, flips `aria-expanded` on the trigger and `aria-hidden` on the drawer. **Focus:** opening moves focus to `.nav-drawer-close`; `Tab` is trapped inside the panel (`trapDrawerFocus`); `Escape` closes. Focus is returned to `.nav-toggle` on Escape and on the close button, but **not** when a nav link closes the drawer — the user is scrolling to that section, and yanking focus to the toggle would scroll them back up to the navbar. This is the `restoreFocus` argument to `toggleDrawer(forceOpen, restoreFocus)`; passing it for the link case is a bug.
+- **Accessibility:** `html` carries `scroll-padding-top: 76px` so anchor jumps and keyboard focus clear the 60px fixed nav (WCAG 2.2 Focus Not Obscured). A `.skip-link` is fixed at `top: -56px` and slides to `top: 16px` on `:focus-visible`. The custom cursor is gated on `pointer: fine` **and** not reduced-motion **and** no `keyboard-nav` class (added on Tab, removed on `pointerdown`), so the native cursor is restored the moment someone uses the keyboard.
 
 ### The Hero Portrait (`.hero-profile`)
 
 The signature component, and the most recently refactored one. Three nested elements over two tokens:
 
-- **`.hero-profile`** — the grid cell. `width: min(34vw, 420px)` (≥1024px), `aspect-ratio: var(--hero-media-ar)`, `position: relative`, `display: grid; place-items: center`, `justify-self: end`, `align-self: center`. Owns the layout only; no visible surface.
+- **`.hero-profile`** — the grid cell. `width: min(34vw, 420px)` (≥1024px), `aspect-ratio: var(--hero-media-ar)`, `position: relative`, `display: grid; place-items: center`, `justify-self: end`, `align-self: start` + `margin-top: 16px`. Owns the layout only; no visible surface. The cell is **top-aligned to the copy column, not centred in it** — `align-self: start` pins it to the row top (which is `.hero-copy`'s top), and the `16px` margin cancels the 16px of leading that sits above `.hero-nickname`, so the photograph's top edge lands exactly level with the cap-height of the "Abira Wisnunggal" wordmark at every viewport. Centring the cell instead pushes the portrait down beside the tagline, which reads as misaligned because the name is visually top-heavy. At `max-width: 767px` the shell is a flex column, where `align-self` switches to controlling the *horizontal* axis, so it is reset to `center` there to keep the portrait centred.
 - **`.hero-profile-ring`** — the decorative plate behind the photo. `position: absolute; inset: 0`, `border-radius: 22px`, `1px solid rgba(184,146,74,.45)`, filled with a `radial-gradient(circle at 25% 20%, rgba(255,255,255,.7), transparent 45%)` over a `conic-gradient(from 220deg, rgba(184,146,74,.2), rgba(26,25,24,.05), rgba(184,146,74,.35))`, `box-shadow: 0 24px 46px rgba(26,25,24,.16)`, and `animation: profileOrbit 6.5s ease-in-out infinite alternate` (a `translateY(-6px) scale(1)` → `translateY(6px) scale(1.015)` drift).
 - **`.hero-profile-frame`** — the photograph. `position: relative` in normal flow, `width: calc(100% - (2 * var(--hero-media-inset)))`, `aspect-ratio: var(--hero-media-ar)`, `overflow: hidden`, `border-radius: 22px`, `4px solid rgba(255,255,255,.95)`, `background: radial-gradient(circle at 30% 25%, #f4efe5 0%, #ddd8cf 100%)`, `box-shadow: inset 0 0 0 1px rgba(26,25,24,.08)`.
 - **`.hero-profile-frame img`** — `width: 100%; height: 100%; aspect-ratio: var(--hero-media-ar); object-fit: cover; object-position: center`. The redundant `aspect-ratio` on the image is deliberate belt-and-braces: it prevents layout shift before the file decodes. The `<img>` carries `width="779" height="595"`, `loading="eager"`, `fetchpriority="high"`, and an inline `onerror` that hides itself and reveals `.hero-profile-placeholder` (mono `12px` uppercase on a warm gradient).
@@ -300,6 +319,27 @@ The signature component, and the most recently refactored one. Three nested elem
 1. `.hero-profile` keeps `display: grid; place-items: center`. Drop it and the frame falls back to normal-flow top-left anchoring, which shifts the photo up and left inside the plate by half the inset.
 2. The frame's inset is `2 * var(--hero-media-inset)`, not `1 *`. A single-factor inset leaves the frame flush to the top-left of the cell and the photo visibly off-center — this was the actual bug when the landscape ratio was first introduced.
 3. The ring stays `inset: 0` with no negative inset or offset transform. Either would overflow the grid cell and collide with the hero copy at narrow widths. Keep the ring pinned to the cell and the inset on the frame.
+
+### Hero Proof Strip (`.hero-proof`)
+
+A single row of social proof inside `.hero-copy`, immediately after `.hero-ctas`, so the credibility signal lands before the scroll rather than five screens down in Honors.
+
+- **Placement is load-bearing.** It lives *inside* `.hero-copy`, not as a sibling of `.hero-shell`. `.hero-profile` is pinned to the row top by `align-self: start`, and the row top is `.hero-copy`'s top — so growing the copy column downward moves nothing in the portrait. Verified: with and without the strip, `profTop − nickTop` is **16px** and `.hero-profile` is `420 × 320.78` at 1280px, `.hero-profile-frame` `388 × 296.34`. Byte-identical.
+- **Geometry:** `display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px`, `margin-top: 24px`, `padding-top: 16px`, `1px solid var(--line)` top rule, `max-width: 640px`. The label is **inline** with the pill list on desktop — stacking it costs ~31px of hero height, which matters, see below.
+- **Pills** (`.hero-proof-item`) are `.proj-tag` geometry: 999px radius, `1px solid var(--line-2)`, `--bg` fill, JetBrains Mono `11px` / `.06em` uppercase. Hover swaps border and colour to `--ink` per the Ink Hover Rule.
+- **The award pill** (`.hero-proof-award`) is the component's one gold element — `#fffaf0` fill, `#e2ca95` border, `--gold-ink` text.
+- **Content is quoted, not invented:** the four employers and the medal all appear verbatim in Experience and Honors. No testimonials, no unverified counts.
+- **Responsive:** at `max-width: 960px` the strip becomes a centred column (`flex-direction: column; align-items: center; gap: 12px`) with the label centred above the pills. At `max-width: 600px` the label and pills drop to `10px` and the pill padding tightens to `5px 10px`.
+- **The height gate — `@media (min-width: 1024px) and (max-height: 939px) { .hero-proof { display: none } }`.** At `≥1024px` `#hero` is an exact-fit `min-height: 100vh` composition. Measured at 1280px wide, the copy column *with* this strip is **917px** tall, so on any viewport under ~940px the strip pushed the CTAs below the fold and dropped the absolutely-positioned `.hero-scroll` cue and `.hero-stats` out of view. Rather than retune the hero's type scale or spacing, the strip yields: with it hidden, `#hero` returns to exactly `100vh` at 1280×800 (measured 800px, `overflowsVh: false`). The strip is supplementary — the same facts are in Experience and Honors — so it is the correct element to drop. **Re-measure this threshold if the strip's content or the hero copy changes.**
+
+### Icons
+
+Icon glyphs are **inline SVG**, never text abbreviations and never emoji. Two families, split by purpose:
+
+- **Brand marks are official and filled** — `.c-icon svg` holds the LinkedIn and GitHub marks (`fill="currentColor"`, 24 viewBox), inside the existing 30px hairline circle. Recolouring or redrawing a brand logo is not allowed; supply the real asset.
+- **Non-brand glyphs are outline**, `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"` on a 24 viewBox — the envelope in `.c-icon`, `.proj-img-placeholder .ph-ico` (image frame), `.cert-img-placeholder .ph-ico` (seal). 1.5px matches the card border weight, so stroke and border read as one system.
+
+Sizing is owned by the container, never the markup: `.c-icon svg { width: 15px; height: 15px }`, `.proj-img-placeholder .ph-ico svg { 28px }`, `.cert-img-placeholder .ph-ico svg { 24px }`. Every one of these is `aria-hidden="true"` because adjacent text already carries the meaning; an icon-only control instead needs an accessible name (`.nav-drawer-close` and `.modal-close` already have `aria-label`).
 
 ### Modal (`.modal-overlay` / `.modal-box`)
 
@@ -392,11 +432,15 @@ Documented rather than fixed, since this pass changed no code:
 - **Don't** give the `.hero-profile-ring` an offset transform or negative inset. It must stay `inset: 0`; the `--hero-media-inset` gap comes from shrinking `.hero-profile-frame` to `calc(100% - (2 * var(--hero-media-inset)))`. Any other approach overflows the grid cell.
 - **Don't** drop `display: grid; place-items: center` from `.hero-profile`, and don't drop the `2 *` factor from the frame inset. Either one de-centers the photo inside the gold plate.
 - **Don't** add a new loop or end-state-dependent animation without listing it in the `prefers-reduced-motion` override block.
-- **Don't** set small text in `--ink-4` (`#b0ada8`). Use `#6f6b66` or `--ink-3`; the late contrast-override block exists because this was already a problem once.
+- **Don't** set small text in `--ink-4` (`#b0ada8`) — it is 2.1:1 on paper and is decoration-only. Use `--ink-3` (`#6f6b66`).
+- **Don't** set text in `--gold`. It is 2.7–2.9:1 and fails WCAG 1.4.3. Use `--gold-ink` for type, `--gold` for rules, rails, dots, fills, and the focus ring.
+- **Don't** add `.proj-tag` (or any other selector that has same-specificity tinted siblings after it) to the late contrast-override block — it would flatten the chip tints to grey. Fix the base declaration instead.
+- **Don't** add a `:focus-visible` ring to `.proj-card` or `.cert-card`. They are plain `<article>` elements with no `tabindex` and no click handler; their affordances are the `.proj-open-btn` and `.cert-btn` descendants, which already carry the ring. Styling the article would advertise a focus stop that does nothing.
 - **Don't** add a spacing scale, a Tailwind config, a preprocessor, or a build step. Raw px in `style.css` is the convention; section padding plus grid gaps is the rhythm.
 - **Don't** promote the `h1` above `.hero-nickname` or enlarge it — the name-first hierarchy is deliberate.
 - **Don't** use a rounded pill shape for rectangular action buttons (2px) or a sharp corner for chips (999px). The two-step radius split is load-bearing.
-- **Don't** invent a new gold shade. Extend the tinted-chip pattern with explicit hex triples if a new category needs color.
+- **Don't** invent a new gold hue. Extend the tinted-chip pattern with explicit hex triples if a new category needs color; for gold *text*, use `--gold-ink`.
+- **Don't** use a text abbreviation (`EM`, `LI`, `GH`, `AI`, `CERT`) as an icon. Icons are inline SVG — official filled marks for brands, 1.5px outline for everything else.
 - **Don't** assume a declared `--ease*` token is used; verify with `var(--ease)` / `var(--ease-i)` before building on it.
 
 ## Open Gaps
@@ -406,4 +450,7 @@ Documented rather than fixed, since this pass changed no code:
 - **Approximately 30 tinted chip colors are literals**, not tokens, with no documented rationale for the specific hue assignments. Whether they are meaningful (a deliberate category taxonomy) or decorative is unknown from the code.
 - **The `@keyframes nudge` / `nodeIn` pair lives inside the modal block**, and `.exp-body`'s `max-height: 800px` accordion cap is an unstated magic number that could clip very long role descriptions.
 - **The `#hero` id selector and the `.hero-section` class coexist**, and the hero has three separate layout blocks (960 / 767 / 1024+). This works but is the least predictable area of the stylesheet — treat it as read-mostly.
-- **Focus-visible is handled, but there is no `:focus-visible` style for `.proj-card` or `.cert-card`**, which are clickable `<article>` elements, and `.exp-card` is clickable-adjacent via `.exp-trigger`.
+- **The `.hero-proof` height gate is a measured constant, not a preference.** `max-height: 939px` was derived from the 917px copy-column height at 1280px wide. Widening `.hero-copy`, adding a line to `.hero-desc`, or changing the strip's contents will make it stale and the CTAs will drop below the fold again. Re-measure rather than guess.
+- **The proof strip is duplicated content by design.** Its employers and medal are also in Experience and Honors. That redundancy is intentional — it is the point of a proof strip — but it means edits to company names or dates must be made in both places.
+- **No dark mode exists.** Every contrast figure quoted here is light-mode only. If a dark theme is ever added, none of these ratios carry over and both `--ink-*` ramps plus `--gold-ink` need re-deriving against the dark surfaces.
+- **Form validation is hand-rolled** against `novalidate`, with the browser's own constraint validation suppressed. Server-side errors from Formspree are not surfaced in the summary — only client-side ones are.

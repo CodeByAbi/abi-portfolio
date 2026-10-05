@@ -13,10 +13,15 @@
   --bg-dark:   #111110;
   --ink:       #1a1918;
   --ink-2:     #3d3b38;
-  --ink-3:     #7a7772;
+  --ink-3:     #6f6b66;
   --ink-4:     #b0ada8;
   --gold:      #b8924a;
   --gold-lt:   #d4aa6a;
+  /* Text-safe gold. --gold on paper/white is 2.7-2.9:1 and fails WCAG 1.4.3 for
+     small text. --gold-ink is the same hue darkened to 5.0:1+ for any use where
+     gold IS the text colour (issuer lines, project sub-labels). Structure keeps
+     --gold. Do not use --gold for body or label text. */
+  --gold-ink:  #8a6a24;
   --line:      #e5e3de;
   --line-2:    #cac8c2;
 
@@ -38,11 +43,43 @@
   --sh-sm: 0 2px 8px rgba(0,0,0,.06);
   --sh-md: 0 6px 24px rgba(0,0,0,.09);
   --sh-lg: 0 16px 56px rgba(0,0,0,.12);
+
+  /* ---- LIQUID GLASS ----
+     Promotes the four surfaces that already used backdrop-filter (nav, mobile
+     drawer, modal, project cards) to a real glass system. Single source of
+     truth: components reference these tokens, never a literal rgba, so the
+     whole theme can be retuned from this block.
+
+     --glass-sat is the load-bearing one. Blur alone reads as fog; the
+     saturation boost is what makes it read as glass.
+
+     --glass-bg .72 is verified, not guessed. Worst case is the strongest
+     aurora bloom (.16 alpha gold-lt) composited under the glass, which lands
+     at #fbf9f6. Measured against that worst case:
+       --ink-3  #6f6b66 -> 5.03:1  (AA pass; better than its 4.94:1 on paper,
+                                    because the white overlay lifts the ground)
+       --ink-2  #3d3b38 -> 10.62:1
+       --gold-ink #8a6a24 -> 4.79:1
+     Contrast holds even if the bloom were doubled (.34 -> 4.88:1), so the
+     aurora strength below has real headroom. Do NOT drop --glass-bg much below
+     .62 without re-measuring. */
+  --glass-bg:      rgba(255,255,255,.72);
+  --glass-bg-drawer: rgba(255,255,255,.78);
+  --glass-blur:    20px;
+  --glass-sat:     180%;
+  /* Specular rim: the inset top highlight plus a weaker bottom bounce. This is
+     what replaces the hairline border on glass elements — do not add both. */
+  --glass-rim:     inset 0 1px 0 rgba(255,255,255,.9),
+                   inset 0 -1px 0 rgba(255,255,255,.35);
+  --glass-shadow:  0 8px 32px rgba(24,20,12,.10);
+  --glass-shadow-hi: 0 16px 48px rgba(24,20,12,.14);
 }
 
 /* ======================== RESET ======================== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+/* scroll-padding keeps anchor jumps and keyboard focus clear of the 60px fixed
+   nav. Without it, tabbing to a target near the top parks it under the bar. */
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; scroll-padding-top: 76px; }
 body {
   background: var(--bg);
   color: var(--ink);
@@ -107,7 +144,7 @@ nav.scrolled { border-bottom-color: var(--line); box-shadow: var(--sh-sm); }
   font-family: var(--fd); font-weight: 700; font-size: 18px;
   letter-spacing: -.02em; color: var(--ink);
 }
-.nav-logo em { color: var(--gold); font-style: normal; }
+.nav-logo em { color: var(--gold-ink); font-style: normal; }
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {
   font-family: var(--fm); font-size: 11px; font-weight: 400;
@@ -258,6 +295,67 @@ section {
   display: flex; gap: 14px; flex-wrap: wrap;
   opacity: 0; animation: fadeSlide .7s var(--ease-s) 1s both;
 }
+
+/* Proof strip. Sits under the CTAs so the credibility signal lands before the
+   scroll, but stays inside .hero-copy so the portrait's pinned top edge
+   (align-self: start) is unaffected. Reuses the .proj-tag pill geometry.
+   Label is inline with the list on desktop to keep the hero within one screen. */
+.hero-proof {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  max-width: 640px;
+  opacity: 0;
+  animation: fadeSlide .7s var(--ease-s) 1.2s both;
+}
+.hero-proof-label {
+  font-family: var(--fm);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6f6b66;
+  white-space: nowrap;
+}
+.hero-proof-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hero-proof-item {
+  font-family: var(--fm);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  transition: border-color .2s, color .2s;
+}
+.hero-proof-item:hover { border-color: var(--ink); color: var(--ink); }
+.hero-proof-award {
+  color: var(--gold-ink);
+  background: #fffaf0;
+  border-color: #e2ca95;
+}
+.hero-proof-award:hover { border-color: var(--gold-ink); color: var(--gold-ink); }
+
+/* At >=1024px #hero is an exact-fit min-height:100vh composition. Measured at
+   1280px wide the copy column with this strip is ~917px tall, so on any viewport
+   under ~940px it pushes the CTAs below the fold and drops the absolutely
+   positioned scroll cue and stats out of view. The strip is supplementary — the
+   same employers and the medal are stated in Experience and Honors — so it yields
+   to the hero on short viewports rather than the other way round. Verified: with
+   the strip hidden the hero returns to exactly 100vh at 1280x800. */
+@media (min-width: 1024px) and (max-height: 939px) {
+  .hero-proof { display: none; }
+}
 .btn-solid {
   font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
   background: var(--ink); color: #fff; padding: 14px 30px; border-radius: var(--r2);
@@ -371,7 +469,7 @@ section {
   display: flex; justify-content: space-between; align-items: flex-start;
 }
 .exp-role    { font-family: var(--fd); font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-.exp-company { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+.exp-company { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 5px; }
 .exp-meta    { font-family: var(--fm); font-size: 10px; color: var(--ink-4); line-height: 1.7; }
 .exp-toggle  {
   width: 28px; height: 28px; flex-shrink: 0;
@@ -413,8 +511,8 @@ section {
   font-family: var(--fm); font-size: 10px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--ink-4); user-select: none;
 }
-.proj-img-placeholder .ph-ico { font-size: 28px; opacity: .4; }
-.proj-img-placeholder span { font-size: 9px; opacity: .6; }
+.proj-img-placeholder .ph-ico { opacity: .45; display: flex; }
+.proj-img-placeholder span:not(.ph-ico) { font-size: 9px; opacity: .6; }
 .proj-body { padding: 24px; }
 .proj-num   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; color: var(--ink-4); margin-bottom: 12px; }
 .proj-title { font-family: var(--fd); font-size: 19px; font-weight: 600; color: var(--ink); margin-bottom: 10px; line-height: 1.2; }
@@ -470,7 +568,7 @@ section {
 .modal-close:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 .modal-content { padding: 40px 32px 56px; }
 .modal-title { font-family: var(--fd); font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 6px; }
-.modal-sub { font-family: var(--fm); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 32px; }
+.modal-sub { font-family: var(--fm); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 32px; }
 .modal-sh { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-top: 28px; margin-bottom: 10px; }
 .modal-p { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); }
 .flow-wrap { margin-top: 28px; padding: 26px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8); }
@@ -514,10 +612,11 @@ section {
   font-family: var(--fm); font-size: 9px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--ink-4); user-select: none;
 }
-.cert-img-placeholder .ph-ico { font-size: 24px; opacity: .35; }
+.cert-img-placeholder .ph-ico { opacity: .4; display: flex; }
+.cert-img-placeholder span:not(.ph-ico) { font-size: 9px; opacity: .6; }
 .cert-body { padding: 20px; }
 .cert-badge { position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
-.cert-issuer { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 7px; }
+.cert-issuer { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 7px; }
 .cert-name   { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
 .cert-date   { font-family: var(--fm); font-size: 10px; color: var(--ink-4); }
 .cert-desc   { font-size: 12px; color: var(--ink-3); margin-top: 7px; line-height: 1.55; }
@@ -563,7 +662,7 @@ section {
   font-family: var(--fm);
   font-size: 10px;
   letter-spacing: .05em;
-  color: var(--ink-4);
+  color: #6f6b66;
 }
 .cert-tags {
   display: flex;
@@ -643,7 +742,7 @@ section {
 .honor-year { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-4); padding-top: 4px; }
 .honor-right { padding-left: 32px; }
 .honor-title { font-family: var(--fd); font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 5px; line-height: 1.25; }
-.honor-org   { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.honor-org   { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 10px; }
 .honor-desc  { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
 .honor-meta {
   font-family: var(--fm);
@@ -891,7 +990,7 @@ body:not(.use-custom-cursor) .cursor-trail {
   margin-bottom: 28px;
 }
 .about-title .line { display: block; }
-.about-em { font-style: italic; color: var(--gold); }
+.about-em { font-style: italic; color: var(--gold-ink); }
 .about-intro { margin-top: 24px; }
 .about-skill-grid { margin-top: 32px; }
 
@@ -1042,7 +1141,8 @@ body:not(.use-custom-cursor) .cursor-trail {
 
 .hero-profile {
   justify-self: end;
-  align-self: center;
+  align-self: start;
+  margin-top: 16px;
   width: min(34vw, 420px);
   aspect-ratio: var(--hero-media-ar);
   display: grid;
@@ -1178,7 +1278,7 @@ body:not(.use-custom-cursor) .cursor-trail {
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--ink-4);
+  color: var(--ink-3);
 }
 .nav-drawer-close {
   border: 1px solid var(--line-2);
@@ -1307,6 +1407,38 @@ body:not(.use-custom-cursor) .cursor-trail {
   color: #fff;
 }
 
+/* Focusable error summary. Sits above the fields, receives focus on failed submit,
+   and links to each invalid field. Inline .f-err messages are retained. */
+.f-summary {
+  border: 1.5px solid #b91c1c;
+  border-left-width: 3px;
+  border-radius: var(--r4);
+  background: #fdf5f5;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+.f-summary:focus { outline: 3px solid #b91c1c; outline-offset: 3px; }
+.f-summary-title {
+  font-family: var(--fd);
+  font-size: 16px;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+.f-summary-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.f-summary-list a {
+  font-size: 13.5px;
+  color: #b91c1c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.f-summary-list a:hover { color: #7f1d1d; }
+
 .f-err {
   min-height: 16px;
   font-size: 12px;
@@ -1325,6 +1457,11 @@ body:not(.use-custom-cursor) .cursor-trail {
 .form-status.success { color: #166534; }
 .form-status.error { color: #b91c1c; }
 
+/* Icon glyphs are inline SVG (Phosphor, regular weight, 1.5px-equivalent stroke).
+   Fixed boxes keep the mono text rhythm of the surrounding labels. */
+.proj-img-placeholder .ph-ico svg { width: 28px; height: 28px; display: block; }
+.cert-img-placeholder .ph-ico svg { width: 24px; height: 24px; display: block; }
+
 .c-icon {
   font-family: var(--fm);
   font-size: 11px;
@@ -1337,6 +1474,7 @@ body:not(.use-custom-cursor) .cursor-trail {
   align-items: center;
   justify-content: center;
 }
+.c-icon svg { width: 15px; height: 15px; display: block; }
 
 /* Increase micro typography readability and contrast */
 .sec-label,
@@ -1374,12 +1512,37 @@ body:not(.use-custom-cursor) .cursor-trail {
 .flow-label,
 .c-label,
 .f-lbl,
-.footer-copy,
-.footer-back,
-.footer-col-label,
-.h-stat .l {
+.h-stat .l,
+/* Second pass: metadata that was still inheriting --ink-4. --ink-4 (#b0ada8) is
+   2.1:1 on paper and 2.2:1 on white, so it is decoration-only from here on. */
+.exp-body-label,
+.proj-cta,
+.cert-date,
+.stack-title,
+.honor-year,
+.honor-meta,
+.proj-img-placeholder,
+.cert-img-placeholder {
   color: #6f6b66;
 }
+
+/* The footer is --bg-dark (#111110), so the light-surface repaint above is wrong
+   there. These three were folded into that block and inherited #6f6b66, which is
+   3.57:1 on the dark ground. Their original rgba(255,255,255,.3/.4) was worse
+   still at 2.68:1. rgba(255,255,255,.5) composites to ~#888888 = 5.37:1 and .65
+   to ~#acacac = 8.39:1, both passing at 11px. .65 matches .footer-link, keeping
+   the back-to-top CTA at the same weight as the other footer links. */
+.footer-copy,
+.footer-col-label { color: rgba(255,255,255,.5); }
+.footer-back { color: rgba(255,255,255,.65); }
+
+/* The playground block sits below this override block, so `.pg-*` labels cannot be
+   repainted from here — they lose on source order at equal specificity. They are
+   fixed at their own declarations instead. */
+
+/* Gold is structure, not text. These three are label-text, so they use the
+   darkened step. Every other --gold use (rules, rails, dots, focus ring) stays. */
+.proj-card:hover .proj-cta { color: var(--gold-ink); }
 
 a:focus-visible,
 button:focus-visible,
@@ -1388,7 +1551,10 @@ textarea:focus-visible,
 .exp-trigger:focus-visible,
 .proj-open-btn:focus-visible,
 .nav-toggle:focus-visible,
-.nav-drawer-close:focus-visible {
+.nav-drawer-close:focus-visible,
+.cert-btn:focus-visible,
+.pg-chip:focus-visible,
+.pg-submit:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 3px;
 }
@@ -1422,6 +1588,17 @@ textarea:focus-visible,
   .nav-toggle { display: inline-flex; }
   .nav-links { display: none; }
   .hero-sub-ctas { gap: 14px; }
+
+  /* Stack the proof label above the pills once the copy column is full width. */
+  .hero-proof {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-proof-label { text-align: center; }
+  .hero-proof-list { justify-content: center; }
 }
 
 @media (max-width: 600px) {
@@ -1440,6 +1617,11 @@ textarea:focus-visible,
     font-size: 9px;
     letter-spacing: .06em;
   }
+  .hero-proof-label,
+  .hero-proof-item {
+    font-size: 10px;
+  }
+  .hero-proof-item { padding: 5px 10px; letter-spacing: .04em; }
   .hero-name {
     font-size: clamp(26px, 8.4vw, 42px);
   }
@@ -1595,6 +1777,7 @@ textarea:focus-visible,
 
   .hero-profile {
     justify-self: center;
+    align-self: center;
     width: min(82vw, 320px);
     max-width: 320px;
     margin-inline: auto;
@@ -1658,7 +1841,8 @@ textarea:focus-visible,
   padding: 20px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8);
   margin-bottom: 20px;
 }
-.pg-arrow { font-size: 16px; color: var(--ink-4); }
+/* aria-hidden connector, but it still has to be visible enough to read the flow. */
+.pg-arrow { font-size: 16px; color: var(--ink-3); }
 .pg-step {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; border: 1.5px solid var(--line); border-radius: var(--r4);
@@ -1674,14 +1858,16 @@ textarea:focus-visible,
 .pg-step-info { min-width: 0; }
 .pg-step-label {
   font-family: var(--fm); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink-4); margin-bottom: 2px;
+  color: #6f6b66; margin-bottom: 2px;
 }
 .pg-step-val {
   font-family: var(--fb); font-size: 12px; color: var(--ink-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;
 }
 .pg-step-active { border-color: var(--gold); background: #fffbf4; }
-.pg-step-active .pg-step-ico { background: var(--gold); border-color: var(--gold); color: #fff; }
+/* White on --gold is 2.90:1. The step letter is 10px, so the active fill uses
+   the darker step: white on --gold-ink is 5.04:1. */
+.pg-step-active .pg-step-ico { background: var(--gold-ink); border-color: var(--gold-ink); color: #fff; }
 .pg-step-done { border-color: #86d39b; background: #f0fbf3; }
 .pg-step-done .pg-step-ico { background: #22c55e; border-color: #22c55e; color: #fff; }
 .pg-answer-box {
@@ -1689,11 +1875,11 @@ textarea:focus-visible,
 }
 .pg-answer-label {
   font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--ink-4); margin-bottom: 12px;
+  color: #6f6b66; margin-bottom: 12px;
 }
 .pg-answer-text { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); margin-bottom: 14px; min-height: 1.8em; }
-.pg-disclaimer { font-family: var(--fm); font-size: 10px; color: var(--ink-4); letter-spacing: .04em; }
-.pg-disclaimer a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+.pg-disclaimer { font-family: var(--fm); font-size: 10px; color: #6f6b66; letter-spacing: .04em; }
+.pg-disclaimer a { color: var(--gold-ink); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 960px) {
   .pg-shell { padding: 20px; }
   .pg-arrow { display: none; }
