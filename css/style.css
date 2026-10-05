@@ -30,6 +30,11 @@
 
   --r2: 2px; --r4: 4px; --r8: 8px;
 
+  /* Intrinsic ratio of the hero portrait (779x595 source) */
+  --hero-media-ar: 779 / 595;
+  /* Distance the decorative ring is offset behind the portrait */
+  --hero-media-inset: 16px;
+
   --sh-sm: 0 2px 8px rgba(0,0,0,.06);
   --sh-md: 0 6px 24px rgba(0,0,0,.09);
   --sh-lg: 0 16px 56px rgba(0,0,0,.12);
@@ -1037,8 +1042,9 @@ body:not(.use-custom-cursor) .cursor-trail {
 
 .hero-profile {
   justify-self: end;
-  width: min(40vw, 430px);
-  aspect-ratio: 1;
+  align-self: center;
+  width: min(34vw, 420px);
+  aspect-ratio: var(--hero-media-ar);
   display: grid;
   place-items: center;
   position: relative;
@@ -1046,7 +1052,7 @@ body:not(.use-custom-cursor) .cursor-trail {
 .hero-profile-ring {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: 22px;
   border: 1px solid rgba(184,146,74,.45);
   background:
     radial-gradient(circle at 25% 20%, rgba(255,255,255,.7), rgba(255,255,255,0) 45%),
@@ -1056,9 +1062,9 @@ body:not(.use-custom-cursor) .cursor-trail {
 }
 .hero-profile-frame {
   position: relative;
-  width: 84%;
-  aspect-ratio: 1;
-  border-radius: 50%;
+  width: calc(100% - (2 * var(--hero-media-inset)));
+  aspect-ratio: var(--hero-media-ar);
+  border-radius: 22px;
   overflow: hidden;
   border: 4px solid rgba(255,255,255,.95);
   background: radial-gradient(circle at 30% 25%, #f4efe5 0%, #ddd8cf 100%);
@@ -1066,8 +1072,8 @@ body:not(.use-custom-cursor) .cursor-trail {
 }
 .hero-profile-frame img {
   width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
+  height: 100%;
+  aspect-ratio: var(--hero-media-ar);
   object-fit: cover;
   object-position: center;
 }
@@ -1512,7 +1518,7 @@ textarea:focus-visible,
 
   .hero-profile {
     justify-self: end;
-    width: min(34vw, 430px);
+    width: min(34vw, 420px);
     margin-inline: 0;
   }
 }
@@ -1592,10 +1598,6 @@ textarea:focus-visible,
     width: min(82vw, 320px);
     max-width: 320px;
     margin-inline: auto;
-  }
-
-  .hero-profile-frame {
-    width: 100%;
   }
 }
 
