@@ -5,6 +5,12 @@
 
 @import url('https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+/* Editorial serif for the display tier (protocol S3). Newsreader is used rather
+   than Instrument Serif because Instrument ships regular+italic only, and the
+   display tier needs 600/700. Newsreader is variable (200-800) with optical
+   sizing, so the 94px hero wordmark still has weight to spare. Instrument Serif
+   is kept as the fallback. */
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Instrument+Serif:ital@0;1&display=swap');
 
 /* ======================== VARIABLES ======================== */
 :root {
@@ -28,6 +34,10 @@
   --fd: 'Clash Display', sans-serif;
   --fb: 'Satoshi', sans-serif;
   --fm: 'JetBrains Mono', monospace;
+  /* Editorial serif — the display tier. Identity/section titles only; Clash
+     Display stays for card titles and the logo, where the geometric grotesque
+     is doing a different job. */
+  --fserif: 'Newsreader', 'Instrument Serif', Georgia, serif;
 
   --ease:   cubic-bezier(.22,.68,0,1.2);
   --ease-s: cubic-bezier(.16,1,.3,1);
@@ -43,36 +53,6 @@
   --sh-sm: 0 2px 8px rgba(0,0,0,.06);
   --sh-md: 0 6px 24px rgba(0,0,0,.09);
   --sh-lg: 0 16px 56px rgba(0,0,0,.12);
-
-  /* ---- LIQUID GLASS ----
-     Promotes the four surfaces that already used backdrop-filter (nav, mobile
-     drawer, modal, project cards) to a real glass system. Single source of
-     truth: components reference these tokens, never a literal rgba, so the
-     whole theme can be retuned from this block.
-
-     --glass-sat is the load-bearing one. Blur alone reads as fog; the
-     saturation boost is what makes it read as glass.
-
-     --glass-bg .72 is verified, not guessed. Worst case is the strongest
-     aurora bloom (.16 alpha gold-lt) composited under the glass, which lands
-     at #fbf9f6. Measured against that worst case:
-       --ink-3  #6f6b66 -> 5.03:1  (AA pass; better than its 4.94:1 on paper,
-                                    because the white overlay lifts the ground)
-       --ink-2  #3d3b38 -> 10.62:1
-       --gold-ink #8a6a24 -> 4.79:1
-     Contrast holds even if the bloom were doubled (.34 -> 4.88:1), so the
-     aurora strength below has real headroom. Do NOT drop --glass-bg much below
-     .62 without re-measuring. */
-  --glass-bg:      rgba(255,255,255,.72);
-  --glass-bg-drawer: rgba(255,255,255,.78);
-  --glass-blur:    20px;
-  --glass-sat:     180%;
-  /* Specular rim: the inset top highlight plus a weaker bottom bounce. This is
-     what replaces the hairline border on glass elements — do not add both. */
-  --glass-rim:     inset 0 1px 0 rgba(255,255,255,.9),
-                   inset 0 -1px 0 rgba(255,255,255,.35);
-  --glass-shadow:  0 8px 32px rgba(24,20,12,.10);
-  --glass-shadow-hi: 0 16px 48px rgba(24,20,12,.14);
 }
 
 /* ======================== RESET ======================== */
@@ -91,42 +71,63 @@ img { display:block; width:100%; }
 a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
 
-/* ======================== CURSOR ======================== */
-.cursor {
-  position: fixed; z-index: 9999; pointer-events: none;
-  width: 10px; height: 10px;
-  background: var(--ink); border-radius: 50%;
-  transform: translate(-50%,-50%);
-  transition: width .18s var(--ease-s), height .18s var(--ease-s),
-              background .18s, opacity .18s;
-  mix-blend-mode: multiply;
-}
-.cursor-trail {
-  position: fixed; z-index: 9998; pointer-events: none;
-  width: 36px; height: 36px;
-  border: 1.5px solid rgba(26,25,24,.35); border-radius: 50%;
-  transform: translate(-50%,-50%);
-  transition: width .4s var(--ease-s), height .4s var(--ease-s), opacity .3s;
-}
-body.h-cursor .cursor { width: 14px; height: 14px; background: var(--gold); }
-body.h-cursor .cursor-trail { width: 52px; height: 52px; opacity: .25; }
+/* ======================== AMBIENT BACKGROUND LAYER ========================
+   Protocol S6/S7 ask for section depth via low-opacity imagery, minimal
+   geometric line patterns, and one slow drifting radial blob.
 
-/* ======================== NOISE OVERLAY ======================== */
-.noise {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  opacity: .025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
+   This REVERSES the de-slop pass recorded in DESIGN.md, which removed
+   .noise / .grid-bg / .aurora because "stacked together they read as generated
+   rather than art-directed". Applied here under the protocol they are collapsed
+   into TWO fixed layers on body pseudo-elements instead of three JS-driven divs,
+   and every opacity sits at or below the protocol's 0.03 ceiling:
 
-/* ======================== GRID BG ======================== */
-.grid-bg {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+     ::before  64px hairline grid (.028) + warm grain (.022) — fully static
+     ::after   one warm radial blob (.03) drifting on transform over 26s
+
+   Differences from the removed versions that keep this from regressing:
+     - no scroll or mouse parallax (the old .grid-bg transitioned transform on
+       scroll, which was the actual cost — a full-screen repaint per frame)
+     - not on a scrolling container; position:fixed, so it costs nothing to scroll
+     - pointer-events:none and z-index:0, so all content sits above it
+     - opaque cards and the opaque footer hide it entirely; it only shows on the
+       paper ground between sections
+     - the blob animation is explicitly killed in the reduced-motion block
+   Keep total contrast impact below ~0.03. Anything stronger stops being
+   "ambient" and starts being visible texture. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background-image:
-    linear-gradient(rgba(26,25,24,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26,25,24,.04) 1px, transparent 1px);
-  background-size: 64px 64px;
-  transition: transform .15s linear;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.022'/%3E%3C/svg%3E"),
+    linear-gradient(rgba(26,25,24,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,25,24,.028) 1px, transparent 1px);
+  background-size: 200px 200px, 64px 64px, 64px 64px;
+}
+body::before { opacity: 1; }
+
+body::after {
+  content: '';
+  position: fixed;
+  top: -18vh;
+  left: 52%;
+  width: 78vw;
+  height: 78vw;
+  max-width: 1100px;
+  max-height: 1100px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .03;
+  background: radial-gradient(circle at 50% 50%, rgba(184,146,74,.55), rgba(184,146,74,0) 62%);
+  will-change: transform;
+  animation: ambientDrift 26s ease-in-out infinite alternate;
+}
+/* Transform only — no layout-triggering properties (protocol S7). */
+@keyframes ambientDrift {
+  from { transform: translate3d(-4%, -2%, 0) scale(1); }
+  to   { transform: translate3d(5%, 4%, 0) scale(1.12); }
 }
 
 /* ======================== NAV ======================== */
@@ -134,8 +135,10 @@ nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   height: 60px; padding: 0 48px;
-  background: rgba(248,247,244,.85);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  /* Opaque, not glass. A blur with no coloured substrate behind it reads as
+     fog, costs a full-screen backdrop-filter on every scroll frame, and makes
+     nav text contrast depend on whatever is scrolling underneath. */
+  background: var(--bg);
   border-bottom: 1px solid transparent;
   transition: border-color .3s, box-shadow .3s;
 }
@@ -187,46 +190,35 @@ section {
   content: ''; width: 28px; height: 1px; background: var(--gold); display: block;
 }
 
-/* ======================== REVEAL ANIMATIONS ======================== */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity .8s var(--ease-s), transform .8s var(--ease-s);
-}
-[data-reveal].in { opacity: 1; transform: translateY(0); }
-[data-reveal="left"]  { transform: translateX(-40px); }
-[data-reveal="left"].in { transform: translateX(0); }
-[data-reveal="right"] { transform: translateX(40px); }
-[data-reveal="right"].in { transform: translateX(0); }
-[data-reveal="scale"] { transform: scale(.94); }
-[data-reveal="scale"].in { transform: scale(1); }
+/* ======================== REVEAL ANIMATIONS ========================
+   Gated on .js. Without it every [data-reveal] element renders at full opacity
+   and no transform, so the page is completely readable if the script fails,
+   is blocked, or the IntersectionObserver never fires.
 
-[data-delay="1"] { transition-delay: .1s; }
-[data-delay="2"] { transition-delay: .2s; }
-[data-delay="3"] { transition-delay: .3s; }
-[data-delay="4"] { transition-delay: .4s; }
-[data-delay="5"] { transition-delay: .5s; }
-[data-delay="6"] { transition-delay: .6s; }
+   Travel is 18px, not 40px, and duration is .55s. A 40px rise on ~30 elements
+   is the generic fade-up this design should not have. */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .55s var(--ease-s), transform .55s var(--ease-s);
+}
+.js [data-reveal].in { opacity: 1; transform: none; }
+.js [data-reveal="left"]  { transform: translateX(-24px); }
+.js [data-reveal="right"] { transform: translateX(24px); }
+.js [data-reveal="scale"] { transform: scale(.97); }
+
+[data-delay="1"] { transition-delay: .06s; }
+[data-delay="2"] { transition-delay: .12s; }
+[data-delay="3"] { transition-delay: .18s; }
+[data-delay="4"] { transition-delay: .24s; }
+[data-delay="5"] { transition-delay: .3s; }
+[data-delay="6"] { transition-delay: .36s; }
 
 /* ======================== HERO ======================== */
 #hero {
   min-height: 100vh; display: flex; flex-direction: column;
   justify-content: flex-end; padding-top: 100px; padding-bottom: 80px;
   overflow: hidden; position: relative; border-bottom: 1px solid var(--line);
-}
-
-/* Animated background circle */
-.hero-circle {
-  position: absolute; top: -20%; right: -10%;
-  width: clamp(400px, 55vw, 800px); aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, rgba(184,146,74,.12), transparent 70%);
-  animation: floatCircle 8s ease-in-out infinite alternate;
-  pointer-events: none; z-index: 0;
-}
-@keyframes floatCircle {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(-30px, 20px) scale(1.05); }
 }
 
 .hero-content { position: relative; z-index: 1; }
@@ -370,21 +362,6 @@ section {
 }
 .btn-outline:hover { border-color: var(--ink); transform: translateY(-3px); box-shadow: var(--sh-sm); }
 
-/* Hero scroll */
-.hero-scroll {
-  position: absolute; bottom: 32px; left: 48px;
-  display: flex; align-items: center; gap: 12px;
-  font-family: var(--fm); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-4);
-  opacity: 0; animation: fadeSlide .7s var(--ease-s) 1.3s both;
-}
-.scroll-track { width: 48px; height: 1px; background: var(--ink-4); position: relative; overflow: hidden; }
-.scroll-track::after {
-  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: var(--gold); animation: scanLine 2s ease-in-out infinite;
-}
-@keyframes scanLine { 0%{left:-100%} 100%{left:100%} }
-
 /* Hero stats */
 .hero-stats {
   position: absolute; right: 48px; bottom: 48px;
@@ -423,28 +400,29 @@ section {
 
 /* Stack diagram */
 .stack-card {
-  background: var(--bg-card); border: 1px solid var(--line);
-  border-radius: var(--r8); padding: 32px; box-shadow: var(--sh-sm);
-  position: relative; overflow: hidden;
-}
-.stack-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--ink), var(--gold));
+  background: var(--bg-card); border: 1.5px solid var(--line);
+  border-radius: var(--r8); padding: 32px;
+  position: relative;
 }
 .stack-title {
   font-family: var(--fm); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-4); margin-bottom: 24px;
+  text-transform: uppercase; color: var(--ink-4); margin-bottom: 20px;
 }
-.stack-rows { display: flex; flex-direction: column; gap: 10px; }
+.stack-rows { display: flex; flex-direction: column; margin: 0; }
 .stack-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 14px; border: 1px solid var(--line); border-radius: var(--r4);
-  background: var(--bg); font-family: var(--fb); font-size: 13px; color: var(--ink-2);
-  transition: border-color .2s, transform .2s var(--ease-s), background .2s;
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 13px 0; border-top: 1px solid var(--line);
+  font-family: var(--fb); font-size: 13px; color: var(--ink-2);
+  transition: border-color .2s;
 }
-.stack-row:hover { border-color: var(--gold-lt); background: #fff; transform: translateX(5px); }
-.stack-ico { font-size: 16px; flex-shrink: 0; }
-.stack-sep { width: 1px; height: 10px; background: var(--line-2); margin-left: 20px; }
+/* A definition list, not a stack of cards. The rows are hairlines inside one
+   surface, so the block reads as a single spec sheet instead of five identical
+   boxes — and there is no proficiency rating to defend, because self-assessed
+   "Growing / Strong / Medium" labels are not verifiable by a reader. */
+.stack-row:last-child { border-bottom: 1px solid var(--line); }
+.stack-row:hover { border-color: var(--line-2); }
+.stack-domain { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); flex-shrink: 0; min-width: 152px; }
+.stack-tools { font-family: var(--fm); font-size: 11px; letter-spacing: .04em; color: var(--ink-3); margin: 0; }
 
 /* ======================== EXPERIENCE ======================== */
 #experience { border-top: 1px solid var(--line); }
@@ -491,18 +469,67 @@ section {
 /* ======================== PROJECTS ======================== */
 #projects { border-top: 1px solid var(--line); }
 .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* Bento layout (protocol S5: "asymmetrical CSS Grid layouts"). Desktop only.
+
+   COLUMN spans only — deliberately no `grid-row` spans. Row spans on an
+   auto-height grid resolve circularly (the spanning card is what would size the
+   rows it spans), and this repo has already shipped one clipping bug from an
+   over-clever height relationship. Asymmetric widths get the bento read with no
+   circular sizing and no clipping risk.
+
+   The composition is 6 / 3+3 / 2+2+2 on a 6-track grid: the flagship takes the
+   full measure, two half-width features follow, then three third-width. The
+   ordering follows the editorial ranking already in the markup — 001 FLAGSHIP,
+   002 FEATURE KEY, then the supporting work.
+
+   This MUST stay inside min-width:961px. At <=960px .proj-grid is a single
+   column, and a bare `grid-column: span 6` against a 1-column track would
+   generate six IMPLICIT columns and blow the layout apart on mobile. Same class
+   of source-order trap AGENTS.md warns about, in the other direction. */
+@media (min-width: 961px) {
+  .proj-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .proj-card:nth-child(1) { grid-column: span 6; }
+  .proj-card:nth-child(2),
+  .proj-card:nth-child(3) { grid-column: span 3; }
+  .proj-card:nth-child(4),
+  .proj-card:nth-child(5),
+  .proj-card:nth-child(6) { grid-column: span 2; }
+  /* A 200px band across the full 1064px measure reads as a letterbox, so the
+     flagship's media gets proportionally more height. */
+  .proj-card:nth-child(1) .proj-img-slot { height: 340px; }
+  /* ...but that would upscale the flagship's asset ~5.3x, and its source is
+     assets/img/demolablogo.jpg at 200x200. `contain` renders it at natural size
+     on the --bg plate instead of blowing it up into mush. This is scoped to the
+     flagship because its source is a LOGO; the other cards hold real
+     screenshots (1280x716) that want `cover`. If the flagship asset is ever
+     replaced with a real screenshot, drop this rule and the band goes back to
+     cover. */
+  .proj-card:nth-child(1) .proj-img-slot img {
+    object-fit: contain;
+    padding: 48px;
+  }
+}
 .proj-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden; cursor: pointer;
-  transition: transform .3s var(--ease-s), box-shadow .3s var(--ease-s), border-color .25s;
+  transition: box-shadow .3s var(--ease-s), border-color .25s;
   position: relative;
+  /* Flex column so .proj-body can FILL the leftover height below the image band.
+     This is what puts the CTA on the card's bottom edge. See .proj-body. */
+  display: flex; flex-direction: column;
 }
-.proj-card:hover { transform: translateY(-6px); box-shadow: var(--sh-lg); border-color: var(--line-2); }
+/* The card does not translate. Six project cards lifting -6px each read as a
+   template, and a full-width card that moves also drags the click target out
+   from under the pointer mid-gesture. Feedback is the border going to ink plus
+   the media easing — enough to read as openable without moving the layout. */
+.proj-card:hover { box-shadow: var(--sh-md); border-color: var(--ink); }
 .proj-img-slot {
   width: 100%; height: 200px; background: var(--bg);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; position: relative;
+  flex-shrink: 0; /* .proj-card is a flex column; the media band keeps its height */
 }
 .proj-img-slot img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease-s); }
 .proj-card:hover .proj-img-slot img { transform: scale(1.04); }
@@ -513,33 +540,34 @@ section {
 }
 .proj-img-placeholder .ph-ico { opacity: .45; display: flex; }
 .proj-img-placeholder span:not(.ph-ico) { font-size: 9px; opacity: .6; }
-.proj-body { padding: 24px; }
+/* Column layout with the CTA pushed to the bottom. Cards in a grid row are
+   already the same height, so this lines the "View Technical Details" buttons
+   up across the row instead of letting them float at ragged heights.
+
+   `height: 100%` was WRONG here and hid the button entirely: a percentage
+   height resolves against the card's full content box, which already contains
+   the 200px .proj-img-slot, so the body became as tall as the card instead of
+   filling the space beneath the image. It then spilled ~200px past the card,
+   and .proj-card's overflow:hidden clipped the CTA out of existence — leaving
+   [data-project-open], the only handler that opens the project modal, with
+   nothing clickable. Use flex:1 on a flex-column card instead. */
+.proj-body { padding: 24px; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 .proj-num   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; color: var(--ink-4); margin-bottom: 12px; }
 .proj-title { font-family: var(--fd); font-size: 19px; font-weight: 600; color: var(--ink); margin-bottom: 10px; line-height: 1.2; }
 .proj-desc  { font-size: 13.5px; line-height: 1.72; color: var(--ink-3); margin-bottom: 18px; }
+.proj-date  { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-4); white-space: nowrap; }
 .proj-tags  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-.proj-tag   { font-family: var(--fm); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); background: var(--bg); border: 1px solid var(--line); padding: 4px 9px; border-radius: 999px; }
-.proj-tag-rag        { background: #fdf3e8; border-color: #d8b58f; color: #825222; }
-.proj-tag-langchain  { background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
-.proj-tag-fastapi    { background: #ebfff9; border-color: #8fdcbf; color: #1b6f56; }
-.proj-tag-postgres   { background: #eef0ff; border-color: #9ca8ed; color: #344497; }
-.proj-tag-ml         { background: #eef9ef; border-color: #92d39a; color: #1f6b33; }
-.proj-tag-python     { background: #edf5ff; border-color: #99bdf5; color: #1f4d9e; }
-.proj-tag-sklearn    { background: #fff2ea; border-color: #f0b28a; color: #9a4f2a; }
-.proj-tag-ds         { background: #eefdff; border-color: #8ed7d7; color: #166767; }
-.proj-tag-regression { background: #f4f3ff; border-color: #b3afe4; color: #4f4692; }
-.proj-tag-pandas     { background: #f5f1ff; border-color: #b6a3e4; color: #4f3a86; }
-.proj-tag-eda        { background: #fff8e8; border-color: #e2ca95; color: #7b5e1f; }
-.proj-tag-tableau    { background: #eaf6ff; border-color: #99c8ec; color: #215c91; }
-.proj-tag-analytics  { background: #eef9f5; border-color: #9fd8c2; color: #1d6650; }
+.proj-tag   { font-family: var(--fm); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); background: var(--bg); border: 1px solid var(--line); padding: 4px 9px; border-radius: 999px; transition: border-color .2s, color .2s; }
+/* 13 per-technology pastel triples removed. Every project tag now carries the
+   same neutral chip; the technology name is the content, the hue was noise. */
+.proj-card:hover .proj-tag { border-color: var(--line-2); }
 .proj-cta   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-4); display: flex; align-items: center; gap: 8px; transition: color .2s, gap .2s; }
-.proj-card:hover .proj-cta { color: var(--gold); gap: 14px; }
+.proj-card:hover .proj-cta { color: var(--gold-ink); gap: 12px; }
 
 /* ======================== PROJECT MODAL ======================== */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 500;
   background: rgba(17,17,16,.6);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px; opacity: 0; pointer-events: none;
   transition: opacity .35s var(--ease-s);
@@ -554,8 +582,8 @@ section {
 }
 .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
 .modal-bar {
-  position: sticky; top: 0; background: rgba(255,255,255,.95);
-  backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--bg-card);
+  border-bottom: 1px solid var(--line);
   padding: 18px 32px; display: flex; justify-content: space-between; align-items: center;
   z-index: 10;
 }
@@ -595,10 +623,11 @@ section {
 .cert-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden;
-  transition: transform .3s var(--ease-s), box-shadow .3s, border-color .2s;
+  transition: box-shadow .3s var(--ease-s), border-color .2s;
   position: relative;
 }
-.cert-card:hover { transform: translateY(-5px); box-shadow: var(--sh-md); border-color: var(--line-2); }
+/* Same hover contract as .proj-card: border to ink, no translate. */
+.cert-card:hover { box-shadow: var(--sh-md); border-color: var(--ink); }
 .cert-img-slot {
   width: 100%; height: 160px; background: var(--bg);
   border-bottom: 1px solid var(--line);
@@ -615,7 +644,9 @@ section {
 .cert-img-placeholder .ph-ico { opacity: .4; display: flex; }
 .cert-img-placeholder span:not(.ph-ico) { font-size: 9px; opacity: .6; }
 .cert-body { padding: 20px; }
-.cert-badge { position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+/* .cert-badge removed: an unconditional green dot is a "verified" claim the
+   page cannot make, and colour alone conveyed it. Where verification actually
+   exists it is stated in text via .cert-status-verified. */
 .cert-issuer { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 7px; }
 .cert-name   { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
 .cert-date   { font-family: var(--fm); font-size: 10px; color: var(--ink-4); }
@@ -682,16 +713,9 @@ section {
   background: #faf9f6;
 }
 
-/* Colored certificate tag variants */
-.cert-tag-analytics    { background: #eef9f5; border-color: #9fd8c2; color: #1d6650; }
-.cert-tag-ml           { background: #eef9ef; border-color: #92d39a; color: #1f6b33; }
-.cert-tag-decision    { background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
-.cert-tag-python      { background: #edf5ff; border-color: #99bdf5; color: #1f4d9e; }
-.cert-tag-automation  { background: #fff2ea; border-color: #f0b28a; color: #9a4f2a; }
-.cert-tag-data        { background: #eefdff; border-color: #8ed7d7; color: #166767; }
-.cert-tag-sql         { background: #eef0ff; border-color: #9ca8ed; color: #344497; }
-.cert-tag-dashboard   { background: #eaf6ff; border-color: #99c8ec; color: #215c91; }
-.cert-tag-storytelling{ background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
+/* 9 coloured certificate tag variants removed — same neutral chip as project
+   and skill tags. One chip style for every label on the page. */
+
 .cert-actions {
   display: flex;
   flex-wrap: wrap;
@@ -743,7 +767,11 @@ section {
 .honor-right { padding-left: 32px; }
 .honor-title { font-family: var(--fd); font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 5px; line-height: 1.25; }
 .honor-org   { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 10px; }
-.honor-desc  { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
+/* Capped at 720px: the honor items span the full 1064px content column, so an
+   uncapped .honor-desc ran to ~1100px — the longest measure anywhere on the
+   page. Every other prose block is already held to 680-760px (.pg-sub,
+   .hero-copy, .section-intro); honors was the one that slipped through. */
+.honor-desc  { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); max-width: 720px; }
 .honor-meta {
   font-family: var(--fm);
   font-size: 10px;
@@ -789,23 +817,26 @@ section {
 .honor-item-featured {
   background: linear-gradient(90deg, rgba(255,247,232,.62), rgba(255,255,255,0));
 }
-/* decorative dot on timeline */
-.honor-item::after {
-  content: ''; position: absolute;
-  left: calc(120px - 4px); top: 36px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--bg); border: 2px solid var(--line-2);
-  transition: border-color .3s, background .3s;
-}
-.honor-item:hover::after { background: var(--gold); border-color: var(--gold); }
+/* The floating timeline dot was removed — a dot that only exists to fill a 1px
+   rule adds nothing a reader can act on. (A dead .honor-item:hover::after
+   rule that referenced that dot was removed with it.) */
 
 /* ======================== CONTACT ======================== */
 #contact { border-top: 1px solid var(--line); }
-.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+/* minmax(0,1fr), not 1fr: a bare 1fr track floors at its content's min-content
+   width, and the unbreakable email string below pushed the whole contact
+   column past a 320px viewport (46px of clipped overflow). */
+.contact-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 80px; align-items: start; }
 .contact-heading {
-  font-family: var(--fd); font-size: clamp(38px, 5vw, 68px);
+  /* The <br> in the markup forces "Got a project" / "or opportunity?". At the old
+     clamp(38px,5vw,68px) the second line measured wider than the ~492px grid
+     column, so it broke AGAIN and stranded "or" alone on its own line. 58px is
+     also the same ceiling as .about-title, so Contact ties About rather than
+     out-shouting it. Verified: the heading now renders on 2 lines, not 3. */
+  font-family: var(--fd); font-size: clamp(36px, 4.3vw, 58px);
   font-weight: 700; line-height: .95; letter-spacing: -.04em;
   color: var(--ink); margin-bottom: 24px;
+  text-wrap: balance;
 }
 .contact-sub { font-size: 15px; line-height: 1.78; color: var(--ink-2); margin-bottom: 40px; }
 .contact-links { display: flex; flex-direction: column; gap: 10px; }
@@ -817,7 +848,10 @@ section {
 }
 .c-link:hover { border-color: var(--ink); transform: translateX(8px); box-shadow: var(--sh-sm); }
 .c-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
-.c-label { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-4); margin-left: auto; }
+/* The address/handle is a single unbreakable token, so it needs an explicit
+   break opportunity plus min-width:0 to be allowed to shrink as a flex item. */
+.c-text { min-width: 0; overflow-wrap: anywhere; }
+.c-label { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-4); margin-left: auto; flex-shrink: 0; }
 
 .form-wrap { display: flex; flex-direction: column; gap: 14px; }
 .f-grp { display: flex; flex-direction: column; gap: 6px; }
@@ -870,11 +904,9 @@ footer {
 .footer-link:hover .fl-arr { opacity: 1; }
 
 /* Footer glow line */
-.footer-glow {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 60%; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-lt), transparent);
-}
+/* The featured-row gradient wash is kept as the one place gold marks an item as
+   a result rather than a credential — but at a strength that reads as a tint,
+   not a highlight. The decorative footer glow line is removed. */
 
 .footer-bottom {
   max-width: 1160px; margin: 0 auto;
@@ -904,16 +936,18 @@ footer {
   nav { padding: 0 24px; }
   .nav-links { display: none; }
   section { padding: 80px 24px; }
-  .about-grid { grid-template-columns: 1fr; gap: 40px; }
-  .exp-grid, .proj-grid { grid-template-columns: 1fr; }
-  .cert-grid { grid-template-columns: 1fr 1fr; }
-  .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+  /* minmax(0,...) throughout: a bare 1fr track floors at its content's
+     min-content width, which let the About and Projects columns exceed a
+     320px viewport instead of shrinking. */
+  .about-grid { grid-template-columns: minmax(0,1fr); gap: 40px; }
+  .exp-grid, .proj-grid { grid-template-columns: minmax(0,1fr); }
+  .cert-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .contact-grid { grid-template-columns: minmax(0,1fr); gap: 48px; }
   .footer-top { grid-template-columns: 1fr; gap: 40px; }
   .footer-bottom { flex-direction: column; gap: 12px; }
-  .hero-stats, .hero-scroll { display: none; }
+  .hero-stats { display: none; }
   .honor-item { grid-template-columns: 80px 1fr; }
   .honor-item::before { left: 80px; }
-  .honor-item::after { left: calc(80px - 4px); }
 }
 @media (max-width: 600px) {
   .cert-grid { grid-template-columns: 1fr; }
@@ -949,13 +983,6 @@ footer {
   transition: top .2s var(--ease-s);
 }
 .skip-link:focus-visible { top: 16px; }
-
-body.use-custom-cursor { cursor: none; }
-body:not(.use-custom-cursor) .cursor,
-body:not(.use-custom-cursor) .cursor-trail {
-  opacity: 0;
-  visibility: hidden;
-}
 
 .hero-section {
   max-width: none;
@@ -997,10 +1024,19 @@ body:not(.use-custom-cursor) .cursor-trail {
 #about {
   background: linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 100%);
 }
-.about-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(350px, 460px);
-  gap: 64px;
-  align-items: stretch;
+/* Desktop-only two-column About. This MUST stay inside a min-width query.
+   It used to be unscoped, so it sat after the max-width:960px block and won on
+   source order at every phone width — re-imposing a 350px second column that
+   forced 28px of clipped overflow at 320px. This is the source-order trap
+   AGENTS.md warns about: the later rule wins regardless of specificity. */
+@media (min-width: 961px) {
+  .about-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(350px, 460px);
+    gap: 64px;
+    /* start, not stretch: with the nested boxes gone the stack card is much
+       shorter than the prose column, and stretching left a large empty void. */
+    align-items: start;
+  }
 }
 #about p {
   font-size: 16px;
@@ -1043,97 +1079,63 @@ body:not(.use-custom-cursor) .cursor-trail {
   letter-spacing: .06em;
   border-width: 1px;
 }
-.skill-chip.skill-python    { background: #edf5ff; border-color: #99bdf5; color: #1f4d9e; }
-.skill-chip.skill-ml        { background: #eef9ef; border-color: #92d39a; color: #1f6b33; }
-.skill-chip.skill-dl        { background: #f5f1ff; border-color: #b6a3e4; color: #4f3a86; }
-.skill-chip.skill-pytorch   { background: #fff2ea; border-color: #f0b28a; color: #9a4f2a; }
-.skill-chip.skill-azure     { background: #ecf6ff; border-color: #90bde8; color: #14538d; }
-.skill-chip.skill-ds        { background: #eefdff; border-color: #8ed7d7; color: #166767; }
-.skill-chip.skill-sql       { background: #eef0ff; border-color: #9ca8ed; color: #344497; }
-.skill-chip.skill-r         { background: #f4f3ff; border-color: #b3afe4; color: #4f4692; }
-.skill-chip.skill-langchain { background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
-.skill-chip.skill-rag       { background: #fdf3e8; border-color: #d8b58f; color: #825222; }
-.skill-chip.skill-fastapi   { background: #ebfff9; border-color: #8fdcbf; color: #1b6f56; }
-.skill-chip.skill-tableau   { background: #eaf6ff; border-color: #99c8ec; color: #215c91; }
+/* 12 per-skill pastel triples removed. Ten technologies in ten unrelated hues
+   read as confetti and encoded nothing — the chip text is already the label.
+   One neutral chip also stops the About section competing with the gold accent,
+   which is the only colour with a job to do. */
 
-.stack-card {
-  background: linear-gradient(180deg, #ffffff 0%, #fefdfb 100%);
-}
-.stack-rows {
-  gap: 12px;
-}
-.stack-row {
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 14px;
-  border-radius: 10px;
-  border: 1px solid #dedad2;
-  background: #fff;
-  transform: translateY(12px);
-  opacity: 0;
-}
-.stack-card.in .stack-row {
-  animation: stackRise .55s var(--ease-s) forwards;
-}
-.stack-card.in .stack-row:nth-child(1) { animation-delay: .08s; }
-.stack-card.in .stack-row:nth-child(2) { animation-delay: .16s; }
-.stack-card.in .stack-row:nth-child(3) { animation-delay: .24s; }
-.stack-card.in .stack-row:nth-child(4) { animation-delay: .32s; }
-.stack-card.in .stack-row:nth-child(5) { animation-delay: .40s; }
+/* The stack rows now reveal with their parent card via [data-reveal]; the
+   per-row transform/opacity reset and the 5-step stackRise ladder are gone,
+   along with .stack-level (self-assessed proficiency) and the five coloured
+   rails, which were decoration pretending to be a taxonomy. */
 
-.stack-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-.stack-domain {
-  font-family: var(--fd);
-  font-size: 16px;
-  color: var(--ink);
-  line-height: 1.1;
-}
-.stack-tools {
-  font-family: var(--fb);
-  font-size: 13px;
-  color: var(--ink-3);
-}
-.stack-level {
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-  padding: 5px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line-2);
-  color: var(--ink-3);
-  background: #faf9f7;
-}
-.stack-row-ai  { border-left: 4px solid #4e7fcc; }
-.stack-row-llm { border-left: 4px solid #3ca46e; }
-.stack-row-data{ border-left: 4px solid #41a5a5; }
-.stack-row-db  { border-left: 4px solid #8a76cf; }
-.stack-row-ops { border-left: 4px solid #b6843a; }
+/* ---- DISPLAY TIER: editorial serif (protocol S3) ----
+   These four blocks are the effective declarations for the display tier and sit
+   late in the file, so they win on source order over the base hero block above.
 
-@keyframes stackRise {
-  from { transform: translateY(12px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
-}
+   Line-heights are RAISED versus the Clash Display values (.88 / .96). A
+   geometric grotesque with tall caps absorbs sub-1.0 leading; a serif with long
+   ascenders and descenders collides below ~1.0, and "Abira Wisnunggal" wraps to
+   two lines at most desktop widths, so this is load-bearing rather than
+   cosmetic. Tracking is loosened to -0.02/-0.03em for the same reason.
 
+   Weights preserve the Reversed Hero Rule: the name is largest AND heaviest
+   (600), the h1 beneath it is smaller and lighter (500) and lower-contrast.
+   .hero-role deliberately STAYS Clash Display — it reads as a geometric
+   caption under a serif statement, which is the contrast the hero wants. */
 .hero-name {
+  font-family: var(--fserif);
+  font-weight: 500;
   font-size: clamp(30px, 4.2vw, 58px);
-  line-height: .96;
+  line-height: 1.08;
+  letter-spacing: -.02em;
 }
 .hero-nickname {
+  font-family: var(--fserif);
+  font-weight: 600;
   font-size: clamp(48px, 7.2vw, 94px);
-  line-height: .88;
+  line-height: 1.02;
+  letter-spacing: -.025em;
   margin-bottom: 16px;
 }
 .hero-role {
   font-size: clamp(18px, 1.9vw, 26px);
   margin-bottom: 14px;
 }
+.about-title {
+  font-family: var(--fserif);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+.contact-heading {
+  font-family: var(--fserif);
+  font-weight: 600;
+  line-height: 1.1;
+}
+/* .pg-title is NOT overridden here: its base declaration sits further down the
+   file (~1690) and would win on source order at equal specificity. It is
+   changed in place instead. */
 .hero-desc {
   max-width: 700px;
   margin-bottom: 30px;
@@ -1142,7 +1144,35 @@ body:not(.use-custom-cursor) .cursor-trail {
 .hero-profile {
   justify-self: end;
   align-self: start;
-  margin-top: 16px;
+  /* NEGATIVE, and deliberately so. See the cap-height arithmetic below.
+     The invariant this repo holds is: the photograph's top edge sits level with
+     the cap-height of the "Abira Wisnunggal" wordmark.
+
+     Two offsets stack between the wordmark's cap and the photo's top edge:
+
+       cap-height offset = (lineHeight - fontBBox) / 2 + fontBBoxAscent - capHeight
+       frame inset       = --hero-media-inset x aspectRatio / 2  (constant 12.22px)
+
+     The frame inset is constant at every viewport because .hero-profile and
+     .hero-profile-frame share --hero-media-ar, so the band's vertical size does
+     not depend on how wide the portrait is. The cap-height offset is not: it
+     scales with font-size. Measured in Newsreader 600 —
+       fontBBox 69/25 per 94px, capHeight 68 per 94px, lineHeight 1.02
+       => cap sits (0.02 x fontSize) below the element's top edge.
+     At the 94px ceiling that is 1.94px, against a 12.22px frame inset, so the
+     margin must be NEGATIVE: 1.94 - 12.22 = -10.28px. Under Clash Display the
+     cap sat far lower and the old +16px sufficed; the serif is what inverts it.
+
+     Re-measure this if the display face or the hero type scale changes.
+
+     The margin is expressed as the formula rather than the solved constant
+     (-10.28px at the 94px ceiling) because the cap offset scales with
+     font-size while the frame inset does not. A single tuned constant is exact
+     only at the width it was measured at and drifts in between — measured
+     +0.37px at 1078px, where 7.2vw yields 77.6px rather than the 94px ceiling.
+     The calc() below holds it at 0.00 across the whole desktop range. The
+     0.0206 factor is capOffset / fontSize, measured in Newsreader 600. */
+  margin-top: calc(0.0206 * clamp(48px, 7.2vw, 94px) - 12.22px);
   width: min(34vw, 420px);
   aspect-ratio: var(--hero-media-ar);
   display: grid;
@@ -1258,15 +1288,23 @@ body:not(.use-custom-cursor) .cursor-trail {
   right: 0;
   bottom: 0;
   width: min(340px, 90vw);
-  background: rgba(255,255,255,.97);
-  backdrop-filter: blur(12px);
+  background: var(--bg-card);
   border-left: 1px solid var(--line);
   transform: translateX(102%);
-  transition: transform .28s var(--ease-s);
+  /* visibility removes the off-screen panel from sequential keyboard focus.
+     Delayed on close so it hides after the slide-out; immediate on open.
+     JS also toggles `inert` as belt-and-braces for engines that keep
+     visibility:hidden subtrees focusable. */
+  visibility: hidden;
+  transition: transform .28s var(--ease-s), visibility 0s linear .28s;
   z-index: 180;
   padding: 18px;
 }
-.nav-drawer.open { transform: translateX(0); }
+.nav-drawer.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform .28s var(--ease-s), visibility 0s;
+}
 .nav-drawer-head {
   display: flex;
   align-items: center;
@@ -1366,6 +1404,18 @@ body:not(.use-custom-cursor) .cursor-trail {
   font-size: 14px;
   line-height: 1.55;
 }
+/* Global `ul { list-style: none }` suppresses ::marker, so the gold marker
+   documented here never rendered. Match .exp-list: a flex row with a gold
+   '›' glyph — list glyphs are allowed to stay gold per the Restrained Gold
+   Rule, and this keeps both lists visually consistent. */
+.proj-metrics li { display: flex; gap: 10px; }
+.proj-metrics li::before {
+  content: '›';
+  color: var(--gold);
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
 .proj-metrics li::marker { color: var(--gold); }
 
 .proj-proof {
@@ -1392,6 +1442,8 @@ body:not(.use-custom-cursor) .cursor-trail {
 }
 
 .proj-open-btn {
+  margin-top: auto;
+  align-self: flex-start;
   font-family: var(--fm);
   font-size: 12px;
   letter-spacing: .08em;
@@ -1540,9 +1592,65 @@ body:not(.use-custom-cursor) .cursor-trail {
    repainted from here — they lose on source order at equal specificity. They are
    fixed at their own declarations instead. */
 
-/* Gold is structure, not text. These three are label-text, so they use the
-   darkened step. Every other --gold use (rules, rails, dots, focus ring) stays. */
-.proj-card:hover .proj-cta { color: var(--gold-ink); }
+/* ======================== DOMAIN-CODED CHIPS (protocol S4) ========================
+   Muted pastels, reintroduced. The earlier de-slop pass deleted 34 per-item
+   tints and DESIGN.md said "do not reintroduce per-item tints" — this reverses
+   that, but NOT the failure it was correcting.
+
+   The reason the original tints read as confetti was that the hue was assigned
+   per ITEM and encoded nothing: ten technologies in ten unrelated pastels, none
+   of which corresponded to anything. Here every chip carries a `data-d` domain
+   key, and the four pastels map onto the five domains the .stack-card
+   definition list already establishes (Storage folds into Infra as "plumbing"):
+
+     data-d="ai"     AI / ML            yellow   PyTorch, YOLOv8, LSTM, SARIMA
+     data-d="llm"    LLM Systems        blue     RAG, LangChain, Azure OpenAI
+     data-d="data"   Data & analytics  green    Pandas, Tableau, Looker Studio
+     data-d="infra"  Infra & retrieval  red      PostgreSQL, Docker, Supabase
+
+   So the colour now repeats information the reader already gets from the chip's
+   place in the tech stack. Read a project row and the hue tells you which parts
+   of the stack it leans on. That is the difference between encoding and confetti.
+
+   Text/background pairings are the protocol's own and all clear WCAG AA at the
+   10-11px these chips render at. Borders are the pastel hue at .20 alpha rather
+   than a flat grey, so the chip edge belongs to its own fill. */
+
+[data-d="ai"] {
+  background: #FBF3DB; color: #956400; border-color: rgba(149,100,0,.20);
+}
+[data-d="llm"] {
+  background: #E1F3FE; color: #1F6C9F; border-color: rgba(31,108,159,.20);
+}
+[data-d="data"] {
+  background: #EDF3EC; color: #346538; border-color: rgba(52,101,56,.20);
+}
+[data-d="infra"] {
+  background: #FDEBEC; color: #9F2F2D; border-color: rgba(159,47,45,.20);
+}
+
+/* The old hover rule recoloured every .proj-tag border to --line-2, which would
+   flatten the pastel edges to grey on hover. Scoped to untagged chips only. */
+.proj-card:hover .proj-tag:not([data-d]) { border-color: var(--line-2); }
+
+/* ======================== BUTTON PRESS FEEDBACK (protocol S5/S7) ========================
+   Hover already lifts these (-2px/-3px). There was no :active state at all, so a
+   tap on a touch device got no acknowledgement beyond a hover that may never
+   fire. scale(.98) is the protocol's specified press response. It composes with
+   the existing lift because hover uses translate and press uses scale — two
+   different properties — so the button never fights itself mid-gesture. */
+.btn-solid:active,
+.btn-outline:active,
+.f-submit:active,
+.pg-submit:active,
+.nav-btn:active,
+.cert-btn:active,
+.cert-btn-primary:active,
+.honor-actions a:active,
+.proj-proof a:active,
+.pg-chip:active {
+  transform: scale(.98);
+}
 
 a:focus-visible,
 button:focus-visible,
@@ -1558,6 +1666,27 @@ textarea:focus-visible,
   outline: 3px solid var(--gold);
   outline-offset: 3px;
 }
+
+/* Invisible hit-area expansion for sub-44px icon buttons. The ::after box is
+   part of the button itself, so it extends the clickable region without
+   changing the visual size or the surrounding layout. Web WCAG 2.5.8 only
+   requires 24px, which these already meet — this is a comfort upgrade for
+   coarse pointers, not a conformance fix. */
+.exp-toggle,
+.modal-close,
+.nav-drawer-close,
+.nav-toggle { position: relative; }
+.exp-toggle::after,
+.modal-close::after,
+.nav-drawer-close::after,
+.nav-toggle::after {
+  content: '';
+  position: absolute;
+}
+.exp-toggle::after { inset: -8px; }      /* 28px -> 44px */
+.modal-close::after { inset: -6px; }    /* 32px -> 44px */
+.nav-drawer-close::after { inset: -5px; } /* 34px -> 44px */
+.nav-toggle::after { inset: -2px; }      /* 40px -> 44px */
 
 @media (max-width: 960px) {
   .hero-section {
@@ -1576,12 +1705,18 @@ textarea:focus-visible,
   .hero-profile {
     justify-self: start;
     width: min(72vw, 330px);
+    /* NOTE: do NOT reset margin-top here. This block sets .hero-shell to one
+       column, but the `min-width: 768px and max-width: 1023px` block further
+       down restores a two-column shell at 768-960px and wins on source order.
+       So this range is still the side-by-side hero, the cap-height invariant
+       still applies, and .hero-profile keeps its base calc() offset. The reset
+       belongs at 767px, where the shell actually becomes a flex column. */
   }
   .about-kpi-grid {
     grid-template-columns: 1fr;
   }
   .about-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0,1fr);
     gap: 34px;
   }
   .nav-actions { display: none; }
@@ -1651,13 +1786,6 @@ textarea:focus-visible,
   }
 }
 
-@media (pointer: coarse) {
-  .cursor,
-  .cursor-trail {
-    display: none !important;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -1665,17 +1793,21 @@ textarea:focus-visible,
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
-  .grid-bg,
-  .hero-circle,
+  /* [data-reveal] targets are forced visible outright rather than animated in,
+     so nothing depends on an IntersectionObserver firing to become readable.
+     This is the safety net for JS being disabled or slow. */
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  /* The ambient blob is a 26s infinite loop, so it is named explicitly rather
+     than relying on the generic duration collapse above. The grid and grain in
+     body::before are static and need no override. */
+  body::after { animation: none !important; transform: none !important; will-change: auto; }
   .proj-card,
   .flow-arrow-svg svg {
     transform: none !important;
     animation: none !important;
   }
-  .cursor,
-  .cursor-trail {
-    display: none !important;
-  }
+  .proj-img-slot img,
+  .cert-img-slot img { transition: none !important; }
 }
 
 /* ======================== HERO LAYOUT BREAKPOINT FIX ======================== */
@@ -1730,7 +1862,6 @@ textarea:focus-visible,
     margin-inline: 0;
   }
 
-  .hero-scroll,
   .hero-stats {
     display: none;
   }
@@ -1781,6 +1912,12 @@ textarea:focus-visible,
     width: min(82vw, 320px);
     max-width: 320px;
     margin-inline: auto;
+    /* At <=767px .hero-shell becomes a flex column: the portrait sits UNDER the
+       copy, so there is no cap-height to align to and the desktop calc() offset
+       would just nudge the photo up. This is the only place the reset belongs —
+       putting it at 960px would also kill the 768-960px range, which is still
+       the two-column hero. */
+    margin-top: 0;
   }
 }
 
@@ -1806,8 +1943,8 @@ textarea:focus-visible,
 #playground { border-top: 1px solid var(--line); }
 .pg-header { margin-bottom: 36px; }
 .pg-title {
-  font-family: var(--fd); font-size: clamp(26px, 3.5vw, 44px);
-  font-weight: 700; letter-spacing: -.03em; color: var(--ink); margin-bottom: 12px;
+  font-family: var(--fserif); font-size: clamp(26px, 3.5vw, 44px);
+  font-weight: 600; line-height: 1.1; letter-spacing: -.03em; color: var(--ink); margin-bottom: 12px;
 }
 .pg-sub { font-size: 15px; line-height: 1.72; color: var(--ink-2); max-width: 680px; }
 .pg-shell {
@@ -1816,7 +1953,10 @@ textarea:focus-visible,
 }
 .pg-input-wrap { display: flex; gap: 10px; margin-bottom: 14px; }
 .pg-input {
-  flex: 1; background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--r4);
+  /* min-width:0 so the field can shrink below its intrinsic input size;
+     without it the input+button pair overflowed a 320px viewport. */
+  flex: 1 1 auto; min-width: 0;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--r4);
   padding: 12px 16px; font-family: var(--fb); font-size: 14px; color: var(--ink);
   outline: none; transition: border-color .2s, box-shadow .2s;
 }
@@ -1825,9 +1965,15 @@ textarea:focus-visible,
   font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
   background: var(--ink); color: #fff; border: none; padding: 12px 22px; border-radius: var(--r4);
   cursor: pointer; white-space: nowrap;
+  /* The label must not be the thing that shrinks; the field gives way instead. */
+  flex: 0 0 auto;
   transition: background .2s, transform .2s var(--ease-s);
 }
 .pg-submit:hover { background: #000; transform: translateY(-2px); }
+/* Loading feedback while the simulated pipeline runs (ux: Submit Feedback —
+   Loading -> result). Disabled state carries no transform so the button does
+   not jump when it becomes unavailable mid-hover. */
+.pg-submit:disabled { opacity: .6; cursor: wait; transform: none; }
 .pg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
 .pg-chip {
   font-family: var(--fm); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;

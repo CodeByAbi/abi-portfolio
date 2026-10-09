@@ -90,21 +90,38 @@
       { "name": "ad-hoc-focus-ring", "value": "0 0 0 3px rgba(26,25,24,.07)", "purpose": "Input :focus alongside the gold outline. Not tokenized." },
       { "name": "ad-hoc-error-ring", "value": "0 0 0 3px rgba(185,28,28,.08)", "purpose": ".f-inp.invalid / .f-txt.invalid. Not tokenized." }
     ],
-    "motion": [
-      { "name": "ease-s", "value": "cubic-bezier(.16,1,.3,1)", "purpose": "The workhorse easing. ~40 var(--ease-s) references: all reveals, hovers, the accordion, the drawer, and every *In keyframe. Declared as --ease-s." },
-      { "name": "ease", "value": "cubic-bezier(.22,.68,0,1.2)", "purpose": "Declared in :root with an overshoot past 1. Currently UNUSED - zero var(--ease) references. Either wire it up or delete it." },
-      { "name": "ease-i", "value": "cubic-bezier(.4,0,.2,1)", "purpose": "Declared in :root. Currently UNUSED - zero var(--ease-i) references. Either wire it up or delete it." },
-      { "name": "wordUp", "value": "translateY(105%) -> 0 with opacity", "purpose": "Masked per-word rise of the hero h1. 1s per word, .05s / .18s / .31s ladder." },
-      { "name": "fadeSlide", "value": "opacity 0->1, translateY(16px) -> 0", "purpose": "Every hero paragraph and CTA row. .7s, with explicit per-element delays .55s .7s .85s .92s 1s 1.1s 1.3s." },
-      { "name": "floatCircle", "value": "translate(0,0) scale(1) -> translate(-30px,20px) scale(1.05)", "purpose": ".hero-circle gold radial glow. 8s ease-in-out infinite alternate." },
-      { "name": "profileOrbit", "value": "translateY(-6px) scale(1) -> translateY(6px) scale(1.015)", "purpose": ".hero-profile-ring drift. 6.5s ease-in-out infinite alternate. Listed in the reduced-motion override." },
-      { "name": "scanLine", "value": "left: -100% -> 100%", "purpose": "Gold sweep inside .scroll-track. 2s ease-in-out infinite." },
-      { "name": "stackRise", "value": "translateY(12px) -> 0 with opacity", "purpose": ".stack-card.in .stack-row. .55s with an :nth-child ladder at 80ms (5 rows)." },
-      { "name": "nodeIn", "value": "translateX(-10px) -> 0 with opacity", "purpose": "Modal .flow-node and .flow-arrow-svg. .4s each." },
-      { "name": "nudge", "value": "translateX(0 -> 4px -> 0)", "purpose": "The inline SVG arrow inside the modal flow diagram. 2s infinite. Listed in the reduced-motion override." },
-      { "name": "reveal-on-scroll", "value": "opacity 0 + translateY(40px) -> rest, .8s", "purpose": "[data-reveal] triggered by an IntersectionObserver (threshold .1, rootMargin 0 0 -48px) that adds .in then unobserves. Direction variants: left -40px, right 40px, scale .94." },
-      { "name": "stagger-ladder", "value": ".1s to .6s in fixed 100ms steps", "purpose": "[data-delay=\"1\"] through [data-delay=\"6\"] - six slots, claimed in DOM order by grid children. Chip grids reuse the slots cyclically instead of continuing the count." }
-    ],
+"motion": [
+    { "name": "ease-s", "value": "cubic-bezier(.16,1,.3,1)", "purpose": "The workhorse easing and effectively the only one in use. Declared as --ease-s; referenced by all reveals, hovers, the accordion, the drawer, and the remaining *In keyframes." },
+    { "name": "ease", "value": "cubic-bezier(.22,.68,0,1.2)", "purpose": "Declared in :root with an overshoot past 1. Currently UNUSED - zero var(--ease) references. Either wire it up or delete it." },
+    { "name": "ease-i", "value": "cubic-bezier(.4,0,.2,1)", "purpose": "Declared in :root. Currently UNUSED - zero var(--ease-i) references. Either wire it up or delete it." },
+    { "name": "wordUp", "value": "translateY(105%) -> 0 with opacity", "purpose": "Masked per-word rise of the hero h1. 1s per word, .05s / .18s / .31s ladder." },
+    { "name": "fadeSlide", "value": "opacity 0->1, translateY(16px) -> 0", "purpose": "Every hero paragraph and CTA row. .7s, with explicit per-element delays .55s .7s .85s .92s 1s 1.1s 1.3s." },
+    { "name": "profileOrbit", "value": "translateY(-6px) scale(1) -> translateY(6px) scale(1.015)", "purpose": ".hero-profile-ring drift. 6.5s ease-in-out infinite alternate. One of only TWO remaining infinite loops on the page, and the only decorative one. Listed in the reduced-motion override." },
+    { "name": "nodeIn", "value": "translateX(-10px) -> 0 with opacity", "purpose": "Modal .flow-node and .flow-arrow-svg. .4s each. Fires on open only." },
+    { "name": "nudge", "value": "translateX(0 -> 4px -> 0)", "purpose": "The inline SVG arrow inside the modal flow diagram. 2s infinite, scoped to the modal. Listed in the reduced-motion override." },
+    { "name": "reveal-on-scroll", "value": "opacity 0 + translateY(18px) -> rest, .55s", "purpose": "[data-reveal] triggered by an IntersectionObserver (threshold .1, rootMargin 0 0 -48px) that adds .in then unobserves. Direction variants: left -24px, right 24px, scale .97. Travel and duration were reduced from 40px/.8s because ~30 elements at that distance read as a generic fade-up." },
+    { "name": "reveal-no-js-gate", "value": "opacity 1 + transform none", "purpose": "CRITICAL. All reveal styles are scoped as `.js [data-reveal]`. An inline script in <head> swaps <html class=\"no-js\"> to class=\"js\" before first paint. Without JS, or if that script throws, the hidden state never applies and every element renders fully visible. Do NOT un-scope this selector - it is the only thing preventing a blank page when JS fails." },
+    { "name": "stagger-ladder", "value": ".06s to .36s in fixed 60ms steps", "purpose": "[data-delay=\"1\"] through [data-delay=\"6\"] - six slots, claimed in DOM order by grid children. Was .1s-.6s in 100ms steps; shortened so a staggered grid still resolves well inside a scroll beat." }
+  ],
+  "removedMotion": {
+    "note": "Deleted in the de-slop pass. Each was a decorative loop with no informational job; the page now runs two infinite animations total instead of six.",
+    "removed": [
+      { "name": "floatCircle", "was": ".hero-circle gold radial glow, 8s infinite alternate, plus a scroll-linked parallax translate in main.js", "reason": "Purely decorative background orb. The element was removed from the DOM." },
+      { "name": "scanLine", "was": "Gold sweep across .scroll-track, 2s infinite", "reason": "Fake scroll indicator. aria-hidden, conveyed nothing a reader cannot already see, and .hero-scroll was removed." },
+      { "name": "stackRise", "was": "5-step stagger on .stack-card.in .stack-row, .55s each", "reason": "Per-row fade-in for a list that is now a single .stack-card surface. Rows reveal with their parent." },
+      { "name": "aurora-drift", "was": "46s infinite alternate translate on a 200vh gradient layer, plus a JS-written --aurora-lift on scroll", "reason": "The substrate existed only to give the backdrop-filter glass surfaces something to refract. With glass removed there was nothing to feed, so it was deleted outright." },
+      { "name": "grid-bg parallax", "was": "64px fixed grid, translate driven by mousemove in main.js", "reason": "Decorative grid + a permanent rAF on every mouse move for a background nobody reads. Element removed." },
+      { "name": "card tilt", "was": "Per-.proj-card rotateX/rotateY from mousemove, rAF-throttled", "reason": "Layout-shifting hover on every card, and a pointer-tracking rAF over 6 elements. Replaced by a border-color + shadow transition." },
+      { "name": "counter roll-up", "was": "requestAnimationFrame 0->target over 1200ms for [data-count]", "reason": "Counting a constant up to a number the DOM already knew. Values are now static text." },
+      { "name": "skill stagger", "was": "JS-set transitionDelay on every .skill-grid child", "reason": "Ten chips fading in 40ms apart. Chips now reveal with their section." }
+    ]
+  },
+  "decorativeLayersRemoved": {
+    "note": "Five fixed or absolutely-positioned full-page layers stacked on top of each other. All removed from markup, CSS, and JS.",
+    "layers": [".cursor (custom pointer, mix-blend-mode:multiply)", ".cursor-trail", ".noise (SVG feTurbulence overlay at .025 opacity)", ".grid-bg (64px grid + scroll/mouse parallax)", ".aurora (200vh gradient substrate)", ".hero-circle (floating gold orb)", ".footer-glow", ".scroll-track scan line"],
+    "reason": "Six simultaneous ambient systems made the page read as generated rather than art-directed, cost real compositing work (multiple backdrop-filter layers each forcing re-composite), and the custom cursor in particular was a usability cost - it obscured hit targets and had no non-pointer equivalent.",
+    "replacement": "Static warm paper. Depth now comes from hairline borders, one gold accent per component, and the hero portrait's gold plate, which is the single deliberate moment of depth in the system."
+  },
     "breakpoints": [
       { "name": "hero-desktop", "value": "min-width: 1024px", "scope": "#hero only" },
       { "name": "hero-tablet", "value": "768px <= w <= 1023px", "scope": "#hero only" },

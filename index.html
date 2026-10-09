@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
   <meta charset="UTF-8" />
+  <!-- Swap no-js -> js before first paint. Scroll reveals are only allowed to
+       hide content when this has run, so a JS failure leaves the page fully
+       readable instead of blank. Keep this inline and above the stylesheet. -->
+  <script>document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/, 'js');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Abira Wisnunggal | AI Engineer Building Production AI Systems</title>
   <meta name="description" content="Portfolio of Abira Wisnunggal (Abi), AI Engineer focused on RAG, automation, and machine learning systems with measurable outcomes." />
@@ -29,7 +33,7 @@
       "name": "Abira Wisnunggal",
       "alternateName": "Abi",
       "jobTitle": "AI Engineer",
-      "email": "mailto:abirawisnu7@gmail.com",
+      "email": "mailto:abirawisnu@gmail.com",
       "url": "https://codebyabi.github.io/",
       "sameAs": [
         "https://www.linkedin.com/in/abiwisnu",
@@ -40,11 +44,6 @@
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-
-  <div class="noise"></div>
-  <div class="grid-bg" id="gridBg"></div>
-  <div class="cursor" id="cursor"></div>
-  <div class="cursor-trail" id="cursorTrail"></div>
 
   <nav id="navbar" aria-label="Primary navigation">
     <a href="#hero" class="nav-logo">AW<em>.</em></a>
@@ -72,7 +71,7 @@
     </div>
   </nav>
 
-  <aside id="navDrawer" class="nav-drawer" aria-hidden="true">
+  <aside id="navDrawer" class="nav-drawer" aria-hidden="true" inert>
     <div class="nav-drawer-head">
       <span class="nav-drawer-title">Menu</span>
       <button type="button" class="nav-drawer-close" id="navDrawerClose" aria-label="Close navigation">✕</button>
@@ -91,8 +90,6 @@
 
   <main id="main-content">
     <section id="hero" class="hero-section">
-      <div class="hero-circle"></div>
-
       <div class="hero-content hero-shell">
         <div class="hero-copy">
           <p class="hero-nickname">Abira Wisnunggal</p>
@@ -122,7 +119,6 @@
               <li class="hero-proof-item">Nawatech</li>
               <li class="hero-proof-item">GAOTek</li>
               <li class="hero-proof-item">Home Credit Indonesia</li>
-              <li class="hero-proof-item">Gipsy Research</li>
               <li class="hero-proof-item hero-proof-award">Bronze · Pesta Data Nasional 2025</li>
             </ul>
           </div>
@@ -138,18 +134,13 @@
         </div>
       </div>
 
-      <div class="hero-scroll" aria-hidden="true">
-        <div class="scroll-track"></div>
-        Scroll
-      </div>
-
       <div class="hero-stats hero-stats-shell">
         <div class="h-stat">
-          <div class="n" data-count="6" data-suffix="+">0</div>
-          <div class="l">Roles & Internships</div>
+          <div class="n">6+</div>
+          <div class="l">Roles &amp; Internships</div>
         </div>
         <div class="h-stat">
-          <div class="n" data-count="6" data-suffix="">0</div>
+          <div class="n">6</div>
           <div class="l">Projects Built</div>
         </div>
       </div>
@@ -167,15 +158,18 @@
           </h3>
 
           <p class="about-intro">
-            I am a <strong>sixth-semester Data Science</strong> undergraduate at <strong>Nusa Mandiri University</strong>,
-            with a deep focus on Artificial Intelligence and real-world delivery.
+            I am a <strong>final-year Data Science</strong> undergraduate at <strong>Nusa Mandiri University</strong>
+            <strong>(GPA 3.73 / 4.00)</strong>, with <strong>1.5+ years</strong> of experience building LLM applications
+            (RAG, Text-to-SQL) and ML models for classification and forecasting.
           </p>
           <p>
-            My hands-on work spans <strong>end-to-end RAG pipelines</strong>, chatbot systems using LangChain,
-            statistical analysis with R and Python, and data dashboards for organizations.
+            My hands-on work spans <strong>end-to-end RAG pipelines</strong> (Hybrid RAG, Knowledge Graphs, vector retrieval
+            with pgvector), <strong>Text-to-SQL</strong> systems, and async AI infrastructure using FastAPI, Celery, RabbitMQ,
+            and Docker — alongside data annotation for autonomous-driving ground truth and BI dashboards with Looker Studio and Tableau.
           </p>
           <p>
-            I am actively seeking opportunities where I can build, ship, and improve AI systems with measurable impact.
+            Recognized with a <strong>Bronze Medal at PeDaS x APTIKOM 2025</strong> and ranked <strong>Top 160 of 448 teams
+            (97.12% accuracy)</strong> at Satria Data. I am actively seeking opportunities where I can build, ship, and improve AI systems with measurable impact.
           </p>
 
           <div class="about-kpi-grid" data-reveal="scale">
@@ -193,64 +187,44 @@
             </div>
           </div>
 
-          <div class="skill-grid about-skill-grid">
-            <span class="skill-chip skill-python" data-reveal data-delay="1">Python</span>
-            <span class="skill-chip skill-ml" data-reveal data-delay="2">Machine Learning</span>
-            <span class="skill-chip skill-dl" data-reveal data-delay="3">Deep Learning</span>
-            <span class="skill-chip skill-pytorch" data-reveal data-delay="4">PyTorch</span>
-            <span class="skill-chip skill-ds" data-reveal data-delay="2">Data Science</span>
-            <span class="skill-chip skill-sql" data-reveal data-delay="3">SQL</span>
-            <span class="skill-chip skill-r" data-reveal data-delay="4">R</span>
-            <span class="skill-chip skill-rag" data-reveal data-delay="2">RAG</span>
-            <span class="skill-chip skill-fastapi" data-reveal data-delay="3">FastAPI</span>
-            <span class="skill-chip skill-tableau" data-reveal data-delay="4">Tableau</span>
-          </div>
+          <ul class="skill-grid about-skill-grid">
+            <li class="skill-chip" data-d="data">Python</li>
+            <li class="skill-chip" data-d="ai">Machine Learning</li>
+            <li class="skill-chip" data-d="llm">RAG</li>
+            <li class="skill-chip" data-d="llm">Text-to-SQL</li>
+            <li class="skill-chip" data-d="llm">Azure OpenAI</li>
+            <li class="skill-chip" data-d="llm">FastAPI</li>
+            <li class="skill-chip" data-d="ai">PyTorch</li>
+            <li class="skill-chip" data-d="ai">Scikit-learn</li>
+            <li class="skill-chip" data-d="infra">PostgreSQL + pgvector</li>
+            <li class="skill-chip" data-d="infra">Docker</li>
+          </ul>
         </div>
 
         <div class="stack-card" data-reveal="right">
           <div class="stack-title">Current Tech Stack</div>
-          <div class="stack-rows">
-            <div class="stack-row stack-row-ai">
-              <span class="stack-ico">AI</span>
-              <div class="stack-main">
-                <span class="stack-domain">AI / ML</span>
-                <span class="stack-tools">PyTorch · Scikit-learn</span>
-              </div>
-              <span class="stack-level">Growing</span>
+          <dl class="stack-rows">
+            <div class="stack-row">
+              <dt class="stack-domain">AI / ML</dt>
+              <dd class="stack-tools">Scikit-learn · XGBoost · YOLOv8 · TensorFlow · PyTorch</dd>
             </div>
-            <div class="stack-row stack-row-llm">
-              <span class="stack-ico">LLM</span>
-              <div class="stack-main">
-                <span class="stack-domain">LLM Systems</span>
-                <span class="stack-tools">FastAPI · RAG</span>
-              </div>
-              <span class="stack-level">Strong</span>
+            <div class="stack-row">
+              <dt class="stack-domain">LLM Systems</dt>
+              <dd class="stack-tools">RAG · Text-to-SQL · Knowledge Graphs · Azure OpenAI</dd>
             </div>
-            <div class="stack-row stack-row-data">
-              <span class="stack-ico">DATA</span>
-              <div class="stack-main">
-                <span class="stack-domain">Data Stack</span>
-                <span class="stack-tools">Pandas · Tableau · R</span>
-              </div>
-              <span class="stack-level">Medium</span>
+            <div class="stack-row">
+              <dt class="stack-domain">Data Stack</dt>
+              <dd class="stack-tools">Pandas · NumPy · Tableau · Looker Studio</dd>
             </div>
-            <div class="stack-row stack-row-db">
-              <span class="stack-ico">DB</span>
-              <div class="stack-main">
-                <span class="stack-domain">Storage & Retrieval</span>
-                <span class="stack-tools">PostgreSQL · Elasticsearch</span>
-              </div>
-              <span class="stack-level">Strong</span>
+            <div class="stack-row">
+              <dt class="stack-domain">Storage &amp; Retrieval</dt>
+              <dd class="stack-tools">PostgreSQL · pgvector · MySQL · Redis</dd>
             </div>
-            <div class="stack-row stack-row-ops">
-              <span class="stack-ico">OPS</span>
-              <div class="stack-main">
-                <span class="stack-domain">Infra & Deployment</span>
-                <span class="stack-tools">Docker · RabbitMQ</span>
-              </div>
-              <span class="stack-level">Growing</span>
+            <div class="stack-row">
+              <dt class="stack-domain">Infra &amp; Deployment</dt>
+              <dd class="stack-tools">FastAPI · Docker · Celery · RabbitMQ</dd>
             </div>
-          </div>
+          </dl>
         </div>
       </div>
     </section>
@@ -259,34 +233,38 @@
       <h2 class="sr-only">Experience</h2>
       <div class="sec-label">02 &nbsp; Experience</div>
 
+      <p class="section-intro">
+        Six roles across AI engineering, data science, and analytics — from production
+        LLM systems to autonomous-driving ground truth and long-term data work. Select any role to see what I actually built.
+      </p>
+
       <div class="exp-grid">
         <article class="exp-card" data-reveal data-delay="1">
           <button type="button" class="exp-trigger" data-exp-trigger aria-expanded="false">
             <div class="exp-head">
               <div class="exp-brand">
                 <div class="exp-logo-slot">
-                       <img src="assets/img/nawatech%20logo.png" alt="Nawatech logo" width="120" height="120"
+                       <img src="assets/img/brin.jpg" alt="BRIN logo" width="120" height="120"
                        onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
                   <span class="exp-logo-ph">LOGO</span>
                 </div>
                 <div>
-                  <div class="exp-role">Machine Learning Engineer Intern</div>
-                  <div class="exp-company">Nawatech</div>
-                  <div class="exp-meta">Sep 2025 - Feb 2026 · 6 months · On-site</div>
+                  <div class="exp-role">AI Engineer Intern</div>
+                  <div class="exp-company">National Research and Innovation Agency (BRIN RI)</div>
+                  <div class="exp-meta">Sep 2026 - Present · Thamrin, Jakarta</div>
                 </div>
               </div>
               <div class="exp-toggle" aria-hidden="true">+</div>
             </div>
-            <div class="exp-preview">Built end-to-end chatbot pipelines and RAG services with FastAPI, Celery, PostgreSQL, and Elasticsearch.</div>
+            <div class="exp-preview">Built an AI Bibliometrics QA system over a 15-table PostgreSQL database with LLM routing across SQL, vector, semantic, and knowledge-graph search.</div>
           </button>
           <div class="exp-body">
             <div class="exp-body-inner">
               <div class="exp-body-label">Responsibilities</div>
               <ul class="exp-list">
-                <li>Developed chatbot pipelines integrating QnA, PDF, and Text-to-SQL datasets</li>
-                <li>Implemented RAG with FastAPI, Celery, PostgreSQL, and Elasticsearch</li>
-                <li>Built model evaluation workflow for accuracy, token usage, and latency tracking</li>
-                <li>Designed scalable architecture using Docker, RabbitMQ, and Celery</li>
+                <li>Built question-answering over 20 publications, 138 authors, and 344 keywords — evaluated on 94 test queries with 82.6% search relevance and 88.6% retrieval success</li>
+                <li>Built a Text-to-SQL pipeline with Qwen2.5-Coder, sqlglot, and PostgreSQL with validation rules for natural-language bibliometric questions</li>
+                <li>Added safeguards: read-only DB access, SQL-injection protection, 10s query timeouts, 60 req/min rate limiting, and citation verification — 726 unit/integration, 38 live E2E, and 12 retrieval regression tests passing</li>
               </ul>
             </div>
           </div>
@@ -297,27 +275,27 @@
             <div class="exp-head">
               <div class="exp-brand">
                 <div class="exp-logo-slot">
-                       <img src="assets/img/gao%20logo.jpeg" alt="GAOTek logo" width="120" height="120"
+                       <img src="assets/img/kupu%20logo.png" alt="Kupu ID logo" width="120" height="120"
                        onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
                   <span class="exp-logo-ph">LOGO</span>
                 </div>
                 <div>
-                  <div class="exp-role">AI Chatbot Development Intern</div>
-                  <div class="exp-company">GAOTek Inc.</div>
-                  <div class="exp-meta">Aug 2025 - Jan 2026 · Remote</div>
+                  <div class="exp-role">Data Annotator</div>
+                  <div class="exp-company">Kupu ID (Sinarmas Group subsidiary)</div>
+                  <div class="exp-meta">Aug 2026 - Sep 2026 · Thamrin, Jakarta</div>
                 </div>
               </div>
               <div class="exp-toggle" aria-hidden="true">+</div>
             </div>
-            <div class="exp-preview">Developing AI chatbots with LangChain for intent recognition and entity extraction.</div>
+            <div class="exp-preview">Produced ground-truth road labels across 10+ km for BYD France's autonomous-driving project.</div>
           </button>
           <div class="exp-body">
             <div class="exp-body-inner">
               <div class="exp-body-label">Responsibilities</div>
               <ul class="exp-list">
-                <li>Built chatbot solutions with retrieval and conversation workflows</li>
-                <li>Implemented intent recognition and entity extraction pipelines</li>
-                <li>Executed testing loops to improve answer quality and consistency</li>
+                <li>Annotated real road scenes for lanes, road borders and edges, stop lines, road markers, parking slots, and other road structures</li>
+                <li>Labeled lane centerlines by driving direction and lane type — one-way and two-way roads, general, emergency, bus, non-motorized, tram, and specialized lanes</li>
+                <li>Captured detailed marking boundaries at intersections (line intersections, colors, thickness, guidance and deceleration markings, faded markings) for consistent ground truth across road conditions</li>
               </ul>
             </div>
           </div>
@@ -328,28 +306,27 @@
             <div class="exp-head">
               <div class="exp-brand">
                 <div class="exp-logo-slot">
-                       <img src="assets/img/home%20credit%20logo.png" alt="Home Credit Indonesia logo" width="120" height="120"
+                       <img src="assets/img/nawatech%20logo.png" alt="Nawatech logo" width="120" height="120"
                        onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
                   <span class="exp-logo-ph">LOGO</span>
                 </div>
                 <div>
-                  <div class="exp-role">Data Scientist Intern</div>
-                  <div class="exp-company">Home Credit Indonesia · Internship</div>
-                  <div class="exp-meta">Sep 2025 - Oct 2025 · 2 mos · Remote</div>
+                  <div class="exp-role">Machine Learning Engineer Intern</div>
+                  <div class="exp-company">Nawa Darsana Technology (Nawatech)</div>
+                  <div class="exp-meta">Oct 2025 - Feb 2026 · 5 mos · Bintaro, Tangerang</div>
                 </div>
               </div>
               <div class="exp-toggle" aria-hidden="true">+</div>
             </div>
-            <div class="exp-preview">Supported data workflows, reporting, and visualization for analytics operations at Home Credit Indonesia.</div>
+            <div class="exp-preview">Developed the Demolabs AI Chatbot — QnA retrieval, RAG-based Text-to-SQL, PDF analysis, and dynamic charts, scoring 0.885 mean answer correctness on 60 DeepEval cases.</div>
           </button>
           <div class="exp-body">
             <div class="exp-body-inner">
               <div class="exp-body-label">Responsibilities</div>
               <ul class="exp-list">
-                <li>Assisted in data collection, cleaning, and preprocessing using Python and SQL to ensure accuracy and consistency in analytical workflows.</li>
-                <li>Utilized Excel for data summarization, reporting, and performance tracking to support day-to-day data operations.</li>
-                <li>Created data visualizations and dashboards to communicate findings effectively to the analytics team and stakeholders.</li>
-                <li>Collaborated with mentors and data professionals to strengthen technical skills and apply data-driven problem-solving in real-world corporate projects.</li>
+                <li>Built the backend with FastAPI, Celery, RabbitMQ, Redis, and Docker — 6 containers, 5 RabbitMQ queues, and 4 Celery workers for QnA, PDF, and SQL workloads</li>
+                <li>Developed the RAG and Text-to-SQL pipeline with pgvector and Azure OpenAI embeddings, including schema retrieval and few-shot SQL generation — 3.23s mean end-to-end latency on 60 benchmark queries (0.40s retrieval, 2.57s LLM generation)</li>
+                <li>Created an automated LLM evaluation and regression-testing setup with DeepEval and Azure OpenAI, generating Excel and Markdown reports across 60 test cases and difficulty levels</li>
               </ul>
             </div>
           </div>
@@ -360,27 +337,27 @@
             <div class="exp-head">
               <div class="exp-brand">
                 <div class="exp-logo-slot">
-                     <img src="assets/img/gipsy%20logo.jpeg" alt="Gipsy Research logo" width="120" height="120"
+                     <img src="assets/img/gao%20logo.jpeg" alt="GAOTek logo" width="120" height="120"
                        onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
                   <span class="exp-logo-ph">LOGO</span>
                 </div>
                 <div>
-                  <div class="exp-role">Statistician</div>
-                  <div class="exp-company">Gipsy Research</div>
-                  <div class="exp-meta">Jul 2025 - Dec 2025</div>
+                  <div class="exp-role">AI Chatbot Development Intern</div>
+                  <div class="exp-company">GAO TEK INC. · Remote</div>
+                  <div class="exp-meta">Oct 2025 - Jan 2026 · New York, America</div>
                 </div>
               </div>
               <div class="exp-toggle" aria-hidden="true">+</div>
             </div>
-            <div class="exp-preview">Designing experiments, running statistical analysis, and delivering actionable stakeholder insights.</div>
+            <div class="exp-preview">Built an LLM-based chatbot with intent classification and semantic retrieval at ~88% intent accuracy and ~2.5s average response time.</div>
           </button>
           <div class="exp-body">
             <div class="exp-body-inner">
               <div class="exp-body-label">Responsibilities</div>
               <ul class="exp-list">
-                <li>Designed experiment and data collection methodologies</li>
-                <li>Performed analysis using R, Python, SPSS, and SAS</li>
-                <li>Translated findings into decision-ready recommendations</li>
+                <li>Built an AI chatbot using LLM-based conversation, intent classification, and context-aware responses — reaching around 88% intent classification accuracy</li>
+                <li>Implemented semantic search and embedding-based retrieval, including query preprocessing, document chunking, and similarity matching</li>
+                <li>Tuned prompts and retrieval across response accuracy, retrieval quality, and latency to bring average response time to ~2.5 seconds</li>
               </ul>
             </div>
           </div>
@@ -391,27 +368,26 @@
             <div class="exp-head">
               <div class="exp-brand">
                 <div class="exp-logo-slot">
-                     <img src="assets/img/ppm%20al%20faqih%20mandiri%20logo.png" alt="PPM Al-Faqih Mandiri logo" width="120" height="120"
+                     <img src="assets/img/home%20credit%20logo.png" alt="Home Credit Indonesia logo" width="120" height="120"
                        onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
                   <span class="exp-logo-ph">LOGO</span>
                 </div>
                 <div>
-                  <div class="exp-role">Data Analyst</div>
-                  <div class="exp-company">PPM Al-Faqih Mandiri</div>
-                  <div class="exp-meta">Nov 2023 - Jun 2025 · 1.5 years</div>
+                  <div class="exp-role">Data Scientist Intern</div>
+                  <div class="exp-company">Home Credit Indonesia · Remote</div>
+                  <div class="exp-meta">Sep 2025 - Nov 2025 · 3 mos · Kebagusan, Jakarta</div>
                 </div>
               </div>
               <div class="exp-toggle" aria-hidden="true">+</div>
             </div>
-            <div class="exp-preview">Built curriculum data systems and dashboards, improving data reliability by 35%.</div>
+            <div class="exp-preview">Analyzed customer and operational data with Python and SQL to surface patterns and key metrics.</div>
           </button>
           <div class="exp-body">
             <div class="exp-body-inner">
               <div class="exp-body-label">Responsibilities</div>
               <ul class="exp-list">
-                <li>Built structured curriculum database using Google Sheets</li>
-                <li>Created monitoring dashboards with Google Data Studio</li>
-                <li>Improved data reliability by 35% through systematic cleaning</li>
+                <li>Analyzed customer and operational data using Python and SQL to identify patterns and key metrics across multiple datasets</li>
+                <li>Prepared and validated 5+ datasets through data cleaning, transformation, and quality checks</li>
               </ul>
             </div>
           </div>
@@ -422,27 +398,26 @@
             <div class="exp-head">
               <div class="exp-brand">
                 <div class="exp-logo-slot">
-                     <img src="assets/img/jkilogo.png" alt="PT Jaya Konsultan Indonesia logo" width="120" height="120"
+                     <img src="assets/img/ppm%20al%20faqih%20mandiri%20logo.png" alt="PPM Al Faqih Mandiri logo" width="120" height="120"
                        onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
                   <span class="exp-logo-ph">LOGO</span>
                 </div>
                 <div>
-                  <div class="exp-role">Web Developer Internship</div>
-                  <div class="exp-company">PT JAYA KONSULTAN INDONESIA</div>
-                  <div class="exp-meta">Feb 2022 - Apr 2022 · 3 mos<br>Jl. Warung Buncit Raya No.39 RT01/09, Kalibata, Kec.Pancoran, Jakarta Selatan 12740 · Remote</div>
+                  <div class="exp-role">Data Analyst</div>
+                  <div class="exp-company">PPM Al Faqih Mandiri</div>
+                  <div class="exp-meta">Aug 2023 - Jun 2025 · Depok, Indonesia</div>
                 </div>
               </div>
               <div class="exp-toggle" aria-hidden="true">+</div>
             </div>
-            <div class="exp-preview">Built LMS and e-learning features on WordPress/PHP stack to improve delivery efficiency and learner scale.</div>
+            <div class="exp-preview">Built 4 interactive Looker Studio dashboards and a centralized reporting pipeline covering 950+ records.</div>
           </button>
           <div class="exp-body">
             <div class="exp-body-inner">
               <div class="exp-body-label">Responsibilities</div>
               <ul class="exp-list">
-                <li>Developed and maintained an online learning platform using WordPress, increasing content delivery efficiency by 30%.</li>
-                <li>Designed and implemented a custom Learning Management System (LMS) using PHP, HTML, and CSS to accommodate over 100 learners.</li>
-                <li>Built e-commerce functionalities (shopping cart, payment gateway integration) for training material sales.</li>
+                <li>Built 4 interactive Looker Studio dashboards to monitor syllabus coverage, student progress, and assessment results across multiple departments</li>
+                <li>Consolidated student progress data from spreadsheet-based masterfiles into a centralized reporting pipeline, covering 950+ records and reducing manual data preparation for recurring reports</li>
               </ul>
             </div>
           </div>
@@ -454,46 +429,17 @@
       <h2 class="sr-only">Projects</h2>
       <div class="sec-label">03 &nbsp; Projects</div>
 
-      <div class="proj-grid">
-        <article class="proj-card" data-reveal data-delay="1" data-project="p2">
-          <div class="proj-img-slot">
-                <img src="assets/img/smartFAQ.jpg" loading="lazy" width="640" height="400"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                 alt="SmartFAQ Chatbot dashboard" />
-            <div class="proj-img-placeholder" style="display:none;">
-              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
-              <span>Add project image</span>
-              <span>assets/img/smartFAQ.jpg</span>
-            </div>
-          </div>
-          <div class="proj-body">
-            <div class="proj-num">001 · FLAGSHIP</div>
-            <h3 class="proj-title">SmartFAQ Chatbot (RAG Assistant)</h3>
-            <p class="proj-desc">Automated FAQ assistant with retrieval, intent routing, and backend orchestration for faster and more consistent responses.</p>
-            <div class="proj-tags">
-              <span class="proj-tag proj-tag-rag">RAG</span>
-              <span class="proj-tag proj-tag-langchain">LangChain</span>
-              <span class="proj-tag proj-tag-fastapi">FastAPI</span>
-              <span class="proj-tag proj-tag-postgres">PostgreSQL</span>
-            </div>
-            <ul class="proj-metrics">
-              <li>Latency and token usage monitoring pipeline integrated</li>
-              <li>Intent and answer-quality evaluation workflow implemented</li>
-              <li>Pagination + caching patterns for improved UX efficiency</li>
-            </ul>
-            <div class="proj-proof">
-              <a href="case-study-smartfaq.html">Case Study</a>
-              <a href="https://github.com/CodeByAbi/faq-chatbot" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-            <button type="button" class="proj-open-btn" data-project-open="p2">View Technical Details</button>
-          </div>
-        </article>
+      <p class="section-intro">
+        Six builds across LLM systems, forecasting, NLP, computer vision, and business
+        analytics — each documented with the approach, the tooling, and the outcome.
+      </p>
 
-        <article class="proj-card" data-reveal data-delay="2" data-project="p5">
+      <div class="proj-grid">
+        <article class="proj-card" data-reveal data-delay="1" data-project="p1">
           <div class="proj-img-slot">
                 <img src="assets/img/demolablogo.jpg" loading="lazy" width="640" height="400"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                 alt="Demolabs Chatbot data assistant interface" />
+                 alt="DemoLabs AI Chatbot data assistant interface" />
             <div class="proj-img-placeholder" style="display:none;">
               <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
               <span>Add project image</span>
@@ -501,130 +447,94 @@
             </div>
           </div>
           <div class="proj-body">
-            <div class="proj-num">002 · FEATURE KEY</div>
-            <h3 class="proj-title">Demolabs Chatbot</h3>
-            <p class="proj-desc">Built an end-to-end AI data assistant that converts natural language into executable SQL and context-aware visualizations using RAG and vector retrieval.</p>
+            <div class="proj-num">001 · FLAGSHIP</div>
+            <h3 class="proj-title">DemoLabs AI Chatbot (Nawatech Internship)</h3>
+            <p class="proj-desc">Multi-capability analytics assistant combining QnA retrieval, RAG-based Text-to-SQL generation, PDF/OCR document analysis, and dynamic chart creation in one conversational interface.</p>
             <div class="proj-tags">
-              <span class="proj-tag proj-tag-rag">RAG</span>
-              <span class="proj-tag">Text-to-SQL</span>
-              <span class="proj-tag">Celery</span>
-              <span class="proj-tag">Azure Blob</span>
+              <span class="proj-tag" data-d="llm">RAG</span>
+              <span class="proj-tag" data-d="llm">Text-to-SQL</span>
+              <span class="proj-tag" data-d="llm">Celery</span>
+              <span class="proj-tag" data-d="infra">Docker</span>
             </div>
             <ul class="proj-metrics">
-              <li>Natural-language query to SQL generation with retrieval-backed context</li>
-              <li>Semantic intent + data-shape parsing for adaptive chart rendering</li>
-              <li>Async architecture with Celery, Redis memory, and signed URL chart delivery</li>
+              <li>0.885 mean answer correctness on 60 DeepEval test cases</li>
+              <li>3.23s mean end-to-end latency (0.40s retrieval, 2.57s LLM generation)</li>
+              <li>Async microservice architecture: 6 containers, 5 RabbitMQ queues, 4 Celery workers</li>
             </ul>
             <div class="proj-proof">
               <a href="assets/vid/demolabs%20chatbot%20video.mp4" target="_blank" rel="noopener noreferrer">Demo Video</a>
-              <a href="#contact">Request Demo</a>
-            </div>
-            <button type="button" class="proj-open-btn" data-project-open="p5">View Technical Details</button>
-          </div>
-        </article>
-
-        <article class="proj-card" data-reveal data-delay="3" data-project="p1">
-          <div class="proj-img-slot">
-                <img src="assets/img/rainfall%20project.jpg" loading="lazy" width="640" height="400"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                 alt="Rainfall prediction model output" />
-            <div class="proj-img-placeholder" style="display:none;">
-              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
-              <span>Add project image</span>
-              <span>assets/img/rainfall project.jpg</span>
-            </div>
-          </div>
-          <div class="proj-body">
-            <div class="proj-num">003</div>
-            <h3 class="proj-title">Rainfall Prediction in Australia</h3>
-            <p class="proj-desc">Weather classification pipeline to support agriculture planning, disaster mitigation, and climate insight decisions.</p>
-            <div class="proj-tags">
-              <span class="proj-tag proj-tag-ml">Machine Learning</span>
-              <span class="proj-tag proj-tag-python">Python</span>
-              <span class="proj-tag proj-tag-sklearn">Scikit-learn</span>
-              <span class="proj-tag proj-tag-ds">Data Science</span>
-            </div>
-            <ul class="proj-metrics">
-              <li>Feature engineering and cross-validation benchmarking included</li>
-              <li>Model comparison workflow for precision and recall tracked</li>
-              <li>Explainable analysis through EDA visual diagnostics</li>
-            </ul>
-            <div class="proj-proof">
-              <a href="https://github.com/CodeByAbi/Rainfall-Prediction-in-Australia" target="_blank" rel="noopener noreferrer">GitHub</a>
-              <a href="assets/img/rainfall%20project.jpg" target="_blank" rel="noopener noreferrer">Result Screenshot</a>
+              <a href="https://github.com/CodeByAbi/faq-chatbot" target="_blank" rel="noopener noreferrer">GitHub</a>
             </div>
             <button type="button" class="proj-open-btn" data-project-open="p1">View Technical Details</button>
           </div>
         </article>
 
-        <article class="proj-card" data-reveal data-delay="4" data-project="p3">
+        <article class="proj-card" data-reveal data-delay="2" data-project="p2">
           <div class="proj-img-slot">
-                <img src="assets/img/house%20prediction%20tebet.jpg" loading="lazy" width="640" height="400"
+                <img src="assets/img/nuxio.jpg" loading="lazy" width="640" height="400"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                 alt="House price prediction charts" />
+                 alt="nuxio.ai financial planning platform" />
             <div class="proj-img-placeholder" style="display:none;">
               <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
               <span>Add project image</span>
-              <span>assets/img/house prediction tebet.jpg</span>
+              <span>assets/img/nuxio.jpg</span>
             </div>
           </div>
           <div class="proj-body">
-            <div class="proj-num">004</div>
-            <h3 class="proj-title">House Price Prediction: Tebet</h3>
-            <p class="proj-desc">Regression model to estimate property value using structural and location-based variables.</p>
+            <div class="proj-num">002 · FEATURE KEY</div>
+            <h3 class="proj-title">nuxio.ai</h3>
+            <p class="proj-desc">AI-powered financial planning platform with a Gemini-based Financial Copilot and forward-looking forecasting — multi-wallet management, budgeting, savings goals, and scheduled transactions. <span class="proj-date">Sep 2026 – Present</span></p>
             <div class="proj-tags">
-              <span class="proj-tag proj-tag-regression">Regression</span>
-              <span class="proj-tag proj-tag-pandas">Pandas</span>
-              <span class="proj-tag proj-tag-sklearn">Scikit-learn</span>
-              <span class="proj-tag proj-tag-eda">EDA</span>
+              <span class="proj-tag" data-d="infra">Next.js</span>
+              <span class="proj-tag" data-d="infra">TypeScript</span>
+              <span class="proj-tag" data-d="infra">Supabase</span>
+              <span class="proj-tag" data-d="llm">Gemini</span>
             </div>
             <ul class="proj-metrics">
-              <li>Feature correlation review and variable selection applied</li>
-              <li>Model iteration for MAE and error stability benchmarking</li>
-              <li>Comparison baseline against manual market estimation</li>
+              <li>Gemini-based Financial Copilot with structured AI outputs</li>
+              <li>Multi-wallet management, budgeting, and savings-goal tracking</li>
+              <li>Scheduled transaction planning on PostgreSQL (Supabase)</li>
             </ul>
             <div class="proj-proof">
-              <a href="https://github.com/CodeByAbi/house-price-prediction" target="_blank" rel="noopener noreferrer">GitHub</a>
-              <a href="assets/img/house%20prediction%20tebet.jpg" target="_blank" rel="noopener noreferrer">Output Screenshot</a>
+              <a href="#contact">Request Demo</a>
+            </div>
+            <button type="button" class="proj-open-btn" data-project-open="p2">View Technical Details</button>
+          </div>
+        </article>
+
+        <article class="proj-card" data-reveal data-delay="3" data-project="p3">
+          <div class="proj-img-slot">
+                <img src="assets/img/student%20progress%20dashboard.jpg" loading="lazy" width="640" height="400"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                 alt="Student Progress Analytics Dashboard" />
+            <div class="proj-img-placeholder" style="display:none;">
+              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
+              <span>Add project image</span>
+              <span>assets/img/student progress dashboard.jpg</span>
+            </div>
+          </div>
+          <div class="proj-body">
+            <div class="proj-num">003</div>
+            <h3 class="proj-title">Student Progress Analytics Dashboard</h3>
+            <p class="proj-desc">Interactive Looker Studio dashboard tracking Qur'an and Hadits memorization progress across student cohorts. <span class="proj-date">Jan 2025 - Apr 2025</span></p>
+            <div class="proj-tags">
+              <span class="proj-tag" data-d="data">Looker Studio</span>
+              <span class="proj-tag" data-d="data">Analytics</span>
+              <span class="proj-tag" data-d="data">Dashboard</span>
+            </div>
+            <ul class="proj-metrics">
+              <li>Per-student completion rates aggregated to class- and cohort-level summaries</li>
+              <li>Curriculum monitoring views for memorization progress</li>
+              <li>Centralized reporting from spreadsheet-based masterfiles</li>
+            </ul>
+            <div class="proj-proof">
+              <a href="#contact">Request Demo</a>
             </div>
             <button type="button" class="proj-open-btn" data-project-open="p3">View Technical Details</button>
           </div>
         </article>
 
-        <article class="proj-card" data-reveal data-delay="5" data-project="p4">
-          <div class="proj-img-slot">
-              <img src="assets/img/EV%20project.jpg" loading="lazy" width="640" height="400"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                 alt="Electric vehicle Tableau dashboard" />
-            <div class="proj-img-placeholder" style="display:none;">
-              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
-              <span>Add project image</span>
-              <span>assets/img/EV project.jpg</span>
-            </div>
-          </div>
-          <div class="proj-body">
-            <div class="proj-num">005</div>
-            <h3 class="proj-title">Electric Vehicle Data Analysis</h3>
-            <p class="proj-desc">Exploratory analytics and Tableau storytelling on US EV adoption trends and infrastructure readiness.</p>
-            <div class="proj-tags">
-              <span class="proj-tag proj-tag-tableau">Tableau</span>
-              <span class="proj-tag proj-tag-eda">EDA</span>
-              <span class="proj-tag proj-tag-analytics">Analytics</span>
-            </div>
-            <ul class="proj-metrics">
-              <li>State-level trend exploration and market segmentation</li>
-              <li>Comparative dashboard views for policy and investment insight</li>
-              <li>Data cleaning pipeline before visualization publishing</li>
-            </ul>
-            <div class="proj-proof">
-              <a href="https://github.com/CodeByAbi/ev-data-analysis" target="_blank" rel="noopener noreferrer">GitHub</a>
-              <a href="assets/img/EV%20project.jpg" target="_blank" rel="noopener noreferrer">Dashboard Screenshot</a>
-            </div>
-            <button type="button" class="proj-open-btn" data-project-open="p4">View Technical Details</button>
-          </div>
-        </article>
-
-        <article class="proj-card" data-reveal data-delay="6" data-project="p6">
+        <article class="proj-card" data-reveal data-delay="4" data-project="p4">
           <div class="proj-img-slot">
               <img src="assets/img/sentiment%20analysis%20telco%20tweets.png" loading="lazy" width="640" height="400"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -636,22 +546,87 @@
             </div>
           </div>
           <div class="proj-body">
-            <div class="proj-num">006</div>
+            <div class="proj-num">004</div>
             <h3 class="proj-title">Sentiment Analysis Telco Tweets</h3>
-            <p class="proj-desc">Sentiment analysis study on Telco tweets to classify customer opinions into positive, negative, and neutral classes using machine learning.</p>
+            <p class="proj-desc">TF-IDF and Logistic Regression classification of customer sentiment from ~10,000 telecom tweets. <span class="proj-date">Jun 2025 - Sep 2025</span></p>
             <div class="proj-tags">
-              <span class="proj-tag">NLP</span>
-              <span class="proj-tag proj-tag-ml">Machine Learning</span>
-              <span class="proj-tag proj-tag-python">Python</span>
-              <span class="proj-tag">Twitter</span>
+              <span class="proj-tag" data-d="llm">NLP</span>
+              <span class="proj-tag" data-d="ai">Logistic Regression</span>
+              <span class="proj-tag" data-d="ai">TF-IDF</span>
+              <span class="proj-tag" data-d="data">Python</span>
             </div>
             <ul class="proj-metrics">
-              <li>Three-class labeled tweet dataset used for supervised classification</li>
-              <li>Text preprocessing and model training pipeline with benchmark comparison</li>
-              <li>Class-level precision, recall, and F1 evaluation for performance validation</li>
+              <li>0.82 F1-score on three-class customer sentiment classification</li>
+              <li>Top recurring negative keywords identified for service improvement</li>
+              <li>Text preprocessing and benchmarked model comparison pipeline</li>
             </ul>
             <div class="proj-proof">
               <a href="https://github.com/CodeByAbi/Sentiment-Analysis-Telco-Tweets" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+            <button type="button" class="proj-open-btn" data-project-open="p4">View Technical Details</button>
+          </div>
+        </article>
+
+        <article class="proj-card" data-reveal data-delay="5" data-project="p5">
+          <div class="proj-img-slot">
+              <img src="assets/img/car%20sales%20forecasting.jpg" loading="lazy" width="640" height="400"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                 alt="Top 5 car sales forecasting charts" />
+            <div class="proj-img-placeholder" style="display:none;">
+              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
+              <span>Add project image</span>
+              <span>assets/img/car sales forecasting.jpg</span>
+            </div>
+          </div>
+          <div class="proj-body">
+            <div class="proj-num">005</div>
+            <h3 class="proj-title">Time Series Forecasting Top 5 Car Sales Indonesia</h3>
+            <p class="proj-desc">Full forecasting pipeline — preprocessing, trend and seasonality analysis, multi-model training across SARIMA, Prophet, and LSTM. <span class="proj-date">Jul 2024 - Sep 2024</span></p>
+            <div class="proj-tags">
+              <span class="proj-tag" data-d="ai">SARIMA</span>
+              <span class="proj-tag" data-d="ai">Prophet</span>
+              <span class="proj-tag" data-d="ai">LSTM</span>
+              <span class="proj-tag" data-d="ai">Forecasting</span>
+            </div>
+            <ul class="proj-metrics">
+              <li>SMAPE below 10% across all 5 car brands</li>
+              <li>Trend and seasonality decomposition per brand</li>
+              <li>Multi-model training and comparison workflow</li>
+            </ul>
+            <div class="proj-proof">
+              <a href="#contact">Request Details</a>
+            </div>
+            <button type="button" class="proj-open-btn" data-project-open="p5">View Technical Details</button>
+          </div>
+        </article>
+
+        <article class="proj-card" data-reveal data-delay="6" data-project="p6">
+          <div class="proj-img-slot">
+              <img src="assets/img/traffic%20monitoring%20yolo.jpg" loading="lazy" width="640" height="400"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                 alt="Traffic monitoring system with YOLOv8 detection" />
+            <div class="proj-img-placeholder" style="display:none;">
+              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.75" cy="10" r="1.5"/><path d="M3.75 17.5 8.5 13l3.75 3.25L16 12.5l4.25 4"/></svg></span>
+              <span>Add project image</span>
+              <span>assets/img/traffic monitoring yolo.jpg</span>
+            </div>
+          </div>
+          <div class="proj-body">
+            <div class="proj-num">006</div>
+            <h3 class="proj-title">Traffic Monitoring System using YOLOv8 + DeepSORT</h3>
+            <p class="proj-desc">Real-time vehicle detection and multi-object tracking for traffic flow analysis and vehicle counting. <span class="proj-date">Jun 2024 - Jul 2024</span></p>
+            <div class="proj-tags">
+              <span class="proj-tag" data-d="ai">YOLOv8</span>
+              <span class="proj-tag" data-d="ai">DeepSORT</span>
+              <span class="proj-tag" data-d="ai">Computer Vision</span>
+            </div>
+            <ul class="proj-metrics">
+              <li>YOLOv8 vehicle detection with DeepSORT multi-object tracking</li>
+              <li>Persistent vehicle ID tracking across video frames</li>
+              <li>Traffic flow analysis and vehicle counting outputs</li>
+            </ul>
+            <div class="proj-proof">
+              <a href="#contact">Request Demo</a>
             </div>
             <button type="button" class="proj-open-btn" data-project-open="p6">View Technical Details</button>
           </div>
@@ -690,20 +665,18 @@
             </div>
           </div>
           <div class="cert-body">
-            <div class="cert-badge"></div>
             <div class="cert-meta-row">
               <span class="cert-level">Professional Credential</span>
               <span class="cert-status cert-status-verified">Verified</span>
             </div>
-            <div class="cert-issuer">BNSP</div>
-            <div class="cert-name">AWS Certified Data Analytics</div>
-            <div class="cert-date">Issued · Aug 2025 · Expires · Aug 2028</div>
-            <div class="cert-id">Credential ID: BNSP-DA-2025-AW-017</div>
-            <div class="cert-desc">Validates practical competency in data pipelines, analytical modeling, and decision-ready reporting workflows.</div>
+            <div class="cert-issuer">BNSP (National Professional Certification Agency)</div>
+            <div class="cert-name">Associate Data Scientist</div>
+            <div class="cert-date">Professional Certification</div>
+            <div class="cert-desc">Nationally certified competency in data pipelines, analytical modeling, and decision-ready reporting workflows.</div>
             <div class="cert-tags">
-              <span class="cert-tag cert-tag-analytics">Analytics</span>
-              <span class="cert-tag cert-tag-ml">ML</span>
-              <span class="cert-tag cert-tag-decision">Decision Support</span>
+              <span class="cert-tag" data-d="data">Analytics</span>
+              <span class="cert-tag" data-d="ai">ML</span>
+              <span class="cert-tag" data-d="data">Decision Support</span>
             </div>
             <div class="cert-actions">
               <a href="assets/img/bnsp%20logo.png" class="cert-btn cert-btn-primary" target="_blank" rel="noopener noreferrer">View Credential</a>
@@ -723,20 +696,18 @@
             </div>
           </div>
           <div class="cert-body">
-            <div class="cert-badge"></div>
             <div class="cert-meta-row">
               <span class="cert-level">Skills Credential</span>
               <span class="cert-status cert-status-verified">Verified</span>
             </div>
             <div class="cert-issuer">Skilvul</div>
-            <div class="cert-name">Python Advanced</div>
-            <div class="cert-date">Oct 2023 - Nov 2027</div>
-            <div class="cert-id">Credential ID: SKV-PY-ADV-2023-1192</div>
+            <div class="cert-name">Python Advanced for Data Science</div>
+            <div class="cert-date">Skills Credential</div>
             <div class="cert-desc">Demonstrates advanced Python proficiency for automation, data processing, and reusable script architecture.</div>
             <div class="cert-tags">
-              <span class="cert-tag cert-tag-python">Python</span>
-              <span class="cert-tag cert-tag-automation">Automation</span>
-              <span class="cert-tag cert-tag-data">Data Processing</span>
+              <span class="cert-tag" data-d="data">Python</span>
+              <span class="cert-tag" data-d="llm">Automation</span>
+              <span class="cert-tag" data-d="data">Data Processing</span>
             </div>
             <div class="cert-actions">
               <a href="https://drive.google.com/file/d/1hykYR7Yqpy7DlC1m2R2PwKDR5HH-YRTZ/view?usp=drive_link" class="cert-btn cert-btn-primary" target="_blank" rel="noopener noreferrer">View Credential</a>
@@ -756,23 +727,52 @@
             </div>
           </div>
           <div class="cert-body">
-            <div class="cert-badge"></div>
             <div class="cert-meta-row">
               <span class="cert-level">Bootcamp Completion</span>
               <span class="cert-status">Completion</span>
             </div>
-            <div class="cert-issuer">Revou</div>
-            <div class="cert-name">Data Analytics Bootcamp</div>
-            <div class="cert-date">Issued · Aug 2022</div>
-            <div class="cert-id">Credential ID: REV-DA-BT-2022-882</div>
+            <div class="cert-issuer">RevoU</div>
+            <div class="cert-name">Data Analytics Intensive Bootcamp</div>
+            <div class="cert-date">Bootcamp Completion</div>
             <div class="cert-desc">Completed intensive analytics training covering data storytelling, SQL fundamentals, and dashboard communication.</div>
             <div class="cert-tags">
-              <span class="cert-tag cert-tag-sql">SQL</span>
-              <span class="cert-tag cert-tag-dashboard">Dashboard</span>
-              <span class="cert-tag cert-tag-storytelling">Storytelling</span>
+              <span class="cert-tag" data-d="data">SQL</span>
+              <span class="cert-tag" data-d="data">Dashboard</span>
+              <span class="cert-tag" data-d="data">Storytelling</span>
             </div>
             <div class="cert-actions">
               <a href="https://drive.google.com/file/d/1c5hGWDm6o_KPXso1Dc7Gxs9A1gcderMj/view?usp=drive_link" class="cert-btn cert-btn-primary" target="_blank" rel="noopener noreferrer">View Credential</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="cert-card" data-reveal data-delay="4">
+          <div class="cert-img-slot">
+              <img src="assets/img/dicoding%20logo.png" loading="lazy" width="640" height="360"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                 alt="Dicoding certificate" />
+            <div class="cert-img-placeholder" style="display:none;">
+              <span class="ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9.5" r="5.75"/><path d="m8.25 14.25-1 7 4.75-2.5 4.75 2.5-1-7"/></svg></span>
+              <span>Add cert image</span>
+              <span>assets/img/dicoding logo.png</span>
+            </div>
+          </div>
+          <div class="cert-body">
+            <div class="cert-meta-row">
+              <span class="cert-level">Course Completion</span>
+              <span class="cert-status">Completion</span>
+            </div>
+            <div class="cert-issuer">Dicoding Indonesia</div>
+            <div class="cert-name">Data Visualization</div>
+            <div class="cert-date">Course Completion</div>
+            <div class="cert-desc">Completed data visualization training covering chart selection, dashboard design, and visual storytelling with data.</div>
+            <div class="cert-tags">
+              <span class="cert-tag" data-d="data">Visualization</span>
+              <span class="cert-tag" data-d="data">Dashboard</span>
+              <span class="cert-tag" data-d="data">Storytelling</span>
+            </div>
+            <div class="cert-actions">
+              <a href="#contact" class="cert-btn cert-btn-primary">Request Credential</a>
             </div>
           </div>
         </article>
@@ -792,13 +792,23 @@
           <div class="honor-year">Aug 2025</div>
           <div class="honor-right">
             <div class="honor-pill">Featured Achievement</div>
-            <div class="honor-title">Bronze Medalist Pesta Data Nasional x UIN</div>
+            <div class="honor-title">Bronze Medalist Pesta Data Nasional x APTIKOM</div>
             <div class="honor-org">APTIKOM Collaboration</div>
-            <div class="honor-meta">Result · 3rd Place (Bronze Medal) | Scale · National Data Competition</div>
+            <div class="honor-meta">Result · Bronze Medal (3rd Place) | Scale · National Data Competition · 2025</div>
             <div class="honor-desc">Built and presented an applied data solution under competitive constraints, demonstrating strong analytical reasoning and delivery quality.</div>
             <div class="honor-actions">
               <a href="https://drive.google.com/file/d/1Ua_zAi61K-UGfK5cJwyF1Dm9JQUEHskc/view" target="_blank" rel="noopener noreferrer">View Certificate</a>
             </div>
+          </div>
+        </article>
+
+        <article class="honor-item" data-reveal data-delay="1">
+          <div class="honor-year">2025</div>
+          <div class="honor-right">
+            <div class="honor-title">Top 160 of 448 Teams — Satria Data Competition</div>
+            <div class="honor-org">Satria Data (National Data Competition)</div>
+            <div class="honor-meta">Result · Top 160 / 448 Teams · 97.12% accuracy | Scale · National · Preliminary Stage</div>
+            <div class="honor-desc">Ranked in the top 160 of 448 teams with a 97.12% accuracy score during the preliminary stage.</div>
           </div>
         </article>
 
@@ -815,13 +825,23 @@
           </div>
         </article>
 
+        <article class="honor-item" data-reveal data-delay="3">
+          <div class="honor-year">2025</div>
+          <div class="honor-right">
+            <div class="honor-title">Agentic AI Hackathon — Top 5 Abstract Competition</div>
+            <div class="honor-org">Agentic AI Hackathon</div>
+            <div class="honor-meta">Result · Top 5 Abstract | Scale · Hackathon</div>
+            <div class="honor-desc">Placed in the Top 5 Abstract Competition with an applied agentic-AI concept.</div>
+          </div>
+        </article>
+
         <article class="honor-item" data-reveal data-delay="4">
           <div class="honor-year">Dec 2023</div>
           <div class="honor-right">
-            <div class="honor-title">International Invitational Contest of IoT Technology</div>
+            <div class="honor-title">3rd Place — International Invitational Contest of IoT Technology</div>
             <div class="honor-org">China-ASEAN Education Cooperation Week</div>
-            <div class="honor-meta">Result · International Participant | Scale · Multi-country Innovation Contest</div>
-            <div class="honor-desc">Collaborated in an international IoT challenge environment, strengthening technical communication and solution framing across teams.</div>
+            <div class="honor-meta">Result · 3rd Place | Scale · Multi-country Innovation Contest</div>
+            <div class="honor-desc">Placed 3rd in an international IoT challenge environment, strengthening technical communication and solution framing across teams.</div>
             <div class="honor-actions">
               <a href="https://drive.google.com/file/d/1uFyr2a0_WMucfmKee1pl4GH5Tr0hglMc/view?usp=drive_link" target="_blank" rel="noopener noreferrer">View Certificate</a>
             </div>
@@ -916,25 +936,25 @@
             Share your use case and I will respond quickly.
           </p>
           <div class="contact-links">
-            <a href="mailto:abirawisnu7@gmail.com" class="c-link">
+            <a href="mailto:abirawisnu@gmail.com" class="c-link">
               <span class="c-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.75" y="5.25" width="18.5" height="13.5" rx="2"/><path d="M3.5 7.5 12 13.5l8.5-6"/></svg>
               </span>
-              abirawisnu7@gmail.com
+              <span class="c-text">abirawisnu@gmail.com</span>
               <span class="c-label">Email</span>
             </a>
             <a href="https://www.linkedin.com/in/abiwisnu" target="_blank" rel="noopener noreferrer" class="c-link">
               <span class="c-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.86-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.23 0Z"/></svg>
               </span>
-              www.linkedin.com/in/abiwisnu
+              <span class="c-text">www.linkedin.com/in/abiwisnu</span>
               <span class="c-label">LinkedIn</span>
             </a>
             <a href="https://github.com/CodeByAbi" target="_blank" rel="noopener noreferrer" class="c-link">
               <span class="c-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.11.82-.26.82-.58v-2.2c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.62-5.48 5.92.43.36.81 1.1.81 2.22v3.29c0 .32.21.7.83.58A12 12 0 0 0 12 .3Z"/></svg>
               </span>
-              github.com/CodeByAbi
+              <span class="c-text">github.com/CodeByAbi</span>
               <span class="c-label">GitHub</span>
             </a>
           </div>
@@ -957,7 +977,7 @@
           </div>
           <div class="f-grp">
             <label class="f-lbl" for="contactMessage">Message</label>
-            <textarea id="contactMessage" name="message" class="f-txt" placeholder="Tell me about your project or opportunity..." required minlength="20" aria-describedby="messageError"></textarea>
+            <textarea id="contactMessage" name="message" class="f-txt" placeholder="Tell me about your project or opportunity..." required minlength="20" rows="5" aria-describedby="messageError"></textarea>
             <p class="f-err" id="messageError"></p>
           </div>
           <button type="submit" class="f-submit">Send Message →</button>
@@ -968,8 +988,7 @@
   </main>
 
   <footer>
-    <div class="footer-glow"></div>
-    <div class="footer-big-text">ABIRA WISNUNGGAL</div>
+    <div class="footer-big-text" aria-hidden="true">ABIRA WISNUNGGAL</div>
 
     <div class="footer-top">
       <div class="footer-brand">
@@ -983,7 +1002,7 @@
       <div>
         <div class="footer-col-label">Connect</div>
         <div class="footer-links-col">
-          <a href="mailto:abirawisnu7@gmail.com" class="footer-link">
+          <a href="mailto:abirawisnu@gmail.com" class="footer-link">
             Email
             <span class="fl-arr">→</span>
           </a>
