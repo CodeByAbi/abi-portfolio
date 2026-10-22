@@ -529,31 +529,19 @@ section {
   border-radius: var(--r8); overflow: hidden;
   position: relative;
 }
-/* Same hover contract as .proj-card: border to ink, no translate. */
-.cert-card:hover { box-shadow: var(--sh-md); border-color: var(--ink); }
 .cert-img-slot {
   width: 100%; height: 160px; background: var(--bg);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; position: relative;
 }
-.cert-img-slot img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease-s); }
-.cert-card:hover .cert-img-slot img { transform: scale(1.05); }
-.cert-img-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  font-family: var(--fm); font-size: 9px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-4); user-select: none;
-}
-.cert-img-placeholder .ph-ico { opacity: .4; display: flex; }
-.cert-img-placeholder span:not(.ph-ico) { font-size: 9px; opacity: .6; }
+.cert-img-slot img { width: 100%; height: 100%; object-fit: cover; }
 .cert-body { padding: 20px; }
-/* .cert-badge removed: an unconditional green dot is a "verified" claim the
-   page cannot make, and colour alone conveyed it. Where verification actually
-   exists it is stated in text via .cert-status-verified. */
-.cert-issuer { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 7px; }
-.cert-name   { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
-.cert-date   { font-family: var(--fm); font-size: 10px; color: var(--ink-4); }
-.cert-desc   { font-size: 12px; color: var(--ink-3); margin-top: 7px; line-height: 1.55; }
+/* No "Verified" pills or badges: the page cannot verify anything itself. A
+   credential is backed by its link, or it carries no button at all. */
+.cert-issuer { font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 7px; }
+.cert-name   { font-family: var(--fd); font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
+.cert-desc   { font-size: 13px; color: var(--ink-3); margin-top: 7px; line-height: 1.6; }
 .section-intro {
   max-width: 760px;
   margin: -24px 0 24px;
@@ -561,63 +549,14 @@ section {
   line-height: 1.75;
   color: var(--ink-2);
 }
-.cert-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
 .cert-level {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .07em;
   text-transform: uppercase;
   color: var(--ink-3);
+  margin-bottom: 8px;
 }
-.cert-status {
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: #6f6b66;
-  border: 1px solid #d4d0ca;
-  border-radius: 999px;
-  padding: 3px 8px;
-  background: #f6f4ef;
-}
-.cert-status-verified {
-  color: #166534;
-  border-color: #86d39b;
-  background: #e9f8ed;
-}
-.cert-id {
-  margin-top: 6px;
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .05em;
-  color: #6f6b66;
-}
-.cert-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-.cert-tag {
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 4px 8px;
-  color: var(--ink-3);
-  background: #faf9f6;
-}
-
-/* 9 coloured certificate tag variants removed — same neutral chip as project
-   and skill tags. One chip style for every label on the page. */
 
 .cert-actions {
   display: flex;
@@ -625,32 +564,19 @@ section {
   gap: 8px;
   margin-top: 14px;
 }
+/* Text links, not filled pills: "open the credential" is a secondary action
+   on a card whose content is the credential itself. */
 .cert-btn {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 7px 10px;
-  color: var(--ink-2);
-  background: #fff;
-  transition: border-color .2s, color .2s, background .2s;
-}
-.cert-btn:hover {
-  border-color: var(--ink);
   color: var(--ink);
+  border-bottom: 1px solid var(--line-2);
+  padding: 6px 0;
+  transition: border-color .2s;
 }
-.cert-btn-primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-.cert-btn-primary:hover {
-  background: #000;
-  border-color: #000;
-  color: #fff;
-}
+.cert-btn:hover { border-color: var(--ink); }
 
 /* ======================== HONORS ======================== */
 #honors { border-top: 1px solid var(--line); }
@@ -669,7 +595,7 @@ section {
 .honor-year { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-4); padding-top: 4px; }
 .honor-right { padding-left: 32px; }
 .honor-title { font-family: var(--fd); font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 5px; line-height: 1.25; }
-.honor-org   { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 10px; }
+.honor-org   { font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 10px; }
 /* Capped at 720px: the honor items span the full 1064px content column, so an
    uncapped .honor-desc ran to ~1100px — the longest measure anywhere on the
    page. Every other prose block is already held to 680-760px (.pg-sub,
@@ -677,9 +603,9 @@ section {
 .honor-desc  { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); max-width: 720px; }
 .honor-meta {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .05em;
-  color: var(--ink-4);
+  color: var(--ink-3);
   margin-bottom: 10px;
 }
 .honor-pill {
