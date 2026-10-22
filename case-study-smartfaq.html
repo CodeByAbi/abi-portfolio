@@ -3,112 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flagship Case Study | SmartFAQ RAG Assistant</title>
-  <meta name="description" content="Deep dive case study of SmartFAQ RAG assistant: architecture, trade-offs, production readiness, and measurable engineering outcomes." />
+  <!-- Filename kept as case-study-smartfaq.html because the hero CTA links here
+       and the hero is locked (AGENTS.md). The content is the DemoLabs project. -->
+  <title>DemoLabs AI Chatbot | Case Study | Abira Wisnunggal</title>
+  <meta name="description" content="Case study of the DemoLabs AI Chatbot built during a Nawatech internship: RAG and Text-to-SQL on FastAPI, Celery and RabbitMQ, evaluated at 0.885 mean answer correctness on 60 DeepEval cases." />
+  <link rel="canonical" href="https://codebyabi.github.io/case-study-smartfaq.html" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/aw-logo.svg" />
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    body { cursor: auto; }
-    .case-wrap {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 110px 24px 80px;
-      position: relative;
-      z-index: 1;
-    }
-    .case-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .case-nav a {
-      font-family: var(--fm);
-      font-size: 11px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      border: 1px solid var(--line-2);
-      padding: 8px 12px;
-      border-radius: var(--r4);
-      color: var(--ink-2);
-    }
-    .case-nav a:hover { border-color: var(--ink); color: var(--ink); }
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    .case-title {
-      font-family: var(--fd);
-      font-size: clamp(36px, 6.8vw, 72px);
-      letter-spacing: -.04em;
-      line-height: .95;
-      margin-bottom: 12px;
-      color: var(--ink);
-    }
-    .case-sub {
-      font-size: 18px;
-      line-height: 1.7;
-      color: var(--ink-2);
-      max-width: 820px;
-      margin-bottom: 20px;
-    }
-    .case-kpi {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin: 24px 0 40px;
-    }
-    .case-kpi-card {
-      border: 1px solid var(--line);
-      border-radius: var(--r8);
-      padding: 16px;
-      background: var(--bg-card);
-    }
-    .case-kpi-label {
-      font-family: var(--fm);
-      font-size: 11px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: #6f6b66;
-      margin-bottom: 10px;
-    }
-    .case-kpi-value {
-      font-family: var(--fd);
-      font-size: 24px;
-      line-height: 1;
-      color: var(--ink);
-      margin-bottom: 6px;
-    }
-    .case-kpi-note {
-      font-size: 14px;
-      color: var(--ink-3);
-      line-height: 1.55;
-    }
+  <main id="main-content" class="case-wrap">
+    <nav class="case-nav" aria-label="Case study">
+      <a href="index.html#projects">← Back to portfolio</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
 
-    .case-section {
-      margin-top: 28px;
-      border-top: 1px solid var(--line);
-      padding-top: 24px;
-    }
-    .case-h {
-      font-family: var(--fd);
-      font-size: 30px;
-      letter-spacing: -.02em;
-      margin-bottom: 10px;
-      color: var(--ink);
-    }
-    .case-p {
-      color: var(--ink-2);
-      font-size: 16px;
-      line-height: 1.8;
-      margin-bottom: 14px;
-    }
-    .case-list {
-      color: var(--ink-2);
-      font-size: 15px;
-      line-height: 1.7;
-      margin-left: 18px;
-      display: grid;
-      gap: 8px;
-    }
+    <p class="case-eyebrow">Case study · Nawatech internship · Oct 2025 – Feb 2026</p>
+    <h1 class="case-title">DemoLabs AI Chatbot</h1>
+    <p class="case-sub">
+      An analytics assistant that answers questions in one chat interface: document QnA, RAG-based
+      Text-to-SQL, PDF/OCR analysis and chart generation. I built it as a Machine Learning Engineer
+      Intern at Nawa Darsana Technology (Nawatech).
+    </p>
 
     .arch-grid {
       display: grid;
