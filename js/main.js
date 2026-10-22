@@ -103,62 +103,48 @@ document.querySelectorAll('[data-exp-trigger]').forEach(btn => {
 });
 
 /* ==================== PROJECT MODAL ==================== */
+/* Every field here restates something stated elsewhere on the page or in the
+   case study. Optional fields (tradeoff, result, lessons, proof) are omitted
+   rather than padded when there is nothing verified to say, and openModal()
+   skips their headings. */
 const projectData = {
   p1: {
-    title: 'DemoLabs AI Chatbot (Nawatech Internship)',
-    sub: 'RAG · Text-to-SQL · Oct 2025 - Feb 2026',
+    title: 'DemoLabs AI Chatbot',
+    sub: 'Nawatech internship · Oct 2025 – Feb 2026',
     problem: 'Analytics users needed answers from complex datasets, but manual SQL writing, PDF review, and chart preparation slowed every decision.',
-    solution: 'Built a multi-capability analytics assistant combining QnA retrieval, RAG-based Text-to-SQL generation, PDF/OCR document analysis, and dynamic chart creation in a single conversational interface with intent routing.',
+    solution: 'A multi-capability analytics assistant combining QnA retrieval, RAG-based Text-to-SQL generation, PDF/OCR document analysis, and dynamic chart creation in a single conversational interface with intent routing.',
     arch: 'FastAPI backend with Celery, RabbitMQ, Redis, and Docker — 6 containers, 5 RabbitMQ queues, 4 Celery workers. RAG and Text-to-SQL pipeline with pgvector and Azure OpenAI embeddings, schema retrieval, and few-shot SQL generation.',
-    tradeoff: 'Balanced retrieval depth and generation cost: 0.40s retrieval vs 2.57s LLM generation within a 3.23s mean end-to-end latency, keeping answers grounded while staying interactive.',
-    result: 'Achieved 0.885 mean answer correctness on 60 DeepEval test cases, with automated Excel and Markdown regression reports tracking results across difficulty levels.',
+    tradeoff: 'Of the 3.23s mean end-to-end latency, retrieval takes 0.40s and LLM generation 2.57s, so generation, not retrieval depth, is where latency work pays off.',
+    result: '0.885 mean answer correctness on 60 DeepEval test cases, with automated Excel and Markdown regression reports tracking results across difficulty levels.',
     lessons: [
-      'Schema-grounded retrieval before generation eliminated most invalid SQL — context quality mattered more than prompt tricks.',
-      'Separating QnA, PDF, and SQL workloads across dedicated queues kept tail latency stable under mixed traffic.',
-      'Automated DeepEval regression reports caught quality drift early when retrieval or model settings changed.'
+      'Retrieving the relevant schema before generating SQL mattered more than prompt wording.',
+      'Giving QnA, PDF and SQL work their own queues means a slow PDF job doesn’t hold up a quick QnA answer.',
+      'A fixed 60-case DeepEval suite makes every retrieval or model change comparable against the previous run.'
     ],
     proof: [
-      { label: 'Demo Video', href: 'assets/vid/demolabs%20chatbot%20video.mp4' },
+      { label: 'Case study', href: 'case-study-smartfaq.html' },
+      { label: 'Demo video (YouTube)', href: 'https://youtu.be/T9D7Ta1O9rU' },
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/faq-chatbot' }
     ]
   },
   p2: {
     title: 'nuxio.ai',
-    sub: 'Next.js · TypeScript · Supabase · Sep 2026 – Present',
+    sub: 'Next.js · TypeScript · Supabase · Sep 2026 – present',
     problem: 'Personal financial planning is fragmented across wallets, budgets, and savings goals, with no forward-looking view of upcoming commitments.',
-    solution: 'Designed an AI-powered financial planning platform integrating a Gemini-based Financial Copilot with a forward-looking forecasting system and structured AI outputs.',
+    solution: 'A financial planning platform with a Gemini-based Financial Copilot and a forward-looking forecasting view, using structured AI outputs.',
     arch: 'Next.js + TypeScript frontend on PostgreSQL (Supabase), with multi-wallet management, budgeting, savings goals, and scheduled transaction planning.',
-    tradeoff: 'Used structured AI outputs so the Copilot returns machine-validatable plans instead of free text that downstream scheduling logic cannot trust.',
-    result: 'Delivered a working platform covering wallets, budgets, goals, and scheduled transactions in one planning surface.',
-    lessons: [
-      'Structured outputs turned the Copilot from a chat toy into a planning input the scheduler can execute.',
-      'Modeling scheduled transactions explicitly made forecasts explainable — users trust a projection they can trace.',
-      'Supabase row-level patterns kept per-wallet data isolated without custom backend access control.'
-    ],
-    proof: [
-      { label: 'Request Demo', href: '#contact' }
-    ]
+    tradeoff: 'Structured AI outputs, so the Copilot returns plans the scheduling logic can validate instead of free text.'
   },
   p3: {
     title: 'Student Progress Analytics Dashboard',
-    sub: 'Looker Studio · Jan 2025 - Apr 2025',
-    problem: 'Curriculum supervisors needed visibility into Qur\u2019an and Hadits memorization progress across cohorts, but data lived in scattered spreadsheets.',
-    solution: 'Built an interactive Looker Studio dashboard aggregating per-student completion rates into class- and cohort-level summary metrics.',
-    arch: 'Spreadsheet masterfiles consolidated into a centralized reporting pipeline feeding Looker Studio summary views.',
-    tradeoff: 'Aggregated to class/cohort summaries for monitoring while keeping per-student detail one drill-down away, so the overview stays readable.',
-    result: 'Gave curriculum monitors a single surface for syllabus coverage and memorization progress across cohorts.',
-    lessons: [
-      'Standardizing masterfile schemas first made every downstream chart trivial — messy inputs were the real bottleneck.',
-      'Cohort-level aggregation surfaced pacing problems that per-student views hid.',
-      'Recurring-report automation paid off immediately by removing manual data preparation.'
-    ],
-    proof: [
-      { label: 'Request Demo', href: '#contact' }
-    ]
+    sub: 'Looker Studio · Jan 2025 – Apr 2025',
+    problem: 'Curriculum supervisors needed visibility into Qur’an and Hadits memorization progress across cohorts, but data lived in scattered spreadsheets.',
+    solution: 'An interactive Looker Studio dashboard aggregating per-student completion rates into class- and cohort-level summaries.',
+    arch: 'Spreadsheet masterfiles consolidated into a centralized reporting pipeline feeding Looker Studio summary views.'
   },
   p4: {
-    title: 'Sentiment Analysis Telco Tweets',
-    sub: 'NLP · TF-IDF · Logistic Regression · Jun 2025 - Sep 2025',
+    title: 'Sentiment Analysis of Telco Tweets',
+    sub: 'NLP · TF-IDF · Logistic Regression · Jun 2025 – Sep 2025',
     problem: 'Telecom providers needed a reliable read on customer perception from high-volume social media conversations.',
     solution: 'Applied TF-IDF and Logistic Regression to classify customer sentiment from ~10,000 telecom tweets, surfacing recurring negative keywords for service improvement.',
     arch: 'Python text preprocessing and TF-IDF feature extraction with supervised classifiers trained and evaluated on labeled tweet data.',
