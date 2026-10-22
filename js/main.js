@@ -146,52 +146,27 @@ const projectData = {
     title: 'Sentiment Analysis of Telco Tweets',
     sub: 'NLP · TF-IDF · Logistic Regression · Jun 2025 – Sep 2025',
     problem: 'Telecom providers needed a reliable read on customer perception from high-volume social media conversations.',
-    solution: 'Applied TF-IDF and Logistic Regression to classify customer sentiment from ~10,000 telecom tweets, surfacing recurring negative keywords for service improvement.',
+    solution: 'TF-IDF and logistic regression to classify customer sentiment in ~10,000 telecom tweets, plus the recurring keywords in negative tweets.',
     arch: 'Python text preprocessing and TF-IDF feature extraction with supervised classifiers trained and evaluated on labeled tweet data.',
-    tradeoff: 'Chose an interpretable linear model over heavier alternatives so keyword-level drivers of negativity stayed explainable to stakeholders.',
-    result: 'Achieved 0.82 F1-score with top recurring negative keywords identified for service improvement recommendations.',
-    lessons: [
-      'TF-IDF outperformed embeddings at this dataset size — simpler features generalized better on limited labeled data.',
-      'Tweet-specific preprocessing (mentions, URLs, slang normalization) improved F1 more than any model switch.',
-      'Keyword analysis on the negative class delivered the stakeholder value, not just the aggregate metric.'
-    ],
+    result: '0.82 F1-score on three-class sentiment classification, with the top recurring negative keywords identified for service improvement.',
     proof: [
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/Sentiment-Analysis-Telco-Tweets' }
     ]
   },
   p5: {
-    title: 'Time Series Forecasting Top 5 Car Sales Indonesia',
-    sub: 'SARIMA · Prophet · LSTM · Jul 2024 - Sep 2024',
+    title: 'Car Sales Forecasting: Indonesia’s Top 5 Brands',
+    sub: 'SARIMA · Prophet · LSTM · Jul 2024 – Sep 2024',
     problem: 'Car sales planning needed reliable forward estimates across brands with distinct trend and seasonality behavior.',
-    solution: 'Built a full forecasting pipeline covering data preprocessing, trend and seasonality analysis, and multi-model training across SARIMA, Prophet, and LSTM.',
-    arch: 'Per-brand preprocessing and decomposition feeding three model families with SMAPE-based comparison.',
-    tradeoff: 'Kept classical (SARIMA, Prophet) and deep (LSTM) models side by side instead of picking one upfront, since seasonality strength varied by brand.',
-    result: 'Achieved SMAPE below 10% across all 5 car brands.',
-    lessons: [
-      'Per-brand seasonality analysis mattered more than model choice — one configuration never fit all five.',
-      'Prophet handled holiday effects with the least tuning; LSTM needed the most preprocessing care.',
-      'SMAPE kept brand comparisons fair despite very different sales volumes.'
-    ],
-    proof: [
-      { label: 'Request Details', href: '#contact' }
-    ]
+    solution: 'A forecasting pipeline covering preprocessing, per-brand trend and seasonality analysis, and multi-model training across SARIMA, Prophet, and LSTM.',
+    arch: 'Per-brand preprocessing and decomposition feeding three model families, compared on SMAPE.',
+    result: 'SMAPE below 10% on all 5 car brands.'
   },
   p6: {
-    title: 'Traffic Monitoring System using YOLOv8 + DeepSORT',
-    sub: 'Computer Vision · Jun 2024 - Jul 2024',
+    title: 'Traffic Monitoring with YOLOv8 + DeepSORT',
+    sub: 'Computer Vision · Jun 2024 – Jul 2024',
     problem: 'Traffic flow analysis and vehicle counting required persistent per-vehicle tracking across video frames, not just per-frame detection.',
-    solution: 'Built a real-time monitoring system combining YOLOv8 for vehicle detection with DeepSORT for multi-object tracking.',
-    arch: 'YOLOv8 detection stage feeding DeepSORT association for persistent IDs, with counting and flow-analysis outputs.',
-    tradeoff: 'Accepted detection-stage cost to keep tracking IDs stable — ID switches hurt counting accuracy more than occasional missed boxes.',
-    result: 'Delivered persistent vehicle ID tracking across frames enabling flow analysis and vehicle counting.',
-    lessons: [
-      'Association tuning in DeepSORT affected counting accuracy more than detector upgrades.',
-      'Occlusion handling was the main error source — camera angle mattered as much as model choice.',
-      'Separating detection and tracking stages made failures diagnosable instead of a single black box.'
-    ],
-    proof: [
-      { label: 'Request Demo', href: '#contact' }
-    ]
+    solution: 'YOLOv8 for vehicle detection combined with DeepSORT for multi-object tracking.',
+    arch: 'YOLOv8 detection stage feeding DeepSORT association for persistent IDs, with counting and flow-analysis outputs.'
   }
 };
 
@@ -234,30 +209,41 @@ function openModal(projectId, triggerEl) {
   if (!project || !modalOverlay || !modalContent) return;
   lastFocusedEl = triggerEl || document.activeElement;
 
+  const section = (label, text) => text
+    ? `<div class="modal-sh">${label}</div><p class="modal-p">${text}</p>`
+    : '';
   const lessonsHtml = project.lessons?.length
     ? `<div class="modal-sh">What I Learned</div>
        <ul class="modal-lessons">${project.lessons.map(l => `<li>${l}</li>`).join('')}</ul>`
+    : '';
+  const proofHtml = project.proof?.length
+    ? `<div class="flow-wrap">
+         <div class="flow-label">Links</div>
+         <div class="proj-proof">${renderProofLinks(project.proof)}</div>
+       </div>`
     : '';
 
   modalContent.innerHTML = `
     <h2 class="modal-title" id="modalTitle">${project.title}</h2>
     <div class="modal-sub">${project.sub}</div>
-    <div class="modal-sh">Problem</div>
-    <p class="modal-p">${project.problem}</p>
-    <div class="modal-sh">Solution</div>
-    <p class="modal-p">${project.solution}</p>
-    <div class="modal-sh">Architecture</div>
-    <p class="modal-p">${project.arch}</p>
-    <div class="modal-sh">Trade-off Decision</div>
-    <p class="modal-p">${project.tradeoff}</p>
-    <div class="modal-sh">Result</div>
-    <p class="modal-p">${project.result}</p>
+    ${section('Problem', project.problem)}
+    ${section('Solution', project.solution)}
+    ${section('Architecture', project.arch)}
+    ${section('Trade-off', project.tradeoff)}
+    ${section('Result', project.result)}
     ${lessonsHtml}
-    <div class="flow-wrap">
-      <div class="flow-label">Proof Links</div>
-      <div class="proj-proof">${renderProofLinks(project.proof)}</div>
-    </div>
+    ${proofHtml}
   `;
+
+  const card = lastFocusedEl?.closest?.('.proj-card');
+  if (card && modalDialog) {
+    const r = card.getBoundingClientRect();
+    modalDialog.style.setProperty('--modal-dx', `${Math.round(r.left + r.width / 2 - window.innerWidth / 2)}px`);
+    modalDialog.style.setProperty('--modal-dy', `${Math.round(r.top + r.height / 2 - window.innerHeight / 2)}px`);
+    // Commit the card-relative start before .open, or the transition starts
+    // from the previous offset instead of this card.
+    void modalDialog.offsetWidth;
+  }
 
   modalOverlay.classList.add('open');
   modalOverlay.setAttribute('aria-hidden', 'false');
