@@ -28,198 +28,80 @@
       Intern at Nawa Darsana Technology (Nawatech).
     </p>
 
-    .arch-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .arch-node {
-      border: 1px solid var(--line-2);
-      border-radius: var(--r8);
-      padding: 12px;
-      background: #fff;
-      text-align: center;
-    }
-    .arch-node b {
-      display: block;
-      font-family: var(--fd);
-      margin-bottom: 4px;
-      color: var(--ink);
-    }
-    .arch-node span {
-      font-size: 13px;
-      color: var(--ink-3);
-      line-height: 1.45;
-    }
+    <dl class="case-kpi">
+      <div class="case-kpi-item">
+        <dt class="case-kpi-label">Answer correctness</dt>
+        <dd class="case-kpi-value">0.885</dd>
+        <dd class="case-kpi-note">Mean across 60 DeepEval test cases</dd>
+      </div>
+      <div class="case-kpi-item">
+        <dt class="case-kpi-label">End-to-end latency</dt>
+        <dd class="case-kpi-value">3.23s</dd>
+        <dd class="case-kpi-note">Mean over 60 benchmark queries: 0.40s retrieval, 2.57s generation</dd>
+      </div>
+      <div class="case-kpi-item">
+        <dt class="case-kpi-label">Backend</dt>
+        <dd class="case-kpi-value">6 / 5 / 4</dd>
+        <dd class="case-kpi-note">Containers / RabbitMQ queues / Celery workers</dd>
+      </div>
+    </dl>
 
-    .proof-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .proof-links a {
-      font-family: var(--fm);
-      font-size: 11px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      border: 1px solid var(--line-2);
-      border-radius: 999px;
-      padding: 8px 12px;
-      color: var(--ink-2);
-    }
-    .proof-links a:hover {
-      color: var(--ink);
-      border-color: var(--ink);
-      background: #fff;
-    }
+    <section class="case-section" aria-labelledby="cs-problem">
+      <h2 class="case-h" id="cs-problem">Problem</h2>
+      <p class="case-p">
+        Analytics users needed answers from complex datasets, but writing SQL by hand, reviewing PDFs and
+        preparing charts slowed every decision. Each of those tasks needs a different pipeline, and users
+        should not have to know which one to pick.
+      </p>
+    </section>
 
-    .roadmap {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .roadmap-card {
-      border: 1px solid var(--line);
-      border-radius: var(--r8);
-      padding: 14px;
-      background: var(--bg-card);
-    }
-    .roadmap-card h4 {
-      font-family: var(--fd);
-      font-size: 20px;
-      margin-bottom: 8px;
-      letter-spacing: -.01em;
-    }
-    .roadmap-card p {
-      font-size: 14px;
-      color: var(--ink-2);
-      line-height: 1.6;
-    }
+    <section class="case-section" aria-labelledby="cs-built">
+      <h2 class="case-h" id="cs-built">What I built</h2>
+      <ul class="case-list">
+        <li>Intent routing that sends each question to QnA retrieval, Text-to-SQL, PDF/OCR analysis or chart generation.</li>
+        <li>A RAG and Text-to-SQL pipeline on pgvector with Azure OpenAI embeddings: schema retrieval first, then few-shot SQL generation.</li>
+        <li>The async backend: FastAPI, Celery, RabbitMQ, Redis and Docker.</li>
+        <li>An automated evaluation and regression-testing setup with DeepEval and Azure OpenAI.</li>
+      </ul>
+    </section>
 
-    @media (max-width: 900px) {
-      .case-kpi { grid-template-columns: 1fr; }
-      .arch-grid { grid-template-columns: 1fr 1fr; }
-      .roadmap { grid-template-columns: 1fr; }
-    }
-  </style>
-+</head>
-+<body>
-+  <div class="noise"></div>
-+  <div class="grid-bg"></div>
-+
-+  <main class="case-wrap">
-+    <div class="case-nav">
-+      <a href="index.html#projects">← Back to Portfolio</a>
-+      <a href="index.html#contact">Discuss This Project</a>
-+    </div>
-+
-+    <h1 class="case-title">SmartFAQ Chatbot - Flagship Case Study</h1>
-+    <p class="case-sub">
-+      A production-oriented RAG assistant that handles repetitive support questions with faster response cycles,
-+      controlled token usage, and measurable answer quality checkpoints.
-+    </p>
-+
-+    <div class="case-kpi">
-+      <article class="case-kpi-card">
-+        <div class="case-kpi-label">Metric Tracked</div>
-+        <div class="case-kpi-value">Latency</div>
-+        <p class="case-kpi-note">p95 response time tracking integrated in evaluation pipeline.</p>
-+      </article>
-+      <article class="case-kpi-card">
-+        <div class="case-kpi-label">Metric Tracked</div>
-+        <div class="case-kpi-value">Token Cost</div>
-+        <p class="case-kpi-note">Per-answer token usage monitored for cost/performance control.</p>
-+      </article>
-+      <article class="case-kpi-card">
-+        <div class="case-kpi-label">Metric Tracked</div>
-+        <div class="case-kpi-value">Answer Quality</div>
-+        <p class="case-kpi-note">Intent + retrieval relevance checks included in QA loop.</p>
-+      </article>
-+    </div>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">1. Problem</h2>
-+      <p class="case-p">
-+        Support teams were overloaded by repetitive FAQs. Manual handling created slow response cycles,
-+        inconsistent answers, and no objective way to evaluate model quality over time.
-+      </p>
-+      <ul class="case-list">
-+        <li>Response quality varied across operators and shifts.</li>
-+        <li>No clear observability for latency or token consumption.</li>
-+        <li>Scaling support volume increased operational overhead.</li>
-+      </ul>
-+    </section>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">2. System Architecture</h2>
-+      <p class="case-p">
-+        The assistant pipeline was designed for modular retrieval, controllable generation, and measurable operations.
-+      </p>
-+      <div class="arch-grid" aria-label="Architecture flow">
-+        <div class="arch-node"><b>Ingestion</b><span>FAQ docs + structured files</span></div>
-+        <div class="arch-node"><b>Chunking</b><span>Hierarchical splitting + embeddings</span></div>
-+        <div class="arch-node"><b>Retrieval</b><span>Relevant context fetch from storage</span></div>
-+        <div class="arch-node"><b>Generation</b><span>LLM response synthesis + guardrails</span></div>
-+        <div class="arch-node"><b>Observability</b><span>Latency/token/quality evaluation logs</span></div>
-+      </div>
-+    </section>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">3. Trade-off Decisions</h2>
-+      <ul class="case-list">
-+        <li><b>Retrieval depth vs speed:</b> deeper context improves completeness but increases latency and token usage.</li>
-+        <li><b>Context window vs cost:</b> larger context can improve relevance but can overrun cost constraints.</li>
-+        <li><b>Strict guardrails vs flexibility:</b> tighter response controls reduce hallucination risk but can shorten answer richness.</li>
-+      </ul>
-+    </section>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">4. Results & Engineering Outcomes</h2>
-+      <ul class="case-list">
-+        <li>Built a reproducible evaluation loop for quality and performance monitoring.</li>
-+        <li>Implemented caching and pagination patterns to improve user experience under load.</li>
-+        <li>Created architecture foundation for scaling with queue workers and containerized services.</li>
-+      </ul>
-+    </section>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">5. Production Readiness</h2>
-+      <ul class="case-list">
-+        <li>Service boundaries separated across API, workers, and retrieval layers.</li>
-+        <li>Operational metrics tracked for latency, token cost, and answer behavior.</li>
-+        <li>Testable modular components for future model swap and rollout strategy.</li>
-+      </ul>
-+    </section>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">6. What I Can Build in 30/60/90 Days</h2>
-+      <div class="roadmap">
-+        <article class="roadmap-card">
-+          <h4>30 Days</h4>
-+          <p>Audit use case, define KPIs, ship baseline RAG assistant with tracking hooks.</p>
-+        </article>
-+        <article class="roadmap-card">
-+          <h4>60 Days</h4>
-+          <p>Improve retrieval quality, add guardrails, and optimize latency + token efficiency.</p>
-+        </article>
-+        <article class="roadmap-card">
-+          <h4>90 Days</h4>
-+          <p>Production hardening: observability, QA automation, rollout strategy, and team handoff docs.</p>
-+        </article>
-+      </div>
-+    </section>
-+
-+    <section class="case-section">
-+      <h2 class="case-h">7. Evidence Links</h2>
-+      <div class="proof-links">
-+        <a href="https://github.com/CodeByAbi" target="_blank" rel="noopener noreferrer">GitHub Profile</a>
-+        <a href="index.html#projects">Project Card Overview</a>
-+        <a href="index.html#contact">Request Live Walkthrough</a>
-+      </div>
-+    </section>
-+  </main>
-+</body>
-+</html>
+    <section class="case-section" aria-labelledby="cs-arch">
+      <h2 class="case-h" id="cs-arch">Architecture</h2>
+      <p class="case-p">
+        Requests enter through FastAPI. Work is split by type across 5 RabbitMQ queues and handled by
+        4 Celery workers, so QnA, PDF and SQL workloads don't compete for the same worker. Redis is part
+        of the stack, and the system runs as 6 Docker containers.
+      </p>
+      <ol class="case-flow" aria-label="Request flow">
+        <li><b>FastAPI</b><span>Request and intent routing</span></li>
+        <li><b>RabbitMQ</b><span>5 queues, split by workload</span></li>
+        <li><b>Celery</b><span>4 workers: QnA, PDF, SQL</span></li>
+        <li><b>pgvector</b><span>Chunk and schema retrieval</span></li>
+        <li><b>Azure OpenAI</b><span>Embeddings and generation</span></li>
+      </ol>
+    </section>
+
+    <section class="case-section" aria-labelledby="cs-eval">
+      <h2 class="case-h" id="cs-eval">Evaluation</h2>
+      <p class="case-p">
+        A DeepEval suite of 60 test cases across difficulty levels
+        scores answer correctness and writes Excel and Markdown reports, so a change to retrieval or model
+        settings can be compared against the previous run.
+      </p>
+      <p class="case-p">
+        The latency split points to where future work should go. Retrieval takes 0.40s of the 3.23s mean;
+        LLM generation takes 2.57s.
+      </p>
+    </section>
+
+    <section class="case-section" aria-labelledby="cs-links">
+      <h2 class="case-h" id="cs-links">Links</h2>
+      <div class="proj-proof">
+        <a href="https://youtu.be/T9D7Ta1O9rU" target="_blank" rel="noopener noreferrer">Demo video (YouTube)</a>
+        <a href="https://github.com/CodeByAbi/faq-chatbot" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="index.html#experience">Nawatech role on the portfolio</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
