@@ -316,7 +316,7 @@ Borders are `1px` for pure hairlines (`--line`), `1.5px` for anything interactiv
 - **Bar:** fixed, 60px tall, `rgba(248,247,244,.85)` + `blur(20px)`, transparent border until `scrollY > 24`, then `--line` + `--sh-sm`.
 - **Logo:** Clash Display 700 `18px`, `-0.02em`, `AW` with the period in gold.
 - **Links:** JetBrains Mono `11px` / `0.1em` uppercase, `--ink-3`. Hover, `.active` (set by an `IntersectionObserver` at `threshold: 0.35` over `section[id]`), and `:focus-visible` all go to `--ink` **and** grow a 1px gold `::after` rule from `width: 0` to `100%` over `.3s var(--ease-s)`.
-- **Actions:** `.nav-link-ghost` (outlined, "Resume") and `.nav-btn` (solid ink, "Hire Me →").
+- **Actions:** `.nav-btn` (solid ink, "Hire Me →"). The outlined `.nav-link-ghost` ("Resume") was removed along with the CV PDF (2026-10); its CSS rules were deleted too.
 - **Mobile:** below 960px the link list and action row are `display: none` and `.nav-toggle` (40px, two 18×1.5px ink bars) appears, opening `.nav-drawer` — a `min(340px, 90vw)` right-side panel at `rgba(255,255,255,.97)` + `blur(12px)`, sliding in from `translateX(102%)` over `.28s var(--ease-s)`. Toggling sets `body { overflow: hidden }`, flips `aria-expanded` on the trigger and `aria-hidden` on the drawer. **Focus:** opening moves focus to `.nav-drawer-close`; `Tab` is trapped inside the panel (`trapDrawerFocus`); `Escape` closes. Focus is returned to `.nav-toggle` on Escape and on the close button, but **not** when a nav link closes the drawer — the user is scrolling to that section, and yanking focus to the toggle would scroll them back up to the navbar. This is the `restoreFocus` argument to `toggleDrawer(forceOpen, restoreFocus)`; passing it for the link case is a bug.
 - **Accessibility:** `html` carries `scroll-padding-top: 76px` so anchor jumps and keyboard focus clear the 60px fixed nav (WCAG 2.2 Focus Not Obscured). A `.skip-link` is fixed at `top: -56px` and slides to `top: 16px` on `:focus-visible`. The custom cursor that used to live here is gone; the native cursor is now always in charge, which also removes a class of bug where the custom dot obscured small hit targets.
 
@@ -483,16 +483,13 @@ All four clear WCAG AA at the 11px these chips render at. The colour now repeats
 
 All 44 chips are tagged. **A new chip without a `data-d` silently renders as the old neutral style** — if you add one, pick the domain or the encoding breaks.
 
-#### 5. Bento project grid
+#### 5. Bento project grid — tried and reverted
 
-`.proj-grid` becomes `repeat(6, minmax(0,1fr))` at `min-width: 961px`: flagship `span 6`, two `span 3`, three `span 2` — matching the editorial ranking already in the markup (`001 FLAGSHIP`, `002 FEATURE KEY`, then supporting work).
+A bento layout was applied here (`.proj-grid` as `repeat(6, minmax(0,1fr))`: flagship `span 6`, two `span 3`, three `span 2`, with a 340px media band and `object-fit: contain` on the flagship because its asset is only 200×200). It measured cleanly — no overflow, no CTA clipping, at every width.
 
-**Column spans only, never `grid-row` spans.** Row spans on an auto-height grid resolve circularly, since the spanning card is what would size the rows it spans, and this repo has already shipped one clipping bug from an over-clever height relationship.
+**It was reverted anyway.** Giving the flagship the full 1064px measure made it read as a different *class of object* from the other five rather than as the first of six, and the flat 2-up grid is what the CTA-alignment rule in `.proj-body` assumes. `.proj-grid` is back to `1fr 1fr` at every width.
 
-Two traps, both live:
-
-- The whole block **must stay inside `min-width: 961px`**. Below 960px `.proj-grid` is one column, and a bare `grid-column: span 6` against a 1-column track generates six **implicit** columns and destroys the mobile layout.
-- The flagship gets `object-fit: contain`, because its asset (`demolablogo.jpg`) is **200×200** and `cover` at full width would upscale it ~5.3× into mush. Scoped to the flagship because its source is a *logo*; the other cards hold real screenshots that want `cover`. **If the flagship asset is ever replaced with a real screenshot, drop that rule.**
+The one durable lesson from it, worth keeping because it applies to any future asymmetric grid here: **column spans only, never `grid-row` spans.** Row spans on an auto-height grid resolve circularly, since the spanning card is what would size the rows it spans — and this repo has already shipped one clipping bug from an over-clever height relationship. If an asymmetric layout returns, it must stay inside a `min-width` query: below 960px `.proj-grid` is one column, and a bare `grid-column: span 6` against a 1-column track generates six **implicit** columns and destroys the mobile layout.
 
 ### Adding a section
 
