@@ -5,6 +5,12 @@
 
 @import url('https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+/* Editorial serif for the display tier (protocol S3). Newsreader is used rather
+   than Instrument Serif because Instrument ships regular+italic only, and the
+   display tier needs 600/700. Newsreader is variable (200-800) with optical
+   sizing, so the 94px hero wordmark still has weight to spare. Instrument Serif
+   is kept as the fallback. */
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap');
 
 /* ======================== VARIABLES ======================== */
 :root {
@@ -13,22 +19,35 @@
   --bg-dark:   #111110;
   --ink:       #1a1918;
   --ink-2:     #3d3b38;
-  --ink-3:     #7a7772;
+  --ink-3:     #6f6b66;
   --ink-4:     #b0ada8;
   --gold:      #b8924a;
   --gold-lt:   #d4aa6a;
+  /* Text-safe gold. --gold on paper/white is 2.7-2.9:1 and fails WCAG 1.4.3 for
+     small text. --gold-ink is the same hue darkened to 5.0:1+ for any use where
+     gold IS the text colour (issuer lines, project sub-labels). Structure keeps
+     --gold. Do not use --gold for body or label text. */
+  --gold-ink:  #8a6a24;
   --line:      #e5e3de;
   --line-2:    #cac8c2;
 
   --fd: 'Clash Display', sans-serif;
   --fb: 'Satoshi', sans-serif;
   --fm: 'JetBrains Mono', monospace;
+  /* Editorial serif — the display tier. Identity/section titles only; Clash
+     Display stays for card titles and the logo, where the geometric grotesque
+     is doing a different job. */
+  --fserif: 'Newsreader', Georgia, serif;
 
-  --ease:   cubic-bezier(.22,.68,0,1.2);
   --ease-s: cubic-bezier(.16,1,.3,1);
   --ease-i: cubic-bezier(.4,0,.2,1);
 
   --r2: 2px; --r4: 4px; --r8: 8px;
+
+  /* Intrinsic ratio of the hero portrait (779x595 source) */
+  --hero-media-ar: 779 / 595;
+  /* Distance the decorative ring is offset behind the portrait */
+  --hero-media-inset: 16px;
 
   --sh-sm: 0 2px 8px rgba(0,0,0,.06);
   --sh-md: 0 6px 24px rgba(0,0,0,.09);
@@ -37,7 +56,9 @@
 
 /* ======================== RESET ======================== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+/* scroll-padding keeps anchor jumps and keyboard focus clear of the 60px fixed
+   nav. Without it, tabbing to a target near the top parks it under the bar. */
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; scroll-padding-top: 76px; }
 body {
   background: var(--bg);
   color: var(--ink);
@@ -49,51 +70,15 @@ img { display:block; width:100%; }
 a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
 
-/* ======================== CURSOR ======================== */
-.cursor {
-  position: fixed; z-index: 9999; pointer-events: none;
-  width: 10px; height: 10px;
-  background: var(--ink); border-radius: 50%;
-  transform: translate(-50%,-50%);
-  transition: width .18s var(--ease-s), height .18s var(--ease-s),
-              background .18s, opacity .18s;
-  mix-blend-mode: multiply;
-}
-.cursor-trail {
-  position: fixed; z-index: 9998; pointer-events: none;
-  width: 36px; height: 36px;
-  border: 1.5px solid rgba(26,25,24,.35); border-radius: 50%;
-  transform: translate(-50%,-50%);
-  transition: width .4s var(--ease-s), height .4s var(--ease-s), opacity .3s;
-}
-body.h-cursor .cursor { width: 14px; height: 14px; background: var(--gold); }
-body.h-cursor .cursor-trail { width: 52px; height: 52px; opacity: .25; }
-
-/* ======================== NOISE OVERLAY ======================== */
-.noise {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  opacity: .025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
-
-/* ======================== GRID BG ======================== */
-.grid-bg {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(26,25,24,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26,25,24,.04) 1px, transparent 1px);
-  background-size: 64px 64px;
-  transition: transform .15s linear;
-}
-
 /* ======================== NAV ======================== */
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   height: 60px; padding: 0 48px;
-  background: rgba(248,247,244,.85);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  /* Opaque, not glass. A blur with no coloured substrate behind it reads as
+     fog, costs a full-screen backdrop-filter on every scroll frame, and makes
+     nav text contrast depend on whatever is scrolling underneath. */
+  background: var(--bg);
   border-bottom: 1px solid transparent;
   transition: border-color .3s, box-shadow .3s;
 }
@@ -102,7 +87,7 @@ nav.scrolled { border-bottom-color: var(--line); box-shadow: var(--sh-sm); }
   font-family: var(--fd); font-weight: 700; font-size: 18px;
   letter-spacing: -.02em; color: var(--ink);
 }
-.nav-logo em { color: var(--gold); font-style: normal; }
+.nav-logo em { color: var(--gold-ink); font-style: normal; }
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {
   font-family: var(--fm); font-size: 11px; font-weight: 400;
@@ -119,15 +104,12 @@ nav.scrolled { border-bottom-color: var(--line); box-shadow: var(--sh-sm); }
 .nav-links a:focus-visible { color: var(--ink); }
 .nav-links a:focus-visible::after { width: 100%; }
 .nav-btn {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .1em;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--ink);
   border: 1.5px solid var(--ink); padding: 8px 18px; border-radius: var(--r2);
   transition: background .2s, color .2s, transform .2s var(--ease-s), box-shadow .2s;
 }
-.nav-btn:hover {
-  background: var(--ink); color: #fff;
-  transform: translateY(-1px); box-shadow: var(--sh-sm);
-}
+.nav-btn:hover { background: var(--ink); color: #fff; }
 
 /* ======================== SECTION BASE ======================== */
 section {
@@ -137,7 +119,7 @@ section {
 }
 .sec-label {
   display: inline-flex; align-items: center; gap: 14px;
-  font-family: var(--fm); font-size: 10px; font-weight: 400;
+  font-family: var(--fm); font-size: 11px; font-weight: 400;
   letter-spacing: .18em; text-transform: uppercase; color: var(--ink-4);
   margin-bottom: 56px;
 }
@@ -145,46 +127,32 @@ section {
   content: ''; width: 28px; height: 1px; background: var(--gold); display: block;
 }
 
-/* ======================== REVEAL ANIMATIONS ======================== */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity .8s var(--ease-s), transform .8s var(--ease-s);
-}
-[data-reveal].in { opacity: 1; transform: translateY(0); }
-[data-reveal="left"]  { transform: translateX(-40px); }
-[data-reveal="left"].in { transform: translateX(0); }
-[data-reveal="right"] { transform: translateX(40px); }
-[data-reveal="right"].in { transform: translateX(0); }
-[data-reveal="scale"] { transform: scale(.94); }
-[data-reveal="scale"].in { transform: scale(1); }
+/* ======================== REVEAL ANIMATIONS ========================
+   Gated on .js. Without it every [data-reveal] element renders at full opacity
+   and no transform, so the page is completely readable if the script fails,
+   is blocked, or the IntersectionObserver never fires.
 
-[data-delay="1"] { transition-delay: .1s; }
-[data-delay="2"] { transition-delay: .2s; }
-[data-delay="3"] { transition-delay: .3s; }
-[data-delay="4"] { transition-delay: .4s; }
-[data-delay="5"] { transition-delay: .5s; }
-[data-delay="6"] { transition-delay: .6s; }
+   Travel is 18px, not 40px, and duration is .55s. A 40px rise on ~30 elements
+   is the generic fade-up this design should not have. */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .55s var(--ease-s), transform .55s var(--ease-s);
+}
+.js [data-reveal].in { opacity: 1; transform: none; }
+.js [data-reveal="left"]  { transform: translateX(-24px); }
+.js [data-reveal="right"] { transform: translateX(24px); }
+.js [data-reveal="scale"] { transform: scale(.97); }
+
+[data-delay="1"] { transition-delay: .06s; }
+[data-delay="2"] { transition-delay: .12s; }
+[data-delay="3"] { transition-delay: .18s; }
 
 /* ======================== HERO ======================== */
 #hero {
   min-height: 100vh; display: flex; flex-direction: column;
   justify-content: flex-end; padding-top: 100px; padding-bottom: 80px;
   overflow: hidden; position: relative; border-bottom: 1px solid var(--line);
-}
-
-/* Animated background circle */
-.hero-circle {
-  position: absolute; top: -20%; right: -10%;
-  width: clamp(400px, 55vw, 800px); aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, rgba(184,146,74,.12), transparent 70%);
-  animation: floatCircle 8s ease-in-out infinite alternate;
-  pointer-events: none; z-index: 0;
-}
-@keyframes floatCircle {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(-30px, 20px) scale(1.05); }
 }
 
 .hero-content { position: relative; z-index: 1; }
@@ -253,6 +221,67 @@ section {
   display: flex; gap: 14px; flex-wrap: wrap;
   opacity: 0; animation: fadeSlide .7s var(--ease-s) 1s both;
 }
+
+/* Proof strip. Sits under the CTAs so the credibility signal lands before the
+   scroll, but stays inside .hero-copy so the portrait's pinned top edge
+   (align-self: start) is unaffected. Reuses the .proj-tag pill geometry.
+   Label is inline with the list on desktop to keep the hero within one screen. */
+.hero-proof {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  max-width: 640px;
+  opacity: 0;
+  animation: fadeSlide .7s var(--ease-s) 1.2s both;
+}
+.hero-proof-label {
+  font-family: var(--fm);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6f6b66;
+  white-space: nowrap;
+}
+.hero-proof-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hero-proof-item {
+  font-family: var(--fm);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  transition: border-color .2s, color .2s;
+}
+.hero-proof-item:hover { border-color: var(--ink); color: var(--ink); }
+.hero-proof-award {
+  color: var(--gold-ink);
+  background: #fffaf0;
+  border-color: #e2ca95;
+}
+.hero-proof-award:hover { border-color: var(--gold-ink); color: var(--gold-ink); }
+
+/* At >=1024px #hero is an exact-fit min-height:100vh composition. Measured at
+   1280px wide the copy column with this strip is ~917px tall, so on any viewport
+   under ~940px it pushes the CTAs below the fold and drops the absolutely
+   positioned scroll cue and stats out of view. The strip is supplementary — the
+   same employers and the medal are stated in Experience and Honors — so it yields
+   to the hero on short viewports rather than the other way round. Verified: with
+   the strip hidden the hero returns to exactly 100vh at 1280x800. */
+@media (min-width: 1024px) and (max-height: 939px) {
+  .hero-proof { display: none; }
+}
 .btn-solid {
   font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
   background: var(--ink); color: #fff; padding: 14px 30px; border-radius: var(--r2);
@@ -266,21 +295,6 @@ section {
   transition: transform .2s var(--ease-s), border-color .2s, box-shadow .2s;
 }
 .btn-outline:hover { border-color: var(--ink); transform: translateY(-3px); box-shadow: var(--sh-sm); }
-
-/* Hero scroll */
-.hero-scroll {
-  position: absolute; bottom: 32px; left: 48px;
-  display: flex; align-items: center; gap: 12px;
-  font-family: var(--fm); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-4);
-  opacity: 0; animation: fadeSlide .7s var(--ease-s) 1.3s both;
-}
-.scroll-track { width: 48px; height: 1px; background: var(--ink-4); position: relative; overflow: hidden; }
-.scroll-track::after {
-  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: var(--gold); animation: scanLine 2s ease-in-out infinite;
-}
-@keyframes scanLine { 0%{left:-100%} 100%{left:100%} }
 
 /* Hero stats */
 .hero-stats {
@@ -300,48 +314,56 @@ section {
 /* ======================== ABOUT ======================== */
 #about { border-top: 1px solid var(--line); }
 .about-grid { display: grid; grid-template-columns: 1fr 440px; gap: 80px; align-items: start; }
-.about-text h2 {
-  font-family: var(--fd); font-size: clamp(36px, 4.5vw, 58px);
-  font-weight: 700; line-height: 1.05; letter-spacing: -.035em;
-  color: var(--ink); margin-bottom: 28px;
-}
-.about-text h2 .line { display: block; }
-.about-text p { font-size: 15.5px; line-height: 1.82; color: var(--ink-2); margin-bottom: 18px; }
-.skill-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 32px; }
-.skill-chip {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--ink-2); background: var(--bg); border: 1.5px solid var(--line);
-  padding: 7px 14px; border-radius: 999px;
-  transition: background .2s, border-color .2s, color .2s, transform .2s var(--ease-s);
-}
-.skill-chip:hover {
-  background: var(--ink); color: #fff; border-color: var(--ink); transform: translateY(-2px);
-}
+
 
 /* Stack diagram */
 .stack-card {
-  background: var(--bg-card); border: 1px solid var(--line);
-  border-radius: var(--r8); padding: 32px; box-shadow: var(--sh-sm);
-  position: relative; overflow: hidden;
-}
-.stack-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--ink), var(--gold));
+  background: var(--bg-card); border: 1.5px solid var(--line);
+  border-radius: var(--r8); padding: 32px;
+  position: relative;
 }
 .stack-title {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-4); margin-bottom: 24px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-4); margin-bottom: 20px;
 }
-.stack-rows { display: flex; flex-direction: column; gap: 10px; }
+.stack-rows { display: flex; flex-direction: column; margin: 0; }
 .stack-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 14px; border: 1px solid var(--line); border-radius: var(--r4);
-  background: var(--bg); font-family: var(--fb); font-size: 13px; color: var(--ink-2);
-  transition: border-color .2s, transform .2s var(--ease-s), background .2s;
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 13px 0; border-top: 1px solid var(--line);
+  font-family: var(--fb); font-size: 13px; color: var(--ink-2);
+  transition: border-color .2s;
 }
-.stack-row:hover { border-color: var(--gold-lt); background: #fff; transform: translateX(5px); }
-.stack-ico { font-size: 16px; flex-shrink: 0; }
-.stack-sep { width: 1px; height: 10px; background: var(--line-2); margin-left: 20px; }
+/* A definition list, not a stack of cards. The rows are hairlines inside one
+   surface, so the block reads as a single spec sheet instead of five identical
+   boxes — and there is no proficiency rating to defend, because self-assessed
+   "Growing / Strong / Medium" labels are not verifiable by a reader. */
+.stack-row:last-child { border-bottom: 1px solid var(--line); }
+.stack-row:hover { border-color: var(--line-2); }
+.stack-domain { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); flex-shrink: 0; min-width: 152px; }
+.stack-tools { font-family: var(--fm); font-size: 11px; letter-spacing: .04em; color: var(--ink-3); margin: 0; min-width: 0; }
+/* Each tool is an unbreakable item, so "Looker Studio" and "Knowledge Graphs" never
+   split across lines. The middle dot is drawn in the gap before every item rather
+   than typed between them: a typed dot can strand at the end or start of a wrapped
+   line. Here the list clips on its own left edge, so the dot that would sit before
+   the first item on each line falls outside the box and is never painted. The
+   decorative dot gets an empty alt (`/ ''`) so screen readers read a plain list. */
+.stack-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 3px 20px;
+  overflow: hidden; line-height: 1.7;
+}
+.stack-list li { position: relative; white-space: nowrap; }
+.stack-list li::before {
+  content: '\00b7'; content: '\00b7' / '';
+  position: absolute; left: -13px; color: var(--ink-4);
+}
+/* On a phone the 152px label column leaves the tool list ~100px, which puts every
+   tool on its own line and clips the longer nowrap items. The label stacks above
+   its tools instead, so the list gets the full row. */
+@media (max-width: 600px) {
+  .stack-row { flex-direction: column; align-items: stretch; gap: 6px; }
+  .stack-domain { min-width: 0; }
+}
 
 /* ======================== EXPERIENCE ======================== */
 #experience { border-top: 1px solid var(--line); }
@@ -349,25 +371,18 @@ section {
 .exp-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden; cursor: pointer;
-  transition: border-color .25s, box-shadow .3s var(--ease-s);
+  transition: border-color .2s;
   position: relative;
 }
-.exp-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px; background: var(--gold);
-  transform: scaleY(0); transform-origin: top;
-  transition: transform .35s var(--ease-s);
-}
-.exp-card:hover::before, .exp-card.open::before { transform: scaleY(1); }
-.exp-card:hover { border-color: var(--line-2); box-shadow: var(--sh-md); }
-.exp-card.open  { border-color: var(--ink); box-shadow: var(--sh-md); }
+.exp-card:hover { border-color: var(--line-2); }
+.exp-card.open  { border-color: var(--ink); }
 .exp-head {
   padding: 26px 26px 20px;
   display: flex; justify-content: space-between; align-items: flex-start;
 }
 .exp-role    { font-family: var(--fd); font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-.exp-company { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
-.exp-meta    { font-family: var(--fm); font-size: 10px; color: var(--ink-4); line-height: 1.7; }
+.exp-company { font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 5px; }
+.exp-meta    { font-family: var(--fm); font-size: 11px; color: var(--ink-4); line-height: 1.7; }
 .exp-toggle  {
   width: 28px; height: 28px; flex-shrink: 0;
   border: 1.5px solid var(--line); border-radius: var(--r4);
@@ -377,66 +392,98 @@ section {
 }
 .exp-card.open .exp-toggle { background: var(--ink); color: #fff; border-color: var(--ink); transform: rotate(45deg); }
 .exp-preview { padding: 0 26px 20px; font-size: 13px; line-height: 1.7; color: var(--ink-3); }
-.exp-body { max-height: 0; overflow: hidden; transition: max-height .5s var(--ease-s); }
-.exp-card.open .exp-body { max-height: 800px; }
+/* 0fr -> 1fr animates to the body's real height, so open and close take the
+   stated time for every role. max-height:800px finished early on short bodies
+   and clipped long ones. Closing is quicker than opening. */
+.exp-body { display: grid; grid-template-rows: 0fr; overflow: hidden; transition: grid-template-rows .3s var(--ease-s); }
+.exp-body > .exp-body-inner { min-height: 0; overflow: hidden; transition: padding .3s var(--ease-s), border-color .3s; }
+/* A grid item can't shrink below its own padding, so a closed body drops its
+   vertical padding; otherwise ~47px of it stays visible under the trigger. */
+.exp-card:not(.open) .exp-body > .exp-body-inner { padding-top: 0; padding-bottom: 0; border-top-color: transparent; }
+.exp-card.open .exp-body > .exp-body-inner { transition-duration: .45s; }
+.exp-card.open .exp-body { grid-template-rows: 1fr; transition-duration: .45s; }
 .exp-body-inner { padding: 20px 26px 26px; border-top: 1px solid var(--line); }
-.exp-body-label { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 12px; }
+.exp-body-label { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 12px; }
 .exp-list { display: flex; flex-direction: column; gap: 9px; }
 .exp-list li { font-size: 13px; line-height: 1.65; color: var(--ink-2); display: flex; gap: 10px; }
 .exp-list li::before { content: '›'; color: var(--gold); font-size: 16px; flex-shrink: 0; line-height: 1.4; }
 
 /* ======================== PROJECTS ======================== */
 #projects { border-top: 1px solid var(--line); }
+/* Two equal columns, always. A bento variant was tried here (flagship span 6,
+   then 3+3, then 2+2+2) and reverted: giving the flagship the full 1064px
+   measure made it read as a different class of object from the other five
+   rather than as the first of six. The flat 2-up grid also keeps every card the
+   same size, which is what the CTA-alignment rule in .proj-body assumes. */
 .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .proj-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden; cursor: pointer;
-  transition: transform .3s var(--ease-s), box-shadow .3s var(--ease-s), border-color .25s;
+  transition: border-color .2s;
   position: relative;
+  /* Flex column so .proj-body can FILL the leftover height below the image band.
+     This is what puts the CTA on the card's bottom edge. See .proj-body. */
+  display: flex; flex-direction: column;
 }
-.proj-card:hover { transform: translateY(-6px); box-shadow: var(--sh-lg); border-color: var(--line-2); }
+/* The card does not translate. Six project cards lifting -6px each read as a
+   template, and a full-width card that moves also drags the click target out
+   from under the pointer mid-gesture. Feedback is the border going to ink plus
+   the media easing — enough to read as openable without moving the layout. */
+.proj-card:hover { border-color: var(--ink); }
 .proj-img-slot {
   width: 100%; height: 200px; background: var(--bg);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; position: relative;
+  flex-shrink: 0; /* .proj-card is a flex column; the media band keeps its height */
 }
-.proj-img-slot img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease-s); }
-.proj-card:hover .proj-img-slot img { transform: scale(1.04); }
-.proj-img-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  font-family: var(--fm); font-size: 10px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-4); user-select: none;
+.proj-img-slot img { width: 100%; height: 100%; object-fit: cover; }
+/* Shown only if the image fails to load: a plain plate with the project name,
+   never authoring hints like "add image here". */
+.proj-img-placeholder,
+.cert-img-placeholder {
+  display: none; padding: 24px; text-align: center;
+  font-family: var(--fd); font-size: 17px; font-weight: 600; color: var(--ink-3);
 }
-.proj-img-placeholder .ph-ico { font-size: 28px; opacity: .4; }
-.proj-img-placeholder span { font-size: 9px; opacity: .6; }
-.proj-body { padding: 24px; }
-.proj-num   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; color: var(--ink-4); margin-bottom: 12px; }
+/* Column layout with the CTA pushed to the bottom. Cards in a grid row are
+   already the same height, so this lines the "View Technical Details" buttons
+   up across the row instead of letting them float at ragged heights.
+
+   `height: 100%` was WRONG here and hid the button entirely: a percentage
+   height resolves against the card's full content box, which already contains
+   the 200px .proj-img-slot, so the body became as tall as the card instead of
+   filling the space beneath the image. It then spilled ~200px past the card,
+   and .proj-card's overflow:hidden clipped the CTA out of existence — leaving
+   [data-project-open], the only handler that opens the project modal, with
+   nothing clickable. Use flex:1 on a flex-column card instead. */
+.proj-body { padding: 24px; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.proj-num   { font-family: var(--fm); font-size: 11px; letter-spacing: .1em; color: var(--ink-4); margin-bottom: 12px; }
 .proj-title { font-family: var(--fd); font-size: 19px; font-weight: 600; color: var(--ink); margin-bottom: 10px; line-height: 1.2; }
 .proj-desc  { font-size: 13.5px; line-height: 1.72; color: var(--ink-3); margin-bottom: 18px; }
-.proj-tags  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-.proj-tag   { font-family: var(--fm); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); background: var(--bg); border: 1px solid var(--line); padding: 4px 9px; border-radius: 999px; }
-.proj-tag-rag        { background: #fdf3e8; border-color: #d8b58f; color: #825222; }
-.proj-tag-langchain  { background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
-.proj-tag-fastapi    { background: #ebfff9; border-color: #8fdcbf; color: #1b6f56; }
-.proj-tag-postgres   { background: #eef0ff; border-color: #9ca8ed; color: #344497; }
-.proj-tag-ml         { background: #eef9ef; border-color: #92d39a; color: #1f6b33; }
-.proj-tag-python     { background: #edf5ff; border-color: #99bdf5; color: #1f4d9e; }
-.proj-tag-sklearn    { background: #fff2ea; border-color: #f0b28a; color: #9a4f2a; }
-.proj-tag-ds         { background: #eefdff; border-color: #8ed7d7; color: #166767; }
-.proj-tag-regression { background: #f4f3ff; border-color: #b3afe4; color: #4f4692; }
-.proj-tag-pandas     { background: #f5f1ff; border-color: #b6a3e4; color: #4f3a86; }
-.proj-tag-eda        { background: #fff8e8; border-color: #e2ca95; color: #7b5e1f; }
-.proj-tag-tableau    { background: #eaf6ff; border-color: #99c8ec; color: #215c91; }
-.proj-tag-analytics  { background: #eef9f5; border-color: #9fd8c2; color: #1d6650; }
-.proj-cta   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-4); display: flex; align-items: center; gap: 8px; transition: color .2s, gap .2s; }
-.proj-card:hover .proj-cta { color: var(--gold); gap: 14px; }
+
+/* One verified headline number per project, set large, with its sample size
+   beside it. Projects without a measured result simply have no figure — the
+   slot is never filled with a made-up number. */
+.proj-figure { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.proj-figure-n { font-family: var(--fd); font-size: 40px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--ink); }
+.proj-figure-l { font-size: 13px; line-height: 1.45; color: var(--ink-3); max-width: 240px; }
+/* The measured number is the one thing on the card that gets its own entrance:
+   uncovered left to right after the card lands, like a readout settling.
+   Gated on .js like every reveal, so with no script it is simply there. */
+.js .proj-card[data-reveal] .proj-figure-n { clip-path: inset(-.1em 100% -.1em -.1em); }
+.js .proj-card[data-reveal].in .proj-figure-n {
+  clip-path: inset(-.1em -.1em -.1em -.1em);
+  transition: clip-path .7s var(--ease-s) .3s;
+}
+.proj-status { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 16px; }
+/* Plain text labels in a single run, not chips: the stack is context, the
+   numbers above are the point. */
+.proj-tags  { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 16px; }
 
 /* ======================== PROJECT MODAL ======================== */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 500;
   background: rgba(17,17,16,.6);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px; opacity: 0; pointer-events: none;
   transition: opacity .35s var(--ease-s);
@@ -446,17 +493,20 @@ section {
   background: var(--bg-card); border-radius: var(--r8);
   width: 100%; max-width: 880px; max-height: 90vh;
   overflow-y: auto; box-shadow: var(--sh-lg);
-  transform: translateY(32px) scale(.96);
-  transition: transform .4s var(--ease-s);
+  /* --modal-dx/--modal-dy point from the viewport centre to the card that
+     opened the modal (set in openModal), so the detail grows out of its card
+     and shrinks back into it on close. Closing is quicker than opening. */
+  transform: translate(var(--modal-dx, 0px), var(--modal-dy, 32px)) scale(.6);
+  transition: transform .25s var(--ease-s);
 }
-.modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+.modal-overlay.open .modal-box { transform: none; transition-duration: .45s; }
 .modal-bar {
-  position: sticky; top: 0; background: rgba(255,255,255,.95);
-  backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--bg-card);
+  border-bottom: 1px solid var(--line);
   padding: 18px 32px; display: flex; justify-content: space-between; align-items: center;
   z-index: 10;
 }
-.modal-bar-label { font-family: var(--fm); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); }
+.modal-bar-label { font-family: var(--fm); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); }
 .modal-close {
   width: 32px; height: 32px; border: 1.5px solid var(--line); border-radius: var(--r4);
   background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -465,26 +515,11 @@ section {
 .modal-close:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 .modal-content { padding: 40px 32px 56px; }
 .modal-title { font-family: var(--fd); font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 6px; }
-.modal-sub { font-family: var(--fm); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 32px; }
-.modal-sh { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-top: 28px; margin-bottom: 10px; }
+.modal-sub { font-family: var(--fm); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 32px; }
+.modal-sh { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-top: 28px; margin-bottom: 10px; }
 .modal-p { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); }
-.flow-wrap { margin-top: 28px; padding: 26px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8); }
-.flow-label { font-family: var(--fm); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 18px; }
-.flow-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.flow-node {
-  background: #fff; border: 1.5px solid var(--line); border-radius: var(--r4);
-  padding: 9px 14px; font-family: var(--fm); font-size: 11px; color: var(--ink);
-  text-align: center; transition: background .2s, border-color .2s;
-  opacity: 0; animation: nodeIn .4s var(--ease-s) both;
-}
-.flow-node:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
-.flow-node .fn-ico { font-size: 15px; margin-bottom: 3px; }
-.flow-arrow-svg {
-  color: var(--ink-4); opacity: 0; animation: nodeIn .4s var(--ease-s) both;
-}
-.flow-arrow-svg svg { animation: nudge 2s ease-in-out infinite; }
-@keyframes nudge { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
-@keyframes nodeIn  { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.flow-wrap { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+.flow-label { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; }
 
 /* ======================== CERTIFICATES ======================== */
 #certificates { border-top: 1px solid var(--line); }
@@ -492,30 +527,21 @@ section {
 .cert-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden;
-  transition: transform .3s var(--ease-s), box-shadow .3s, border-color .2s;
   position: relative;
 }
-.cert-card:hover { transform: translateY(-5px); box-shadow: var(--sh-md); border-color: var(--line-2); }
 .cert-img-slot {
   width: 100%; height: 160px; background: var(--bg);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; position: relative;
 }
-.cert-img-slot img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease-s); }
-.cert-card:hover .cert-img-slot img { transform: scale(1.05); }
-.cert-img-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  font-family: var(--fm); font-size: 9px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-4); user-select: none;
-}
-.cert-img-placeholder .ph-ico { font-size: 24px; opacity: .35; }
+.cert-img-slot img { width: 100%; height: 100%; object-fit: cover; }
 .cert-body { padding: 20px; }
-.cert-badge { position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
-.cert-issuer { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 7px; }
-.cert-name   { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
-.cert-date   { font-family: var(--fm); font-size: 10px; color: var(--ink-4); }
-.cert-desc   { font-size: 12px; color: var(--ink-3); margin-top: 7px; line-height: 1.55; }
+/* No "Verified" pills or badges: the page cannot verify anything itself. A
+   credential is backed by its link, or it carries no button at all. */
+.cert-issuer { font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 7px; }
+.cert-name   { font-family: var(--fd); font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
+.cert-desc   { font-size: 13px; color: var(--ink-3); margin-top: 7px; line-height: 1.6; }
 .section-intro {
   max-width: 760px;
   margin: -24px 0 24px;
@@ -523,103 +549,34 @@ section {
   line-height: 1.75;
   color: var(--ink-2);
 }
-.cert-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
 .cert-level {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .07em;
   text-transform: uppercase;
   color: var(--ink-3);
-}
-.cert-status {
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: #6f6b66;
-  border: 1px solid #d4d0ca;
-  border-radius: 999px;
-  padding: 3px 8px;
-  background: #f6f4ef;
-}
-.cert-status-verified {
-  color: #166534;
-  border-color: #86d39b;
-  background: #e9f8ed;
-}
-.cert-id {
-  margin-top: 6px;
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .05em;
-  color: var(--ink-4);
-}
-.cert-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-.cert-tag {
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 4px 8px;
-  color: var(--ink-3);
-  background: #faf9f6;
+  margin-bottom: 8px;
 }
 
-/* Colored certificate tag variants */
-.cert-tag-analytics    { background: #eef9f5; border-color: #9fd8c2; color: #1d6650; }
-.cert-tag-ml           { background: #eef9ef; border-color: #92d39a; color: #1f6b33; }
-.cert-tag-decision    { background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
-.cert-tag-python      { background: #edf5ff; border-color: #99bdf5; color: #1f4d9e; }
-.cert-tag-automation  { background: #fff2ea; border-color: #f0b28a; color: #9a4f2a; }
-.cert-tag-data        { background: #eefdff; border-color: #8ed7d7; color: #166767; }
-.cert-tag-sql         { background: #eef0ff; border-color: #9ca8ed; color: #344497; }
-.cert-tag-dashboard   { background: #eaf6ff; border-color: #99c8ec; color: #215c91; }
-.cert-tag-storytelling{ background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
 .cert-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
 }
+/* Text links, not filled pills: "open the credential" is a secondary action
+   on a card whose content is the credential itself. */
 .cert-btn {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 7px 10px;
-  color: var(--ink-2);
-  background: #fff;
-  transition: border-color .2s, color .2s, background .2s;
-}
-.cert-btn:hover {
-  border-color: var(--ink);
   color: var(--ink);
+  border-bottom: 1px solid var(--line-2);
+  padding: 6px 0;
+  transition: border-color .2s;
 }
-.cert-btn-primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-.cert-btn-primary:hover {
-  background: #000;
-  border-color: #000;
-  color: #fff;
-}
+.cert-btn:hover { border-color: var(--ink); }
 
 /* ======================== HONORS ======================== */
 #honors { border-top: 1px solid var(--line); }
@@ -638,27 +595,18 @@ section {
 .honor-year { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-4); padding-top: 4px; }
 .honor-right { padding-left: 32px; }
 .honor-title { font-family: var(--fd); font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 5px; line-height: 1.25; }
-.honor-org   { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
-.honor-desc  { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
+.honor-org   { font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 10px; }
+/* Capped at 720px: the honor items span the full 1064px content column, so an
+   uncapped .honor-desc ran to ~1100px — the longest measure anywhere on the
+   page. Every other prose block is already held to 680-760px (.pg-sub,
+   .hero-copy, .section-intro); honors was the one that slipped through. */
+.honor-desc  { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); max-width: 720px; }
 .honor-meta {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .05em;
-  color: var(--ink-4);
+  color: var(--ink-3);
   margin-bottom: 10px;
-}
-.honor-pill {
-  display: inline-flex;
-  margin-bottom: 10px;
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: #7a5318;
-  background: #fff2de;
-  border: 1px solid #e4be8a;
-  border-radius: 999px;
-  padding: 4px 9px;
 }
 .honor-actions {
   display: flex;
@@ -668,40 +616,35 @@ section {
 }
 .honor-actions a {
   font-family: var(--fm);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .07em;
   text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 6px 10px;
-  color: var(--ink-2);
-  background: #fff;
-  transition: border-color .2s, color .2s, background .2s;
-}
-.honor-actions a:hover {
-  border-color: var(--ink);
   color: var(--ink);
+  border-bottom: 1px solid var(--line-2);
+  padding: 6px 0;
+  transition: border-color .2s;
 }
-.honor-item-featured {
-  background: linear-gradient(90deg, rgba(255,247,232,.62), rgba(255,255,255,0));
-}
-/* decorative dot on timeline */
-.honor-item::after {
-  content: ''; position: absolute;
-  left: calc(120px - 4px); top: 36px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--bg); border: 2px solid var(--line-2);
-  transition: border-color .3s, background .3s;
-}
-.honor-item:hover::after { background: var(--gold); border-color: var(--gold); }
+.honor-actions a:hover { border-color: var(--ink); }
+/* The floating timeline dot was removed — a dot that only exists to fill a 1px
+   rule adds nothing a reader can act on. (A dead .honor-item:hover::after
+   rule that referenced that dot was removed with it.) */
 
 /* ======================== CONTACT ======================== */
 #contact { border-top: 1px solid var(--line); }
-.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+/* minmax(0,1fr), not 1fr: a bare 1fr track floors at its content's min-content
+   width, and the unbreakable email string below pushed the whole contact
+   column past a 320px viewport (46px of clipped overflow). */
+.contact-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 80px; align-items: start; }
 .contact-heading {
-  font-family: var(--fd); font-size: clamp(38px, 5vw, 68px);
+  /* The <br> in the markup forces "Got a project" / "or opportunity?". At the old
+     clamp(38px,5vw,68px) the second line measured wider than the ~492px grid
+     column, so it broke AGAIN and stranded "or" alone on its own line. 58px is
+     also the same ceiling as .about-title, so Contact ties About rather than
+     out-shouting it. Verified: the heading now renders on 2 lines, not 3. */
+  font-family: var(--fd); font-size: clamp(36px, 4.3vw, 58px);
   font-weight: 700; line-height: .95; letter-spacing: -.04em;
   color: var(--ink); margin-bottom: 24px;
+  text-wrap: balance;
 }
 .contact-sub { font-size: 15px; line-height: 1.78; color: var(--ink-2); margin-bottom: 40px; }
 .contact-links { display: flex; flex-direction: column; gap: 10px; }
@@ -709,15 +652,18 @@ section {
   display: flex; align-items: center; gap: 14px;
   padding: 16px 20px; border: 1.5px solid var(--line); border-radius: var(--r4);
   background: var(--bg-card); font-family: var(--fb); font-size: 14px; color: var(--ink);
-  transition: border-color .2s, transform .25s var(--ease-s), box-shadow .25s;
+  transition: border-color .2s;
 }
-.c-link:hover { border-color: var(--ink); transform: translateX(8px); box-shadow: var(--sh-sm); }
+.c-link:hover { border-color: var(--ink); }
 .c-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
-.c-label { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-4); margin-left: auto; }
+/* The address/handle is a single unbreakable token, so it needs an explicit
+   break opportunity plus min-width:0 to be allowed to shrink as a flex item. */
+.c-text { min-width: 0; overflow-wrap: anywhere; }
+.c-label { font-family: var(--fm); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-4); margin-left: auto; flex-shrink: 0; }
 
 .form-wrap { display: flex; flex-direction: column; gap: 14px; }
 .f-grp { display: flex; flex-direction: column; gap: 6px; }
-.f-lbl { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); }
+.f-lbl { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); }
 .f-inp, .f-txt {
   background: var(--bg-card); border: 1.5px solid var(--line); border-radius: var(--r4);
   padding: 12px 16px; font-family: var(--fb); font-size: 14px; color: var(--ink);
@@ -731,9 +677,9 @@ section {
   letter-spacing: .1em; text-transform: uppercase;
   background: var(--ink); color: #fff; border: none;
   padding: 14px 32px; border-radius: var(--r2); cursor: pointer;
-  transition: transform .2s var(--ease-s), box-shadow .2s, background .2s;
+  transition: background .2s;
 }
-.f-submit:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.2); background: #000; }
+.f-submit:hover { background: #000; }
 
 /* ======================== FOOTER ======================== */
 footer {
@@ -754,7 +700,7 @@ footer {
 .footer-brand .f-logo em { color: var(--gold-lt); font-style: normal; }
 .footer-brand p { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,.5); max-width: 320px; }
 .footer-links-col { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.footer-col-label { font-family: var(--fm); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 12px; }
+.footer-col-label { font-family: var(--fm); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 12px; }
 .footer-link {
   display: flex; align-items: center; gap: 12px;
   font-family: var(--fb); font-size: 14px; color: rgba(255,255,255,.65);
@@ -765,51 +711,37 @@ footer {
 .footer-link .fl-arr { font-size: 16px; margin-left: auto; opacity: .4; transition: opacity .2s; }
 .footer-link:hover .fl-arr { opacity: 1; }
 
-/* Footer glow line */
-.footer-glow {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 60%; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-lt), transparent);
-}
 
 .footer-bottom {
   max-width: 1160px; margin: 0 auto;
   padding: 24px 48px;
   display: flex; justify-content: space-between; align-items: center;
 }
-.footer-copy { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; color: rgba(255,255,255,.3); }
+.footer-copy { font-family: var(--fm); font-size: 11px; letter-spacing: .08em; color: rgba(255,255,255,.3); }
 .footer-back {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
   color: rgba(255,255,255,.4); display: flex; align-items: center; gap: 8px;
   transition: color .2s;
 }
 .footer-back:hover { color: var(--gold-lt); }
-
-/* Big decorative text */
-.footer-big-text {
-  font-family: var(--fd); font-weight: 700;
-  font-size: clamp(60px, 12vw, 180px);
-  letter-spacing: -.05em; color: rgba(255,255,255,.04);
-  white-space: nowrap; text-align: center;
-  padding: 0 48px 20px; line-height: 1; user-select: none;
-  overflow: hidden;
-}
 
 /* ======================== RESPONSIVE ======================== */
 @media (max-width: 960px) {
   nav { padding: 0 24px; }
   .nav-links { display: none; }
   section { padding: 80px 24px; }
-  .about-grid { grid-template-columns: 1fr; gap: 40px; }
-  .exp-grid, .proj-grid { grid-template-columns: 1fr; }
-  .cert-grid { grid-template-columns: 1fr 1fr; }
-  .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+  /* minmax(0,...) throughout: a bare 1fr track floors at its content's
+     min-content width, which let the About and Projects columns exceed a
+     320px viewport instead of shrinking. */
+  .about-grid { grid-template-columns: minmax(0,1fr); gap: 40px; }
+  .exp-grid, .proj-grid { grid-template-columns: minmax(0,1fr); }
+  .cert-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .contact-grid { grid-template-columns: minmax(0,1fr); gap: 48px; }
   .footer-top { grid-template-columns: 1fr; gap: 40px; }
   .footer-bottom { flex-direction: column; gap: 12px; }
-  .hero-stats, .hero-scroll { display: none; }
+  .hero-stats { display: none; }
   .honor-item { grid-template-columns: 80px 1fr; }
   .honor-item::before { left: 80px; }
-  .honor-item::after { left: calc(80px - 4px); }
 }
 @media (max-width: 600px) {
   .cert-grid { grid-template-columns: 1fr; }
@@ -817,7 +749,6 @@ footer {
   .hero-name { font-size: clamp(30px, 10vw, 54px); margin-bottom: 16px; }
   .hero-role { font-size: clamp(17px, 6vw, 24px); }
   .hero-desc { font-size: 15px; line-height: 1.65; }
-  .footer-big-text { font-size: 60px; }
 }
 
 /* ======================== ACCESSIBILITY + STRUCTURE OVERRIDES ======================== */
@@ -845,13 +776,6 @@ footer {
   transition: top .2s var(--ease-s);
 }
 .skip-link:focus-visible { top: 16px; }
-
-body.use-custom-cursor { cursor: none; }
-body:not(.use-custom-cursor) .cursor,
-body:not(.use-custom-cursor) .cursor-trail {
-  opacity: 0;
-  visibility: hidden;
-}
 
 .hero-section {
   max-width: none;
@@ -886,17 +810,22 @@ body:not(.use-custom-cursor) .cursor-trail {
   margin-bottom: 28px;
 }
 .about-title .line { display: block; }
-.about-em { font-style: italic; color: var(--gold); }
+.about-em { font-style: italic; color: var(--gold-ink); }
 .about-intro { margin-top: 24px; }
-.about-skill-grid { margin-top: 32px; }
 
-#about {
-  background: linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 100%);
-}
-.about-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(350px, 460px);
-  gap: 64px;
-  align-items: stretch;
+/* Desktop-only two-column About. This MUST stay inside a min-width query.
+   It used to be unscoped, so it sat after the max-width:960px block and won on
+   source order at every phone width — re-imposing a 350px second column that
+   forced 28px of clipped overflow at 320px. This is the source-order trap
+   AGENTS.md warns about: the later rule wins regardless of specificity. */
+@media (min-width: 961px) {
+  .about-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(350px, 460px);
+    gap: 64px;
+    /* start, not stretch: with the nested boxes gone the stack card is much
+       shorter than the prose column, and stretching left a large empty void. */
+    align-items: start;
+  }
 }
 #about p {
   font-size: 16px;
@@ -904,132 +833,58 @@ body:not(.use-custom-cursor) .cursor-trail {
   color: var(--ink-2);
   margin-bottom: 16px;
 }
-.about-kpi-grid {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.about-kpi {
-  border: 1px solid var(--line);
-  border-radius: var(--r8);
-  background: rgba(255,255,255,.7);
-  padding: 12px;
-  box-shadow: var(--sh-sm);
-}
-.kpi-v {
-  display: block;
-  font-family: var(--fd);
-  font-size: 18px;
-  letter-spacing: -.02em;
-  color: var(--ink);
-}
-.kpi-l {
-  display: block;
-  margin-top: 4px;
-  font-family: var(--fm);
-  font-size: 11px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
+/* The stack rows now reveal with their parent card via [data-reveal]; the
+   per-row transform/opacity reset and the 5-step stackRise ladder are gone,
+   along with .stack-level (self-assessed proficiency) and the five coloured
+   rails, which were decoration pretending to be a taxonomy. */
 
-.skill-chip {
-  font-size: 11px;
-  letter-spacing: .06em;
-  border-width: 1px;
-}
-.skill-chip.skill-python    { background: #edf5ff; border-color: #99bdf5; color: #1f4d9e; }
-.skill-chip.skill-ml        { background: #eef9ef; border-color: #92d39a; color: #1f6b33; }
-.skill-chip.skill-dl        { background: #f5f1ff; border-color: #b6a3e4; color: #4f3a86; }
-.skill-chip.skill-pytorch   { background: #fff2ea; border-color: #f0b28a; color: #9a4f2a; }
-.skill-chip.skill-azure     { background: #ecf6ff; border-color: #90bde8; color: #14538d; }
-.skill-chip.skill-ds        { background: #eefdff; border-color: #8ed7d7; color: #166767; }
-.skill-chip.skill-sql       { background: #eef0ff; border-color: #9ca8ed; color: #344497; }
-.skill-chip.skill-r         { background: #f4f3ff; border-color: #b3afe4; color: #4f4692; }
-.skill-chip.skill-langchain { background: #fff8e8; border-color: #e9c97f; color: #7a5a15; }
-.skill-chip.skill-rag       { background: #fdf3e8; border-color: #d8b58f; color: #825222; }
-.skill-chip.skill-fastapi   { background: #ebfff9; border-color: #8fdcbf; color: #1b6f56; }
-.skill-chip.skill-tableau   { background: #eaf6ff; border-color: #99c8ec; color: #215c91; }
+/* ---- DISPLAY TIER: editorial serif (protocol S3) ----
+   These four blocks are the effective declarations for the display tier and sit
+   late in the file, so they win on source order over the base hero block above.
 
-.stack-card {
-  background: linear-gradient(180deg, #ffffff 0%, #fefdfb 100%);
-}
-.stack-rows {
-  gap: 12px;
-}
-.stack-row {
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 14px;
-  border-radius: 10px;
-  border: 1px solid #dedad2;
-  background: #fff;
-  transform: translateY(12px);
-  opacity: 0;
-}
-.stack-card.in .stack-row {
-  animation: stackRise .55s var(--ease-s) forwards;
-}
-.stack-card.in .stack-row:nth-child(1) { animation-delay: .08s; }
-.stack-card.in .stack-row:nth-child(2) { animation-delay: .16s; }
-.stack-card.in .stack-row:nth-child(3) { animation-delay: .24s; }
-.stack-card.in .stack-row:nth-child(4) { animation-delay: .32s; }
-.stack-card.in .stack-row:nth-child(5) { animation-delay: .40s; }
+   Line-heights are RAISED versus the Clash Display values (.88 / .96). A
+   geometric grotesque with tall caps absorbs sub-1.0 leading; a serif with long
+   ascenders and descenders collides below ~1.0, and "Abira Wisnunggal" wraps to
+   two lines at most desktop widths, so this is load-bearing rather than
+   cosmetic. Tracking is loosened to -0.02/-0.03em for the same reason.
 
-.stack-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-.stack-domain {
-  font-family: var(--fd);
-  font-size: 16px;
-  color: var(--ink);
-  line-height: 1.1;
-}
-.stack-tools {
-  font-family: var(--fb);
-  font-size: 13px;
-  color: var(--ink-3);
-}
-.stack-level {
-  font-family: var(--fm);
-  font-size: 10px;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-  padding: 5px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line-2);
-  color: var(--ink-3);
-  background: #faf9f7;
-}
-.stack-row-ai  { border-left: 4px solid #4e7fcc; }
-.stack-row-llm { border-left: 4px solid #3ca46e; }
-.stack-row-data{ border-left: 4px solid #41a5a5; }
-.stack-row-db  { border-left: 4px solid #8a76cf; }
-.stack-row-ops { border-left: 4px solid #b6843a; }
-
-@keyframes stackRise {
-  from { transform: translateY(12px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
-}
-
+   Weights preserve the Reversed Hero Rule: the name is largest AND heaviest
+   (600), the h1 beneath it is smaller and lighter (500) and lower-contrast.
+   .hero-role deliberately STAYS Clash Display — it reads as a geometric
+   caption under a serif statement, which is the contrast the hero wants. */
 .hero-name {
+  font-family: var(--fserif);
+  font-weight: 500;
   font-size: clamp(30px, 4.2vw, 58px);
-  line-height: .96;
+  line-height: 1.08;
+  letter-spacing: -.02em;
 }
 .hero-nickname {
+  font-family: var(--fserif);
+  font-weight: 600;
   font-size: clamp(48px, 7.2vw, 94px);
-  line-height: .88;
+  line-height: 1.02;
+  letter-spacing: -.025em;
   margin-bottom: 16px;
 }
 .hero-role {
   font-size: clamp(18px, 1.9vw, 26px);
   margin-bottom: 14px;
 }
+.about-title {
+  font-family: var(--fserif);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+.contact-heading {
+  font-family: var(--fserif);
+  font-weight: 600;
+  line-height: 1.1;
+}
+/* .pg-title is NOT overridden here: its base declaration sits further down the
+   file (~1690) and would win on source order at equal specificity. It is
+   changed in place instead. */
 .hero-desc {
   max-width: 700px;
   margin-bottom: 30px;
@@ -1037,8 +892,37 @@ body:not(.use-custom-cursor) .cursor-trail {
 
 .hero-profile {
   justify-self: end;
-  width: min(40vw, 430px);
-  aspect-ratio: 1;
+  align-self: start;
+  /* The invariant this repo holds: the photograph's top edge sits 0.4 x the
+     nickname font-size (about 38px at the 94px ceiling) ABOVE the cap-height of
+     the first h1 line ("I build AI systems"). It was exactly level with that
+     cap-height, and before that level with the "Abira Wisnunggal" cap-height;
+     the user asked for it a little higher, so 0.4 x is a tuned nudge, not a
+     typographic alignment.
+
+     align-self stays `start`, so the cell top == .hero-copy top and the margin
+     is the whole offset. Terms, in order:
+
+       1.64 x nicknameFS = 2 lines x 1.02 line-height (the nickname wraps to two
+                           lines at every desktop width, measured) minus the
+                           0.4 x nudge
+       16px              = .hero-nickname margin-bottom
+       0.07 x h1FS       = gap from the h1 box top to the cap-height of its first
+                           line, canvas measureText in Newsreader 500 at line-height
+                           1.08. Chrome rounds ascent/descent to whole pixels, so
+                           the true ratio wobbles 0.065-0.075 with size; 0.07
+                           keeps the error under 0.3px.
+       -12.22px          = the gold plate's constant frame inset
+                           (--hero-media-inset x aspectRatio / 2), because the
+                           visible photo sits that far inside the cell.
+
+     Expressed as a formula because both font sizes are vw clamps while the 16px
+     and 12.22px terms are constant. If the wordmark ever fits on one line, or
+     either type scale or the display face changes, re-measure. Do not switch to
+     align-self: center. */
+  margin-top: calc(1.64 * clamp(48px, 7.2vw, 94px) + 16px + 0.07 * clamp(30px, 4.2vw, 58px) - 12.22px);
+  width: min(34vw, 420px);
+  aspect-ratio: var(--hero-media-ar);
   display: grid;
   place-items: center;
   position: relative;
@@ -1046,7 +930,7 @@ body:not(.use-custom-cursor) .cursor-trail {
 .hero-profile-ring {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: 22px;
   border: 1px solid rgba(184,146,74,.45);
   background:
     radial-gradient(circle at 25% 20%, rgba(255,255,255,.7), rgba(255,255,255,0) 45%),
@@ -1056,9 +940,9 @@ body:not(.use-custom-cursor) .cursor-trail {
 }
 .hero-profile-frame {
   position: relative;
-  width: 84%;
-  aspect-ratio: 1;
-  border-radius: 50%;
+  width: calc(100% - (2 * var(--hero-media-inset)));
+  aspect-ratio: var(--hero-media-ar);
+  border-radius: 22px;
   overflow: hidden;
   border: 4px solid rgba(255,255,255,.95);
   background: radial-gradient(circle at 30% 25%, #f4efe5 0%, #ddd8cf 100%);
@@ -1066,8 +950,8 @@ body:not(.use-custom-cursor) .cursor-trail {
 }
 .hero-profile-frame img {
   width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
+  height: 100%;
+  aspect-ratio: var(--hero-media-ar);
   object-fit: cover;
   object-position: center;
 }
@@ -1096,37 +980,12 @@ body:not(.use-custom-cursor) .cursor-trail {
   flex-wrap: wrap;
   gap: 18px;
 }
-.text-cta {
-  font-family: var(--fm);
-  font-size: 12px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  transition: color .2s;
-}
-.text-cta:hover { color: var(--ink); }
 
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.nav-link-ghost {
-  font-family: var(--fm);
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  border: 1px solid var(--line-2);
-  padding: 8px 14px;
-  border-radius: var(--r2);
-  transition: border-color .2s, color .2s;
-}
-.nav-link-ghost:hover {
-  color: var(--ink);
-  border-color: var(--ink);
-}
-
 .nav-toggle {
   width: 40px;
   height: 40px;
@@ -1152,15 +1011,23 @@ body:not(.use-custom-cursor) .cursor-trail {
   right: 0;
   bottom: 0;
   width: min(340px, 90vw);
-  background: rgba(255,255,255,.97);
-  backdrop-filter: blur(12px);
+  background: var(--bg-card);
   border-left: 1px solid var(--line);
   transform: translateX(102%);
-  transition: transform .28s var(--ease-s);
+  /* visibility removes the off-screen panel from sequential keyboard focus.
+     Delayed on close so it hides after the slide-out; immediate on open.
+     JS also toggles `inert` as belt-and-braces for engines that keep
+     visibility:hidden subtrees focusable. */
+  visibility: hidden;
+  transition: transform .28s var(--ease-s), visibility 0s linear .28s;
   z-index: 180;
   padding: 18px;
 }
-.nav-drawer.open { transform: translateX(0); }
+.nav-drawer.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform .28s var(--ease-s), visibility 0s;
+}
 .nav-drawer-head {
   display: flex;
   align-items: center;
@@ -1172,7 +1039,7 @@ body:not(.use-custom-cursor) .cursor-trail {
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--ink-4);
+  color: var(--ink-3);
 }
 .nav-drawer-close {
   border: 1px solid var(--line-2);
@@ -1226,9 +1093,8 @@ body:not(.use-custom-cursor) .cursor-trail {
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1.5px solid var(--line-2);
-  box-shadow: var(--sh-sm);
-  background: radial-gradient(circle at 25% 20%, #ffffff, #ebe6dc);
+  border: 1px solid var(--line);
+  background: var(--bg-card);
   display: grid;
   place-items: center;
 }
@@ -1242,10 +1108,10 @@ body:not(.use-custom-cursor) .cursor-trail {
   place-items: center;
   text-align: center;
   font-family: var(--fm);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: #7b756f;
+  color: var(--ink-3);
 }
 
 .proj-card {
@@ -1260,6 +1126,18 @@ body:not(.use-custom-cursor) .cursor-trail {
   font-size: 14px;
   line-height: 1.55;
 }
+/* Global `ul { list-style: none }` suppresses ::marker, so the gold marker
+   documented here never rendered. Match .exp-list: a flex row with a gold
+   '›' glyph — list glyphs are allowed to stay gold per the Restrained Gold
+   Rule, and this keeps both lists visually consistent. */
+.proj-metrics li { display: flex; gap: 10px; }
+.proj-metrics li::before {
+  content: '›';
+  color: var(--gold);
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
 .proj-metrics li::marker { color: var(--gold); }
 
 .proj-proof {
@@ -1268,24 +1146,22 @@ body:not(.use-custom-cursor) .cursor-trail {
   gap: 8px;
   margin-bottom: 16px;
 }
+.proj-proof { gap: 18px; }
 .proj-proof a {
   font-family: var(--fm);
   font-size: 11px;
   letter-spacing: .06em;
   text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 6px 10px;
-  color: var(--ink-2);
-  transition: border-color .2s, color .2s, background .2s;
-}
-.proj-proof a:hover {
-  border-color: var(--ink);
   color: var(--ink);
-  background: #fff;
+  border-bottom: 1px solid var(--line-2);
+  padding: 6px 0;
+  transition: border-color .2s;
 }
+.proj-proof a:hover { border-color: var(--ink); }
 
 .proj-open-btn {
+  margin-top: auto;
+  align-self: flex-start;
   font-family: var(--fm);
   font-size: 12px;
   letter-spacing: .08em;
@@ -1300,6 +1176,37 @@ body:not(.use-custom-cursor) .cursor-trail {
   background: var(--ink);
   color: #fff;
 }
+
+/* Focusable error summary. Sits above the fields, receives focus on failed submit,
+   and links to each invalid field. Inline .f-err messages are retained. */
+.f-summary {
+  border: 1.5px solid #b91c1c;
+  border-radius: var(--r4);
+  background: #fdf5f5;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+.f-summary:focus { outline: 3px solid #b91c1c; outline-offset: 3px; }
+.f-summary-title {
+  font-family: var(--fd);
+  font-size: 16px;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+.f-summary-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.f-summary-list a {
+  font-size: 13.5px;
+  color: #b91c1c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.f-summary-list a:hover { color: #7f1d1d; }
 
 .f-err {
   min-height: 16px;
@@ -1319,6 +1226,7 @@ body:not(.use-custom-cursor) .cursor-trail {
 .form-status.success { color: #166534; }
 .form-status.error { color: #b91c1c; }
 
+
 .c-icon {
   font-family: var(--fm);
   font-size: 11px;
@@ -1331,6 +1239,7 @@ body:not(.use-custom-cursor) .cursor-trail {
   align-items: center;
   justify-content: center;
 }
+.c-icon svg { width: 15px; height: 15px; display: block; }
 
 /* Increase micro typography readability and contrast */
 .sec-label,
@@ -1342,14 +1251,11 @@ body:not(.use-custom-cursor) .cursor-trail {
 .exp-meta,
 .exp-body-label,
 .proj-num,
-.proj-tag,
-.proj-cta,
 .modal-bar-label,
 .modal-sub,
 .modal-sh,
 .flow-label,
 .cert-issuer,
-.cert-date,
 .honor-org,
 .c-label,
 .f-lbl,
@@ -1368,11 +1274,43 @@ body:not(.use-custom-cursor) .cursor-trail {
 .flow-label,
 .c-label,
 .f-lbl,
+.h-stat .l,
+/* Second pass: metadata that was still inheriting --ink-4. --ink-4 (#b0ada8) is
+   2.1:1 on paper and 2.2:1 on white, so it is decoration-only from here on. */
+.exp-body-label,
+.stack-title,
+.honor-year,
+.honor-meta {
+  color: var(--ink-3);
+}
+
+/* The footer is --bg-dark (#111110), so the light-surface repaint above is wrong
+   there. These three were folded into that block and inherited #6f6b66, which is
+   3.57:1 on the dark ground. Their original rgba(255,255,255,.3/.4) was worse
+   still at 2.68:1. rgba(255,255,255,.5) composites to ~#888888 = 5.37:1 and .65
+   to ~#acacac = 8.39:1, both passing at 11px. .65 matches .footer-link, keeping
+   the back-to-top CTA at the same weight as the other footer links. */
 .footer-copy,
-.footer-back,
-.footer-col-label,
-.h-stat .l {
-  color: #6f6b66;
+.footer-col-label { color: rgba(255,255,255,.5); }
+.footer-back { color: rgba(255,255,255,.65); }
+
+/* The playground block sits below this override block, so `.pg-*` labels cannot be
+   repainted from here — they lose on source order at equal specificity. They are
+   fixed at their own declarations instead. */
+
+/* ======================== BUTTON PRESS FEEDBACK (protocol S5/S7) ========================
+   Hover already lifts these (-2px/-3px). There was no :active state at all, so a
+   tap on a touch device got no acknowledgement beyond a hover that may never
+   fire. scale(.98) is the protocol's specified press response. It composes with
+   the existing lift because hover uses translate and press uses scale — two
+   different properties — so the button never fights itself mid-gesture. */
+.btn-solid:active,
+.btn-outline:active,
+.f-submit:active,
+.pg-submit:active,
+.nav-btn:active,
+.pg-chip:active {
+  transform: scale(.98);
 }
 
 a:focus-visible,
@@ -1382,10 +1320,37 @@ textarea:focus-visible,
 .exp-trigger:focus-visible,
 .proj-open-btn:focus-visible,
 .nav-toggle:focus-visible,
-.nav-drawer-close:focus-visible {
-  outline: 3px solid var(--gold);
+.nav-drawer-close:focus-visible,
+.cert-btn:focus-visible,
+.pg-chip:focus-visible,
+.pg-submit:focus-visible {
+  /* --gold-ink, not --gold (2.7:1 on paper, fails WCAG 1.4.11) and not --ink
+     (16:1 on paper but 1.08:1 on the #111110 footer, where the ring vanishes).
+     --gold-ink is 4.7:1 on --bg, 5.0:1 on white, 3.75:1 on --bg-dark. */
+  outline: 3px solid var(--gold-ink);
   outline-offset: 3px;
 }
+
+/* Invisible hit-area expansion for sub-44px icon buttons. The ::after box is
+   part of the button itself, so it extends the clickable region without
+   changing the visual size or the surrounding layout. Web WCAG 2.5.8 only
+   requires 24px, which these already meet — this is a comfort upgrade for
+   coarse pointers, not a conformance fix. */
+.exp-toggle,
+.modal-close,
+.nav-drawer-close,
+.nav-toggle { position: relative; }
+.exp-toggle::after,
+.modal-close::after,
+.nav-drawer-close::after,
+.nav-toggle::after {
+  content: '';
+  position: absolute;
+}
+.exp-toggle::after { inset: -8px; }      /* 28px -> 44px */
+.modal-close::after { inset: -8px; }    /* 29-32px -> 44px+ */
+.nav-drawer-close::after { inset: -8px; } /* 33-34px -> 44px+ */
+.nav-toggle::after { inset: -3px; }      /* 39-40px -> 44px */
 
 @media (max-width: 960px) {
   .hero-section {
@@ -1404,18 +1369,32 @@ textarea:focus-visible,
   .hero-profile {
     justify-self: start;
     width: min(72vw, 330px);
-  }
-  .about-kpi-grid {
-    grid-template-columns: 1fr;
+    /* NOTE: do NOT reset margin-top here. This block sets .hero-shell to one
+       column, but the `min-width: 768px and max-width: 1023px` block further
+       down restores a two-column shell at 768-960px and wins on source order.
+       So this range is still the side-by-side hero, the cap-height invariant
+       still applies, and .hero-profile keeps its base calc() offset. The reset
+       belongs at 767px, where the shell actually becomes a flex column. */
   }
   .about-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0,1fr);
     gap: 34px;
   }
   .nav-actions { display: none; }
   .nav-toggle { display: inline-flex; }
   .nav-links { display: none; }
   .hero-sub-ctas { gap: 14px; }
+
+  /* Stack the proof label above the pills once the copy column is full width. */
+  .hero-proof {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-proof-label { text-align: center; }
+  .hero-proof-list { justify-content: center; }
 }
 
 @media (max-width: 600px) {
@@ -1434,6 +1413,11 @@ textarea:focus-visible,
     font-size: 9px;
     letter-spacing: .06em;
   }
+  .hero-proof-label,
+  .hero-proof-item {
+    font-size: 10px;
+  }
+  .hero-proof-item { padding: 5px 10px; letter-spacing: .04em; }
   .hero-name {
     font-size: clamp(26px, 8.4vw, 42px);
   }
@@ -1457,16 +1441,9 @@ textarea:focus-visible,
     margin-top: -10px;
     font-size: 13px;
   }
-  .cert-meta-row,
   .honor-actions {
-    align-items: flex-start;
-  }
-}
 
-@media (pointer: coarse) {
-  .cursor,
-  .cursor-trail {
-    display: none !important;
+    align-items: flex-start;
   }
 }
 
@@ -1477,17 +1454,10 @@ textarea:focus-visible,
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
-  .grid-bg,
-  .hero-circle,
-  .proj-card,
-  .flow-arrow-svg svg {
-    transform: none !important;
-    animation: none !important;
-  }
-  .cursor,
-  .cursor-trail {
-    display: none !important;
-  }
+  /* [data-reveal] targets are forced visible outright rather than animated in,
+     so nothing depends on an IntersectionObserver firing to become readable.
+     This is the safety net for JS being disabled or slow. */
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
 }
 
 /* ======================== HERO LAYOUT BREAKPOINT FIX ======================== */
@@ -1499,10 +1469,16 @@ textarea:focus-visible,
     padding-bottom: 72px;
   }
 
+  /* The portrait column is `auto` so it is exactly as wide as the portrait
+     (min(38vw, 500px)) instead of a fixed 430px track the photo never filled.
+     The shell is 80px wider than the base 1160px so the extra photo width comes
+     out of the empty right margin, not out of the copy column ("Wisnunggal" is
+     ~5.4em wide and clips if the copy column drops under it at ~1024px). */
   .hero-shell {
-    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 430px);
+    grid-template-columns: minmax(0, 1.05fr) auto;
     align-items: center;
     gap: clamp(36px, 5vw, 78px);
+    max-width: 1240px;
   }
 
   .hero-copy {
@@ -1512,7 +1488,7 @@ textarea:focus-visible,
 
   .hero-profile {
     justify-self: end;
-    width: min(34vw, 430px);
+    width: min(38vw, 500px);
     margin-inline: 0;
   }
 }
@@ -1542,7 +1518,6 @@ textarea:focus-visible,
     margin-inline: 0;
   }
 
-  .hero-scroll,
   .hero-stats {
     display: none;
   }
@@ -1589,13 +1564,16 @@ textarea:focus-visible,
 
   .hero-profile {
     justify-self: center;
+    align-self: center;
     width: min(82vw, 320px);
     max-width: 320px;
     margin-inline: auto;
-  }
-
-  .hero-profile-frame {
-    width: 100%;
+    /* At <=767px .hero-shell becomes a flex column: the portrait sits UNDER the
+       copy, so there is no cap-height to align to and the desktop calc() offset
+       would just nudge the photo up. This is the only place the reset belongs —
+       putting it at 960px would also kill the 768-960px range, which is still
+       the two-column hero. */
+    margin-top: 0;
   }
 }
 
@@ -1621,8 +1599,8 @@ textarea:focus-visible,
 #playground { border-top: 1px solid var(--line); }
 .pg-header { margin-bottom: 36px; }
 .pg-title {
-  font-family: var(--fd); font-size: clamp(26px, 3.5vw, 44px);
-  font-weight: 700; letter-spacing: -.03em; color: var(--ink); margin-bottom: 12px;
+  font-family: var(--fserif); font-size: clamp(26px, 3.5vw, 44px);
+  font-weight: 600; line-height: 1.1; letter-spacing: -.03em; color: var(--ink); margin-bottom: 12px;
 }
 .pg-sub { font-size: 15px; line-height: 1.72; color: var(--ink-2); max-width: 680px; }
 .pg-shell {
@@ -1631,7 +1609,10 @@ textarea:focus-visible,
 }
 .pg-input-wrap { display: flex; gap: 10px; margin-bottom: 14px; }
 .pg-input {
-  flex: 1; background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--r4);
+  /* min-width:0 so the field can shrink below its intrinsic input size;
+     without it the input+button pair overflowed a 320px viewport. */
+  flex: 1 1 auto; min-width: 0;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--r4);
   padding: 12px 16px; font-family: var(--fb); font-size: 14px; color: var(--ink);
   outline: none; transition: border-color .2s, box-shadow .2s;
 }
@@ -1640,13 +1621,19 @@ textarea:focus-visible,
   font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
   background: var(--ink); color: #fff; border: none; padding: 12px 22px; border-radius: var(--r4);
   cursor: pointer; white-space: nowrap;
+  /* The label must not be the thing that shrinks; the field gives way instead. */
+  flex: 0 0 auto;
   transition: background .2s, transform .2s var(--ease-s);
 }
-.pg-submit:hover { background: #000; transform: translateY(-2px); }
+.pg-submit:hover { background: #000; }
+/* Loading feedback while the simulated pipeline runs (ux: Submit Feedback —
+   Loading -> result). Disabled state carries no transform so the button does
+   not jump when it becomes unavailable mid-hover. */
+.pg-submit:disabled { opacity: .6; cursor: wait; transform: none; }
 .pg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
 .pg-chip {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-  border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--line-2); border-radius: var(--r4); padding: 8px 12px;
   color: var(--ink-3); background: var(--bg); cursor: pointer;
   transition: border-color .2s, color .2s, background .2s;
 }
@@ -1656,42 +1643,72 @@ textarea:focus-visible,
   padding: 20px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8);
   margin-bottom: 20px;
 }
-.pg-arrow { font-size: 16px; color: var(--ink-4); }
+/* aria-hidden connector, but it still has to be visible enough to read the flow. */
+.pg-arrow { font-size: 16px; color: var(--ink-3); transition: color .2s; }
+/* The connector into the running stage carries the signal forward. */
+.pg-arrow.pg-arrow-lit { color: var(--gold-ink); }
 .pg-step {
+  position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; border: 1.5px solid var(--line); border-radius: var(--r4);
   background: #fff; min-width: 0;
   transition: border-color .3s var(--ease-s), background .3s;
 }
+/* Stage timer. JS sets --pg-dur per stage. Retrieve and Generate use half of
+   their measured DemoLabs latency, so Generate visibly dominates the run, as
+   it does in the real system. Resetting a run removes the classes and the
+   bar snaps back with no transition. */
+.pg-step::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--gold-ink); transform: scaleX(0); transform-origin: left;
+}
+.pg-step-active::after { transform: scaleX(1); transition: transform var(--pg-dur, .2s) linear; }
+.pg-step-done::after { transform: scaleX(1); opacity: 0; transition: opacity .25s; }
 .pg-step-ico {
   width: 28px; height: 28px; border-radius: 50%; background: var(--bg);
   border: 1.5px solid var(--line-2); display: flex; align-items: center; justify-content: center;
-  font-family: var(--fm); font-size: 10px; font-weight: 500; color: var(--ink-3); flex-shrink: 0;
+  font-family: var(--fm); font-size: 11px; font-weight: 500; color: var(--ink-3); flex-shrink: 0;
   transition: background .3s, border-color .3s, color .3s;
 }
 .pg-step-info { min-width: 0; }
 .pg-step-label {
-  font-family: var(--fm); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink-4); margin-bottom: 2px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 2px;
 }
 .pg-step-val {
   font-family: var(--fb); font-size: 12px; color: var(--ink-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;
 }
 .pg-step-active { border-color: var(--gold); background: #fffbf4; }
-.pg-step-active .pg-step-ico { background: var(--gold); border-color: var(--gold); color: #fff; }
-.pg-step-done { border-color: #86d39b; background: #f0fbf3; }
-.pg-step-done .pg-step-ico { background: #22c55e; border-color: #22c55e; color: #fff; }
+/* White on --gold is 2.90:1. The step letter is 10px, so the active fill uses
+   the darker step: white on --gold-ink is 5.04:1. */
+.pg-step-active .pg-step-ico { background: var(--gold-ink); border-color: var(--gold-ink); color: #fff; }
+/* Done is ink, not green: a finished step is a state, not a success claim, and
+   a fifth hue on the page buys nothing. */
+.pg-step-done { border-color: var(--line-2); }
+.pg-step-done .pg-step-ico { background: var(--ink); border-color: var(--ink); color: #fff; }
 .pg-answer-box {
   background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8); padding: 24px;
 }
 .pg-answer-label {
-  font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--ink-4); margin-bottom: 12px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 12px;
 }
-.pg-answer-text { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); margin-bottom: 14px; min-height: 1.8em; }
-.pg-disclaimer { font-family: var(--fm); font-size: 10px; color: var(--ink-4); letter-spacing: .04em; }
-.pg-disclaimer a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+.pg-answer-text { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); min-height: 1.8em; }
+/* The answer is uncovered top-down, the way generated text arrives. There is
+   no fill-mode, so if the animation never runs the box is simply visible. */
+.pg-answer-box:not([hidden]) { animation: pgAnswerIn .45s var(--ease-s); }
+@keyframes pgAnswerIn {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); }
+  to   { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+.pg-timing {
+  font-family: var(--fm); font-size: 12px; letter-spacing: .04em; color: var(--ink-3);
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
+}
+/* Stated before anything runs, not after: a reader must know it is scripted
+   before deciding whether the output means anything. */
+.pg-disclaimer { font-family: var(--fm); font-size: 11px; color: var(--ink-3); letter-spacing: .04em; margin-top: 12px; }
 @media (max-width: 960px) {
   .pg-shell { padding: 20px; }
   .pg-arrow { display: none; }
@@ -1704,11 +1721,133 @@ textarea:focus-visible,
 /* ======================== MOBILE MICRO-TEXT IMPROVEMENTS ======================== */
 @media (max-width: 600px) {
   .sec-label { font-size: 12px; }
-  .proj-num, .proj-tag, .cert-date, .cert-issuer,
+  .proj-num, .proj-tags, .cert-issuer,
   .exp-meta, .exp-company, .honor-meta, .honor-org,
   .modal-sh, .stack-title, .f-lbl, .pg-step-label,
   .pg-disclaimer { font-size: 12px; }
-  .skill-chip { font-size: 12px; }
   .exp-list li, .modal-lessons li { font-size: 14px; }
   .modal-p { font-size: 15px; }
+}
+
+/* ======================== CASE STUDY (case-study-smartfaq.html) ========================
+   Uses the same tokens and type tiers as the portfolio. The KPI row is a <dl>:
+   each number sits with the test it came from, never on its own. */
+.case-wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+.case-nav {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 64px;
+}
+.case-nav a {
+  font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-2); border-bottom: 1px solid var(--line-2); padding: 6px 0;
+  transition: border-color .2s, color .2s;
+}
+.case-nav a:hover { color: var(--ink); border-color: var(--ink); }
+.case-eyebrow {
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gold-ink); margin-bottom: 16px;
+}
+.case-title {
+  font-family: var(--fserif); font-weight: 600;
+  font-size: clamp(38px, 6vw, 68px); line-height: 1.05; letter-spacing: -.025em;
+  color: var(--ink); margin-bottom: 20px;
+}
+.case-sub { font-size: 18px; line-height: 1.7; color: var(--ink-2); max-width: 720px; }
+.case-kpi {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 48px 0 16px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line);
+}
+.case-kpi-item { padding: 22px 20px 22px 0; }
+.case-kpi-item + .case-kpi-item { padding-left: 20px; border-left: 1px solid var(--line); }
+.case-kpi-label {
+  font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 10px;
+}
+.case-kpi-value {
+  font-family: var(--fd); font-size: clamp(32px, 4vw, 44px); font-weight: 700;
+  letter-spacing: -.03em; line-height: 1; color: var(--ink); margin: 0 0 10px;
+}
+.case-kpi-note { font-size: 14px; line-height: 1.5; color: var(--ink-3); margin: 0; }
+.case-section { margin-top: 56px; }
+.case-h {
+  font-family: var(--fd); font-size: 24px; font-weight: 600; letter-spacing: -.015em;
+  color: var(--ink); margin-bottom: 14px;
+}
+.case-p { font-size: 16px; line-height: 1.8; color: var(--ink-2); margin-bottom: 14px; max-width: 720px; }
+.case-list { display: flex; flex-direction: column; gap: 10px; max-width: 720px; }
+.case-list li { font-size: 16px; line-height: 1.7; color: var(--ink-2); display: flex; gap: 10px; }
+.case-list li::before { content: '›'; color: var(--gold); flex-shrink: 0; }
+.case-flow {
+  list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 22px; border: 1px solid var(--line); border-radius: var(--r8);
+  background: var(--bg-card); counter-reset: flow;
+}
+.case-flow li { padding: 16px 14px; counter-increment: flow; }
+.case-flow li + li { border-left: 1px solid var(--line); }
+.case-flow b {
+  display: block; font-family: var(--fd); font-size: 15px; font-weight: 600;
+  color: var(--ink); margin-bottom: 4px;
+}
+.case-flow b::before {
+  content: counter(flow) ' '; font-family: var(--fm); font-size: 11px; font-weight: 400; color: var(--ink-3);
+}
+.case-flow span { font-size: 13px; line-height: 1.45; color: var(--ink-3); }
+@media (max-width: 760px) {
+  .case-kpi { grid-template-columns: minmax(0, 1fr); }
+  .case-kpi-item + .case-kpi-item { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .case-flow { grid-template-columns: minmax(0, 1fr); }
+  .case-flow li + li { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* ======================== TOUCH + PHONE ADAPTATION ========================
+   Last in the file so it wins by source order over the earlier breakpoint
+   blocks. The query is (pointer: coarse) OR a phone-width viewport, so a
+   narrow desktop window gets the same larger hit areas; they are invisible.
+
+   Hit areas follow the existing nav-toggle / modal-close pattern: the visible
+   control keeps its size and an ::after extends the tappable box to 44px.
+   Text links sit on an 18px row gap or more, so extended areas never overlap. */
+@media (pointer: coarse), (max-width: 767px) {
+  a, button { touch-action: manipulation; -webkit-tap-highlight-color: rgba(184, 146, 74, .2); }
+
+  .proj-proof a, .cert-btn, .honor-actions a, .footer-back, .nav-logo { position: relative; }
+  .proj-proof a::after, .cert-btn::after, .honor-actions a::after { content: ''; position: absolute; inset: -9px 0; }
+  .footer-back::after { content: ''; position: absolute; inset: -15px 0; }
+  .nav-logo::after { content: ''; position: absolute; inset: -11px -6px; }
+
+  .proj-proof { row-gap: 18px; }
+  .honor-actions { row-gap: 18px; }
+  .cert-actions { row-gap: 18px; }
+
+  /* Filled controls grow for real: their whole box is the visible shape. */
+  .proj-open-btn, .pg-chip, .pg-submit, .f-submit, .btn-solid, .btn-outline, .skip-link {
+    min-height: 44px;
+  }
+  .pg-chip { display: inline-flex; align-items: center; }
+  .footer-link, .nav-drawer-links a { min-height: 44px; }
+}
+
+/* Phone type floor. Hero text is left as set. Everything else that was 11px
+   or below reads at 12px, matching the micro-label bump the 600px block
+   already gave other labels. */
+@media (max-width: 767px) {
+  .proj-proof a, .honor-actions a, .cert-btn, .cert-level, .honor-year,
+  .stack-tools, .exp-body-label, .proj-status, .proj-tags, .c-label,
+  .footer-col-label, .footer-copy, .footer-back, .pg-chip, .pg-submit, .f-submit,
+  .pg-step-ico, .pg-timing, .pg-disclaimer, .modal-bar-label { font-size: 12px; }
+
+  /* Horizontal reveals travel up on a phone. Entering from 24px off the right
+     edge adds 24px of scrollable width until the element is revealed, which
+     iOS Safari does not hide behind overflow-x:hidden on <body>. The hero
+     portrait is excluded: it is revealed on load and its entrance stays as set. */
+  .js [data-reveal="left"]:not(.in):not(.hero-profile),
+  .js [data-reveal="right"]:not(.in):not(.hero-profile) { transform: translateY(18px); }
+}
+
+/* Portrait tablet: the project cards were already built to fit a 390px phone,
+   so two of them fit across 700-960px instead of one card floating in a
+   770px-wide column. Experience stays single-column: opening one entry would
+   stretch the card beside it. */
+@media (min-width: 700px) and (max-width: 960px) {
+  .proj-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

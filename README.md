@@ -1,40 +1,47 @@
-# Abi Portfolio — VS Code Project
+# codebyabi.github.io
 
-## Folder Structure
+Portfolio of Abira Wisnunggal (Abi), AI engineer. Live at https://codebyabi.github.io/
+
+A static site with no build step and no dependencies, served as-is by GitHub Pages.
 
 ```
-abi-portfolio/
-├── index.html          ← Main page
-├── css/
-│   └── style.css       ← All styles
-├── js/
-│   └── main.js         ← All interactions & animations
-└── assets/
-    └── img/            ← Drop your images here
-        ├── proj-rainfall.jpg     ← Project 1 image
-        ├── proj-chatbot.jpg      ← Project 2 image
-        ├── proj-houseprice.jpg   ← Project 3 image
-        ├── proj-ev.jpg           ← Project 4 image
-        ├── cert-bnsp.jpg         ← Certificate 1 image
-        ├── cert-skilvul.jpg      ← Certificate 2 image
-        └── cert-revou.jpg        ← Certificate 3 image
+index.html                 the portfolio
+case-study-smartfaq.html   DemoLabs AI Chatbot case study (filename is historical)
+css/style.css              all styles
+js/main.js                 nav, accordion, project modal, contact form, demo walkthrough
+assets/img/                photos, logos, project images
+assets/pdf/                CV (abi-wisnunggal-cv.pdf)
+assets/vid/                local copy of the demo video (Git LFS, not served; the site links YouTube)
+site.webmanifest           name, theme colour and icon
+PRODUCT.md                 who the site is for and what it must never fake
+DESIGN.md                  the design system
+AGENTS.md                  rules for anyone (or any agent) editing the repo
+.impeccable/               design-tool config and saved critiques
 ```
 
-## How to add images
+## Preview
 
-1. Put your image files inside `assets/img/`
-2. Name them exactly as listed above (or change the `src=` in index.html)
-3. Images will auto-display — if a file is missing, a placeholder is shown instead
+Open `index.html`, or serve the folder with any static server (for example
+`python -m http.server 8765`, then visit http://127.0.0.1:8765/).
 
-## Go Live (VS Code)
+## How it behaves
 
-1. Install the **Live Server** extension in VS Code
-2. Right-click `index.html` → **Open with Live Server**
-3. Done!
+- **Contact form** posts to Formspree. If the request fails it falls back to opening the
+  visitor's email app, and says so.
+- **RAG demo** is a scripted walkthrough of the pipeline stages. No model is called, and the
+  section says so before anything runs.
+- **Motion** is limited to a few places (the demo stages, the experience accordion, the project
+  figures and the project modal) and all of it respects `prefers-reduced-motion`.
+- **Phones and touch**: every control has at least a 44px tap area, and the layout was checked
+  at 320px, 390px, an 820px tablet and phone landscape.
 
-## Update contact links
+## Before you change things
 
-In `index.html`, search for:
-- `abirawisnunggal@email.com` → replace with your real email
-- `linkedin.com/in/abirawisnunggal` → replace with your real LinkedIn URL
-- `github.com/abirawisnunggal` → replace with your real GitHub URL
+- Read [AGENTS.md](AGENTS.md) before touching anything near the hero. Its alignment rule is
+  easy to break and is verified by measurement, not by eye.
+- Every number and credential on the page must trace to something stated elsewhere in the repo.
+  [PRODUCT.md](PRODUCT.md) explains why: no "Verified" badges, no placeholder demo links, no
+  invented images.
+- The design system is documented in [DESIGN.md](DESIGN.md). Its front matter still lists an older
+  display font; the CSS is the source of truth.
+- Do not commit throwaway test files such as `_shot.html` or `_measure.html`.

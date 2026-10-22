@@ -3,72 +3,11 @@
    ============================================================ */
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const finePointer = window.matchMedia('(pointer:fine)').matches;
 
 function trackEvent(name, detail = {}) {
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...detail, ts: Date.now() });
 }
-
-/* ==================== CURSOR + PARALLAX (POINTER AWARE) ==================== */
-const cursor = document.getElementById('cursor');
-const trail = document.getElementById('cursorTrail');
-const gridBg = document.getElementById('gridBg');
-
-let mouseX = 0;
-let mouseY = 0;
-let trailX = 0;
-let trailY = 0;
-let mouseRaf = null;
-
-function updateCursorMode() {
-  const canUse = finePointer && !prefersReducedMotion && !document.body.classList.contains('keyboard-nav');
-  document.body.classList.toggle('use-custom-cursor', canUse);
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Tab') {
-    document.body.classList.add('keyboard-nav');
-    updateCursorMode();
-  }
-});
-
-document.addEventListener('pointerdown', () => {
-  document.body.classList.remove('keyboard-nav');
-  updateCursorMode();
-});
-
-updateCursorMode();
-
-function flushMouseEffects() {
-  mouseRaf = null;
-
-  if (document.body.classList.contains('use-custom-cursor') && cursor && trail) {
-    cursor.style.left = `${mouseX}px`;
-    cursor.style.top = `${mouseY}px`;
-    trailX += (mouseX - trailX) * 0.14;
-    trailY += (mouseY - trailY) * 0.14;
-    trail.style.left = `${trailX}px`;
-    trail.style.top = `${trailY}px`;
-  }
-
-  if (gridBg && !prefersReducedMotion) {
-    const x = (mouseX / window.innerWidth - 0.5) * 10;
-    const y = (mouseY / window.innerHeight - 0.5) * 10;
-    gridBg.style.transform = `translate(${x}px, ${y}px)`;
-  }
-}
-
-document.addEventListener('mousemove', e => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-  if (!mouseRaf) mouseRaf = requestAnimationFrame(flushMouseEffects);
-}, { passive: true });
-
-document.querySelectorAll('a,button,.exp-trigger,.proj-open-btn,.cert-card,.c-link,.skill-chip').forEach(el => {
-  el.addEventListener('mouseenter', () => document.body.classList.add('h-cursor'));
-  el.addEventListener('mouseleave', () => document.body.classList.remove('h-cursor'));
-});
 
 /* ==================== NAV + MOBILE DRAWER ==================== */
 const navbar = document.getElementById('navbar');
@@ -76,18 +15,31 @@ const navToggle = document.getElementById('navToggle');
 const navDrawer = document.getElementById('navDrawer');
 const navDrawerClose = document.getElementById('navDrawerClose');
 
-function toggleDrawer(forceOpen) {
+function toggleDrawer(forceOpen, restoreFocus = false) {
   if (!navDrawer || !navToggle) return;
   const open = typeof forceOpen === 'boolean' ? forceOpen : !navDrawer.classList.contains('open');
   navDrawer.classList.toggle('open', open);
   navDrawer.setAttribute('aria-hidden', String(!open));
   navToggle.setAttribute('aria-expanded', String(open));
+  // visibility:hidden already drops the closed panel from tab order; `inert`
+  // covers engines that keep hidden subtrees focusable. Guarded for older
+  // browsers where the property does not exist.
+  if ('inert' in navDrawer) navDrawer.inert = !open;
   document.body.style.overflow = open ? 'hidden' : '';
+  if (open) {
+    navDrawerClose?.focus();
+  } else if (restoreFocus) {
+    // Only bounce focus back for dismissals (Escape / close button). When a nav
+    // link closed the drawer the user is scrolling to that section, and yanking
+    // focus to the toggle would scroll them back up to the navbar.
+    navToggle.focus();
+  }
 }
 
 if (navToggle && navDrawer) {
+  if ('inert' in navDrawer) navDrawer.inert = true;
   navToggle.addEventListener('click', () => toggleDrawer());
-  navDrawerClose?.addEventListener('click', () => toggleDrawer(false));
+  navDrawerClose?.addEventListener('click', () => toggleDrawer(false, true));
   navDrawer.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', () => toggleDrawer(false));
   });
@@ -130,36 +82,6 @@ if (prefersReducedMotion) {
   revealTargets.forEach(el => revealObs.observe(el));
 }
 
-/* ==================== COUNTERS ==================== */
-function animateCounter(el) {
-  const target = parseInt(el.dataset.count || '0', 10);
-  const suffix = el.dataset.suffix || '';
-  if (prefersReducedMotion) {
-    el.textContent = `${target}${suffix}`;
-    return;
-  }
-
-  const duration = 1200;
-  let startedAt = 0;
-  const step = timestamp => {
-    if (!startedAt) startedAt = timestamp;
-    const progress = Math.min((timestamp - startedAt) / duration, 1);
-    el.textContent = `${Math.floor(target * progress)}${suffix}`;
-    if (progress < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-
-const counterObs = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    animateCounter(entry.target);
-    counterObs.unobserve(entry.target);
-  });
-}, { threshold: 0.6 });
-
-document.querySelectorAll('[data-count]').forEach(el => counterObs.observe(el));
-
 /* ==================== EXPERIENCE TOGGLE ==================== */
 const expCards = Array.from(document.querySelectorAll('.exp-card'));
 
@@ -181,110 +103,70 @@ document.querySelectorAll('[data-exp-trigger]').forEach(btn => {
 });
 
 /* ==================== PROJECT MODAL ==================== */
+/* Every field here restates something stated elsewhere on the page or in the
+   case study. Optional fields (tradeoff, result, lessons, proof) are omitted
+   rather than padded when there is nothing verified to say, and openModal()
+   skips their headings. */
 const projectData = {
   p1: {
-    title: 'Rainfall Prediction in Australia',
-    sub: 'Machine Learning · Weather Forecasting',
-    problem: 'Weather forecasting for rainfall is critical for agriculture and disaster mitigation, but traditional approaches can miss local variability.',
-    solution: 'Built a supervised classification workflow with feature engineering, model comparison, and robust validation loops.',
-    arch: 'Python data pipeline with preprocessing, training, and evaluation stages using Pandas and Scikit-learn.',
-    tradeoff: 'Balanced higher model complexity with interpretability by combining tree-based and linear baselines before selecting final behavior.',
-    result: 'Delivered a reproducible pipeline with benchmark tracking for precision/recall and clearer decision support outputs.',
+    title: 'DemoLabs AI Chatbot',
+    sub: 'Nawatech internship · Oct 2025 – Feb 2026',
+    problem: 'Analytics users needed answers from complex datasets, but manual SQL writing, PDF review, and chart preparation slowed every decision.',
+    solution: 'A multi-capability analytics assistant combining QnA retrieval, RAG-based Text-to-SQL generation, PDF/OCR document analysis, and dynamic chart creation in a single conversational interface with intent routing.',
+    arch: 'FastAPI backend with Celery, RabbitMQ, Redis, and Docker — 6 containers, 5 RabbitMQ queues, 4 Celery workers. RAG and Text-to-SQL pipeline with pgvector and Azure OpenAI embeddings, schema retrieval, and few-shot SQL generation.',
+    tradeoff: 'Of the 3.23s mean end-to-end latency, retrieval takes 0.40s and LLM generation 2.57s, so generation, not retrieval depth, is where latency work pays off.',
+    result: '0.885 mean answer correctness on 60 DeepEval test cases, with automated Excel and Markdown regression reports tracking results across difficulty levels.',
     lessons: [
-      'Class imbalance skewed early recall — stratified cross-validation fixed this without oversampling noise.',
-      'Switching from logistic regression to gradient boosting improved minority-class recall significantly; the non-linear boundary mattered.',
-      'Imputation strategy (median vs. KNN) had more impact on final accuracy than model choice at this data scale.'
+      'Retrieving the relevant schema before generating SQL mattered more than prompt wording.',
+      'Giving QnA, PDF and SQL work their own queues means a slow PDF job doesn’t hold up a quick QnA answer.',
+      'A fixed 60-case DeepEval suite makes every retrieval or model change comparable against the previous run.'
     ],
     proof: [
-      { label: 'GitHub', href: 'https://github.com/CodeByAbi/Rainfall-Prediction-in-Australia' }
-    ]
-  },
-  p2: {
-    title: 'SmartFAQ Chatbot (Flagship)',
-    sub: 'RAG · LangChain · FastAPI',
-    problem: 'Support teams handled repetitive FAQ traffic with inconsistent answers and long response cycles.',
-    solution: 'Built retrieval-enhanced chatbot flows with intent routing, answer generation, and observability for latency and token usage.',
-    arch: 'LangChain orchestration + FastAPI service + queue workers + searchable storage for chunk retrieval and response synthesis.',
-    tradeoff: 'Optimized retrieval depth and context window size to balance response quality, speed, and token cost.',
-    result: 'Established production-ready foundation with measurable monitoring points for quality and response efficiency.',
-    lessons: [
-      'Chunk size tuning had more effect on retrieval quality than swapping embedding models — start with chunking, not models.',
-      'Intent routing before retrieval eliminated a class of irrelevant context windows that were silently degrading answers.',
-      'Cache warmup scheduling via Celery beat prevented latency spikes on cold first requests in production.'
-    ],
-    proof: [
-      { label: 'Flagship Case Study', href: 'case-study-smartfaq.html' },
+      { label: 'Case study', href: 'case-study-smartfaq.html' },
+      { label: 'Demo video (YouTube)', href: 'https://youtu.be/T9D7Ta1O9rU' },
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/faq-chatbot' }
     ]
   },
+  p2: {
+    title: 'nuxio.ai',
+    sub: 'Next.js · TypeScript · Supabase · Sep 2026 – present',
+    problem: 'Personal financial planning is fragmented across wallets, budgets, and savings goals, with no forward-looking view of upcoming commitments.',
+    solution: 'A financial planning platform with a Gemini-based Financial Copilot and a forward-looking forecasting view, using structured AI outputs.',
+    arch: 'Next.js + TypeScript frontend on PostgreSQL (Supabase), with multi-wallet management, budgeting, savings goals, and scheduled transaction planning.',
+    tradeoff: 'Structured AI outputs, so the Copilot returns plans the scheduling logic can validate instead of free text.'
+  },
   p3: {
-    title: 'House Price Prediction: Tebet',
-    sub: 'Regression Modeling · Real Estate',
-    problem: 'Property pricing decisions in local markets often depend on subjective estimates and inconsistent comparisons.',
-    solution: 'Built a regression workflow using structured features across property characteristics and location context.',
-    arch: 'Data cleaning and feature preparation in Pandas followed by baseline and tuned regression evaluation in Scikit-learn.',
-    tradeoff: 'Prioritized model interpretability for stakeholders over black-box complexity to keep outputs actionable.',
-    result: 'Produced benchmarked pricing estimates with repeatable evaluation steps for iteration and refinement.',
-    lessons: [
-      'Outlier luxury properties inflated MAE — removing verified out-of-scope listings improved benchmark relevance, not just metrics.',
-      'Log-transforming the price target made residuals near-normal and improved R² without any model change.',
-      'Location features (subdistrict encoding) contributed more predictive signal than building area alone.'
-    ],
-    proof: [
-      { label: 'GitHub', href: 'https://github.com/CodeByAbi/house-price-prediction' }
-    ]
+    title: 'Student Progress Analytics Dashboard',
+    sub: 'Looker Studio · Jan 2025 – Apr 2025',
+    problem: 'Curriculum supervisors needed visibility into Qur’an and Hadits memorization progress across cohorts, but data lived in scattered spreadsheets.',
+    solution: 'An interactive Looker Studio dashboard aggregating per-student completion rates into class- and cohort-level summaries.',
+    arch: 'Spreadsheet masterfiles consolidated into a centralized reporting pipeline feeding Looker Studio summary views.'
   },
   p4: {
-    title: 'Electric Vehicle Data Analysis',
-    sub: 'EDA · Tableau · Analytics',
-    problem: 'EV trend analysis requires multi-dimensional views across regions, infrastructure readiness, and market behavior.',
-    solution: 'Built data-cleaning and exploratory analytics workflow, then delivered interactive Tableau dashboards for decision support.',
-    arch: 'Python data preparation pipeline feeding dashboard views with state-level trend and segmentation breakdowns.',
-    tradeoff: 'Balanced dashboard complexity with readability by prioritizing high-impact slices and drill-down clarity.',
-    result: 'Created reusable dashboard storytelling structure for policy, market, and growth discussions.',
-    lessons: [
-      'Pre-aggregating in Python before Tableau was significantly faster than relying on Tableau blended data sources.',
-      'Per-capita normalization told a completely different regional story than raw EV counts — always normalize before comparing regions.',
-      'Starting with the stakeholder question ("which states are under-served?") shaped better filter choices than starting with the data columns.'
-    ],
-    proof: [
-      { label: 'GitHub', href: 'https://github.com/CodeByAbi/ev-data-analysis' }
-    ]
-  },
-  p5: {
-    title: 'Demolabs Chatbot',
-    sub: 'RAG · Text-to-SQL · Feature Key',
-    problem: 'Business users need fast and accurate answers from complex datasets, but manual SQL and chart preparation slow down decisions.',
-    solution: 'Built an end-to-end AI-powered data assistant that transforms natural language queries into executable SQL and context-aware visualizations using RAG with vector similarity search.',
-    arch: 'Semantic intent detection + data-shape parsing for adaptive chart generation, backed by Celery async tasks, Redis conversation memory, and Azure Blob Storage signed URLs for chart delivery.',
-    tradeoff: 'Balanced adaptive chart automation with deterministic post-processing so generated outputs remain accurate, explainable, and stable at scale.',
-    result: 'Delivered automated insights generation with structured LLM outputs and robust processing pipelines that support trend and ranking analysis without explicit chart requests.',
-    lessons: [
-      'SQL hallucinations were the hardest failure mode — schema-grounded post-validation caught ~90% of invalid queries before execution.',
-      'Redis TTL tuning for conversation memory was non-obvious: too short broke multi-turn context, too long wasted memory on dead sessions.',
-      'Async chart delivery via signed Azure Blob URLs removed a blocking bottleneck; users got faster text responses while charts rendered in background.'
-    ],
-    proof: [
-      { label: 'Demo Video', href: 'assets/vid/demolabs%20chatbot%20video.mp4' },
-      { label: 'Request Demo', href: '#contact' }
-    ]
-  },
-  p6: {
-    title: 'Sentiment Analysis Telco Tweets',
-    sub: 'NLP · Twitter Text Classification',
-    problem: 'Telecommunication providers need a reliable way to understand customer perception from high-volume social media conversations.',
-    solution: 'Built a sentiment analysis workflow on Telco tweets labeled as positive, negative, and neutral to classify customer opinions with machine learning.',
-    arch: 'Python text preprocessing and feature extraction pipeline with supervised classifiers trained and evaluated on labeled Twitter data.',
-    tradeoff: 'Balanced model complexity and interpretability by benchmarking multiple classifiers and selecting a configuration with stable class-wise performance.',
-    result: 'Produced actionable sentiment classification outputs with class-level metrics to support service quality and customer experience analysis.',
-    lessons: [
-      'TF-IDF outperformed word embeddings at this dataset size — simpler features generalized better on limited labeled data.',
-      'The neutral class was consistently misclassified by all models; adding more labeled neutral examples was the fix, not hyperparameter tuning.',
-      'Tweet-specific preprocessing (stripping mentions, URLs, slang normalization) improved F1 more than any model switch.'
-    ],
+    title: 'Sentiment Analysis of Telco Tweets',
+    sub: 'NLP · TF-IDF · Logistic Regression · Jun 2025 – Sep 2025',
+    problem: 'Telecom providers needed a reliable read on customer perception from high-volume social media conversations.',
+    solution: 'TF-IDF and logistic regression to classify customer sentiment in ~10,000 telecom tweets, plus the recurring keywords in negative tweets.',
+    arch: 'Python text preprocessing and TF-IDF feature extraction with supervised classifiers trained and evaluated on labeled tweet data.',
+    result: '0.82 F1-score on three-class sentiment classification, with the top recurring negative keywords identified for service improvement.',
     proof: [
       { label: 'GitHub', href: 'https://github.com/CodeByAbi/Sentiment-Analysis-Telco-Tweets' }
     ]
+  },
+  p5: {
+    title: 'Car Sales Forecasting: Indonesia’s Top 5 Brands',
+    sub: 'SARIMA · Prophet · LSTM · Jul 2024 – Sep 2024',
+    problem: 'Car sales planning needed reliable forward estimates across brands with distinct trend and seasonality behavior.',
+    solution: 'A forecasting pipeline covering preprocessing, per-brand trend and seasonality analysis, and multi-model training across SARIMA, Prophet, and LSTM.',
+    arch: 'Per-brand preprocessing and decomposition feeding three model families, compared on SMAPE.',
+    result: 'SMAPE below 10% on all 5 car brands.'
+  },
+  p6: {
+    title: 'Traffic Monitoring with YOLOv8 + DeepSORT',
+    sub: 'Computer Vision · Jun 2024 – Jul 2024',
+    problem: 'Traffic flow analysis and vehicle counting required persistent per-vehicle tracking across video frames, not just per-frame detection.',
+    solution: 'YOLOv8 for vehicle detection combined with DeepSORT for multi-object tracking.',
+    arch: 'YOLOv8 detection stage feeding DeepSORT association for persistent IDs, with counting and flow-analysis outputs.'
   }
 };
 
@@ -327,30 +209,41 @@ function openModal(projectId, triggerEl) {
   if (!project || !modalOverlay || !modalContent) return;
   lastFocusedEl = triggerEl || document.activeElement;
 
+  const section = (label, text) => text
+    ? `<div class="modal-sh">${label}</div><p class="modal-p">${text}</p>`
+    : '';
   const lessonsHtml = project.lessons?.length
     ? `<div class="modal-sh">What I Learned</div>
        <ul class="modal-lessons">${project.lessons.map(l => `<li>${l}</li>`).join('')}</ul>`
+    : '';
+  const proofHtml = project.proof?.length
+    ? `<div class="flow-wrap">
+         <div class="flow-label">Links</div>
+         <div class="proj-proof">${renderProofLinks(project.proof)}</div>
+       </div>`
     : '';
 
   modalContent.innerHTML = `
     <h2 class="modal-title" id="modalTitle">${project.title}</h2>
     <div class="modal-sub">${project.sub}</div>
-    <div class="modal-sh">Problem</div>
-    <p class="modal-p">${project.problem}</p>
-    <div class="modal-sh">Solution</div>
-    <p class="modal-p">${project.solution}</p>
-    <div class="modal-sh">Architecture</div>
-    <p class="modal-p">${project.arch}</p>
-    <div class="modal-sh">Trade-off Decision</div>
-    <p class="modal-p">${project.tradeoff}</p>
-    <div class="modal-sh">Result</div>
-    <p class="modal-p">${project.result}</p>
+    ${section('Problem', project.problem)}
+    ${section('Solution', project.solution)}
+    ${section('Architecture', project.arch)}
+    ${section('Trade-off', project.tradeoff)}
+    ${section('Result', project.result)}
     ${lessonsHtml}
-    <div class="flow-wrap">
-      <div class="flow-label">Proof Links</div>
-      <div class="proj-proof">${renderProofLinks(project.proof)}</div>
-    </div>
+    ${proofHtml}
   `;
+
+  const card = lastFocusedEl?.closest?.('.proj-card');
+  if (card && modalDialog) {
+    const r = card.getBoundingClientRect();
+    modalDialog.style.setProperty('--modal-dx', `${Math.round(r.left + r.width / 2 - window.innerWidth / 2)}px`);
+    modalDialog.style.setProperty('--modal-dy', `${Math.round(r.top + r.height / 2 - window.innerHeight / 2)}px`);
+    // Commit the card-relative start before .open, or the transition starts
+    // from the previous offset instead of this card.
+    void modalDialog.offsetWidth;
+  }
 
   modalOverlay.classList.add('open');
   modalOverlay.setAttribute('aria-hidden', 'false');
@@ -379,6 +272,8 @@ modalCloseBtn?.addEventListener('click', closeModal);
 /* ==================== CONTACT FORM ==================== */
 const contactForm = document.getElementById('contactForm');
 const formStatus = document.getElementById('formStatus');
+const formSummary = document.getElementById('formSummary');
+const formSummaryList = document.getElementById('formSummaryList');
 const nameInput = document.getElementById('contactName');
 const emailInput = document.getElementById('contactEmail');
 const messageInput = document.getElementById('contactMessage');
@@ -388,6 +283,41 @@ const fieldMap = {
   email: { input: emailInput, err: document.getElementById('emailError') },
   message: { input: messageInput, err: document.getElementById('messageError') }
 };
+
+function hideFormSummary() {
+  if (!formSummary || !formSummaryList) return;
+  formSummary.hidden = true;
+  formSummaryList.innerHTML = '';
+}
+
+/* Complements the inline errors: a keyboard-reachable list at the top of the form
+   whose items jump to the offending field. Inline .f-err text is reused as the
+   item label so the two can never drift apart. Built with DOM APIs rather than
+   innerHTML — if a message ever echoes user input, string interpolation here
+   would turn it into an injection point. */
+function showFormSummary(errors) {
+  if (!formSummary || !formSummaryList) return;
+  formSummaryList.textContent = '';
+  errors.forEach(key => {
+    const field = fieldMap[key];
+    const id = field?.input?.id;
+    if (!id) return;
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `#${id}`;
+    link.textContent = field.err?.textContent || '';
+    item.appendChild(link);
+    formSummaryList.appendChild(item);
+  });
+  formSummary.hidden = false;
+}
+
+formSummaryList?.addEventListener('click', e => {
+  const link = e.target.closest('a[href^="#"]');
+  if (!link) return;
+  const target = document.querySelector(link.getAttribute('href'));
+  if (target) { e.preventDefault(); target.focus(); }
+});
 
 function setFieldError(key, message) {
   const field = fieldMap[key];
@@ -407,6 +337,7 @@ function clearFieldError(key) {
 
 function clearAllErrors() {
   Object.keys(fieldMap).forEach(clearFieldError);
+  hideFormSummary();
   if (formStatus) {
     formStatus.className = 'form-status';
     formStatus.textContent = '';
@@ -422,25 +353,25 @@ function validateContactForm() {
 
   if (name.length < 2) {
     errors.push('name');
-    setFieldError('name', 'Please enter your full name.');
+    setFieldError('name', 'Enter your name.');
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push('email');
-    setFieldError('email', 'Please enter a valid email address.');
+    setFieldError('email', 'Enter an email address in the format name@company.com.');
   }
 
   if (message.length < 20) {
     errors.push('message');
-    setFieldError('message', 'Message should be at least 20 characters.');
+    setFieldError('message', 'Add a little more detail: the message needs at least 20 characters.');
   }
 
   if (errors.length) {
-    fieldMap[errors[0]].input?.focus();
-    if (formStatus) {
-      formStatus.className = 'form-status error';
-      formStatus.textContent = 'Please fix the highlighted fields and try again.';
-    }
+    showFormSummary(errors);
+    // Focus the summary, not the first input: a screen reader then reads the
+    // problem and the full list of failures before the user starts fixing them.
+    // The status line stays empty here: the summary already says it once.
+    formSummary?.focus();
     return null;
   }
 
@@ -467,7 +398,7 @@ if (contactForm) {
       if (res.ok) {
         if (formStatus) {
           formStatus.className = 'form-status success';
-          formStatus.textContent = 'Message sent — I will get back to you shortly!';
+          formStatus.textContent = `Message sent. I’ll reply to ${values.email}.`;
         }
         contactForm.reset();
         trackEvent('contact_submit', { method: 'formspree' });
@@ -477,12 +408,11 @@ if (contactForm) {
     } catch {
       const subject = encodeURIComponent(`Portfolio inquiry from ${values.name}`);
       const body = encodeURIComponent(`Name: ${values.name}\nEmail: ${values.email}\n\nMessage:\n${values.message}`);
-      window.location.href = `mailto:abirawisnu7@gmail.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:abirawisnu@gmail.com?subject=${subject}&body=${body}`;
       if (formStatus) {
-        formStatus.className = 'form-status success';
-        formStatus.textContent = 'Your email app has been opened. Thank you!';
+        formStatus.className = 'form-status error';
+        formStatus.textContent = 'The form couldn’t send your message, so your mail app should open with it as a draft. If no draft appears, email me at abirawisnu@gmail.com.';
       }
-      contactForm.reset();
       trackEvent('contact_submit', { method: 'mailto_fallback' });
     } finally {
       if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send Message →'; }
@@ -507,60 +437,11 @@ function trapDrawerFocus(e) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (modalOverlay?.classList.contains('open')) closeModal();
-    if (navDrawer?.classList.contains('open')) toggleDrawer(false);
+    if (navDrawer?.classList.contains('open')) toggleDrawer(false, true);
   }
   trapModalFocus(e);
   trapDrawerFocus(e);
 });
-
-/* ==================== SKILL STAGGER ==================== */
-const chipParent = document.querySelector('.skill-grid');
-if (chipParent) {
-  Array.from(chipParent.children).forEach((chip, index) => {
-    chip.style.transitionDelay = `${index * 0.04}s`;
-  });
-}
-
-/* ==================== HERO PARALLAX ==================== */
-if (!prefersReducedMotion) {
-  const circle = document.querySelector('.hero-circle');
-  let scrollRaf = null;
-
-  window.addEventListener('scroll', () => {
-    if (!circle || scrollRaf) return;
-    scrollRaf = requestAnimationFrame(() => {
-      circle.style.transform = `translateY(${window.scrollY * 0.08}px)`;
-      scrollRaf = null;
-    });
-  }, { passive: true });
-}
-
-/* ==================== PROJECT CARD TILT (SOFT + DESKTOP ONLY) ==================== */
-if (finePointer && !prefersReducedMotion) {
-  document.querySelectorAll('.proj-card').forEach(card => {
-    let tiltRaf = null;
-    let dx = 0;
-    let dy = 0;
-
-    card.addEventListener('mousemove', e => {
-      const rect = card.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      dx = (e.clientX - cx) / (rect.width / 2);
-      dy = (e.clientY - cy) / (rect.height / 2);
-
-      if (tiltRaf) return;
-      tiltRaf = requestAnimationFrame(() => {
-        card.style.transform = `translateY(-4px) rotateX(${-dy * 1.2}deg) rotateY(${dx * 1.2}deg)`;
-        tiltRaf = null;
-      });
-    });
-
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = '';
-    });
-  });
-}
 
 /* ==================== LINK TRACKING ==================== */
 document.querySelectorAll('.proj-proof a, .c-link, .footer-link, .hero-ctas a').forEach(link => {
@@ -578,32 +459,35 @@ const pgStepQuery = document.getElementById('pgStepQuery');
 const pgStepRetrieve = document.getElementById('pgStepRetrieve');
 const pgStepContext = document.getElementById('pgStepContext');
 const pgPipeline = document.getElementById('pgPipeline');
+const pgArrows = pgPipeline ? Array.from(pgPipeline.querySelectorAll('.pg-arrow')) : [];
 
+/* Answers only restate facts from this page. The keyword match is deliberately
+   simple: this is a labelled walkthrough of the pipeline stages, not a model. */
 const ragKB = [
   {
-    keywords: ['rag', 'retrieval', 'pipeline', 'how'],
-    chunks: ['SmartFAQ architecture', 'Demolabs pipeline', 'LangChain integration'],
-    answer: 'I build RAG pipelines using LangChain for orchestration, PostgreSQL + Elasticsearch for chunk storage, and FastAPI for the service layer. The core loop is: embed the query → cosine similarity retrieval → assemble top-k chunks into a context window → generate with GPT-4o-mini. I tune chunk size, retrieval depth, and context window size independently based on answer-quality evaluation metrics.'
+    keywords: ['rag', 'retrieval', 'pipeline'],
+    chunks: ['DemoLabs architecture', 'BRIN QA system', 'Stack card'],
+    answer: 'In the DemoLabs chatbot at Nawatech, questions are embedded with Azure OpenAI embeddings, matched against chunks stored in PostgreSQL with pgvector, and the retrieved context goes to an Azure OpenAI model. For SQL questions the pipeline retrieves the relevant schema first and generates SQL from few-shot examples. Measured on 60 benchmark queries: 3.23s mean end-to-end, of which 0.40s is retrieval. At BRIN, an LLM router chooses between SQL, vector, semantic and knowledge-graph search.'
   },
   {
-    keywords: ['tech', 'stack', 'skill', 'strongest', 'best', 'use'],
-    chunks: ['Skills index', 'Project evidence', 'Nawatech internship context'],
-    answer: 'My strongest technical area is production LLM systems — specifically RAG pipelines with LangChain, FastAPI, Celery, and Elasticsearch. On the data side I am strong in Python (Pandas, Scikit-learn, PyTorch) and statistical analysis with R and SPSS. I am comfortable with Azure, Docker, PostgreSQL, and Redis from my internship at Nawatech where I built these systems end-to-end.'
+    keywords: ['tech', 'stack', 'skill', 'strongest', 'best'],
+    chunks: ['Skills index', 'Project evidence', 'Nawatech + BRIN context'],
+    answer: 'My strongest technical area is production LLM systems — RAG, Knowledge Graphs, and Text-to-SQL with Azure OpenAI, pgvector, FastAPI, Celery, and RabbitMQ. On the data side I work with Python (Pandas, Scikit-learn, XGBoost, PyTorch, TensorFlow), time series forecasting (SARIMA, Prophet, LSTM), and BI dashboards with Tableau and Looker Studio. I built these systems end-to-end during my internships at Nawatech and BRIN.'
   },
   {
-    keywords: ['smartfaq', 'chatbot', 'faq', 'flagship'],
-    chunks: ['SmartFAQ case study', 'FAQ chatbot GitHub', 'Nawatech deployment context'],
-    answer: 'SmartFAQ is my flagship project — a retrieval-augmented FAQ chatbot built for support teams drowning in repetitive queries. It uses LangChain for orchestration, FastAPI for the API layer, Celery workers for async processing, PostgreSQL for structured storage, and Elasticsearch for semantic chunk retrieval. I built intent routing before retrieval so irrelevant context windows do not pollute the generation step. The full architecture is documented in the case study page.'
+    keywords: ['demolabs', 'chatbot', 'faq', 'flagship', 'nawatech'],
+    chunks: ['DemoLabs case study', 'Nawatech role', 'DeepEval results'],
+    answer: 'DemoLabs is an analytics assistant I built during my Nawatech internship. One chat interface routes each question to document QnA, RAG-based Text-to-SQL, PDF/OCR analysis or chart generation. The backend runs on FastAPI with 6 containers, 5 RabbitMQ queues and 4 Celery workers. It scored 0.885 mean answer correctness on 60 DeepEval test cases. The case study page has the details.'
   },
   {
     keywords: ['work', 'experience', 'company', 'companies', 'internship', 'job', 'career'],
-    chunks: ['Nawatech experience', 'GAOTek internship', 'Gipsy Research role', 'Home Credit internship'],
-    answer: 'I have held 6 roles and internships: Machine Learning Engineer Intern at Nawatech (building production RAG systems), AI Chatbot Development Intern at GAOTek (LangChain pipelines), Data Scientist Intern at Home Credit Indonesia, Statistician at Gipsy Research, Data Analyst at PPM Al-Faqih Mandiri (1.5 years), and Web Developer Intern at PT Jaya Konsultan Indonesia. My current focus is AI engineering with production LLM systems.'
+    chunks: ['BRIN AI Engineer', 'Kupu ID annotator', 'Nawatech ML Engineer', 'GAOTek chatbot', 'Home Credit data', 'PPM data analyst'],
+    answer: 'I have held 6 roles: AI Engineer Intern at BRIN (bibliometrics QA + Text-to-SQL), Data Annotator at Kupu ID (ground-truth labels for BYD France autonomous driving), Machine Learning Engineer Intern at Nawatech (DemoLabs AI Chatbot), AI Chatbot Development Intern at GAOTek, Data Scientist Intern at Home Credit Indonesia, and Data Analyst at PPM Al Faqih Mandiri. My current focus is production LLM systems.'
   },
   {
     keywords: ['award', 'honor', 'medal', 'competition', 'achievement'],
-    chunks: ['Pesta Data Nasional certificate', 'Bank Indonesia qualification', 'IoT contest participation'],
-    answer: 'I won a Bronze Medal at Pesta Data Nasional x UIN (APTIKOM national data competition, Aug 2025), had a qualified scientific paper submission to Bank Indonesia\'s national program (Smart Invoice with OCR, Jun 2025), and participated in the International Invitational Contest of IoT Technology during China-ASEAN Education Cooperation Week (Dec 2023).'
+    chunks: ['Pesta Data bronze', 'Satria Data Top 160', 'Bank Indonesia paper', 'IoT contest'],
+    answer: 'Bronze Medal at Pesta Data Nasional x APTIKOM 2025; Top 160 of 448 teams (97.12% accuracy) in the Satria Data preliminary stage; Top 5 in the Agentic AI Hackathon abstract competition; a qualified scientific paper for Bank Indonesia; and 3rd place at the International Invitational Contest of IoT Technology (2023).'
   }
 ];
 
@@ -614,24 +498,10 @@ function pgGetResponse(query) {
   }
   return {
     chunks: ['About section', 'Projects index', 'Contact details'],
-    answer: 'I am Abi — an AI Engineer in training at Nusa Mandiri University, specializing in RAG pipelines, LangChain, FastAPI, and data science. I have worked across 6 roles, built 6 production-style projects, and won a national data competition. The best way to see my work is the SmartFAQ case study or my GitHub at github.com/CodeByAbi. Feel free to contact me directly at abirawisnu7@gmail.com.'
+    answer: 'None of the scripted answers match that question, so here is the general summary. I am Abi — a final-year Data Science student (GPA 3.73) specializing in RAG, Text-to-SQL, and production LLM systems with FastAPI, Celery, and Docker. I have worked across 6 roles, built 6 projects including the DemoLabs AI Chatbot and nuxio.ai, and won a Bronze Medal at Pesta Data Nasional x APTIKOM 2025. See my GitHub at github.com/CodeByAbi or contact me directly at abirawisnu@gmail.com.'
   };
 }
 
-function pgTypeText(el, text, done) {
-  el.textContent = '';
-  let i = 0;
-  const speed = Math.max(12, Math.min(28, Math.floor(2400 / text.length)));
-  const tick = () => {
-    if (i < text.length) {
-      el.textContent += text[i++];
-      setTimeout(tick, speed);
-    } else {
-      done?.();
-    }
-  };
-  tick();
-}
 
 function pgSetStepActive(stepEl, active) {
   stepEl?.classList.toggle('pg-step-active', active);
@@ -642,8 +512,21 @@ function pgSetStepDone(stepEl) {
   stepEl?.classList.add('pg-step-done');
 }
 
+/* Monotonic run token. Each Ask starts a new run; stale timeouts and typing
+   loops check their id and bail out, so rapid re-submits cannot interleave
+   steps or answers from two queries. */
+let pgRunId = 0;
+
+function pgSetSubmitBusy(busy) {
+  if (!pgSubmit) return;
+  pgSubmit.disabled = busy;
+  pgSubmit.setAttribute('aria-busy', String(busy));
+  pgSubmit.textContent = busy ? 'Working…' : 'Ask →';
+}
+
 function pgRunPipeline(query) {
   if (!pgPipeline) return;
+  const runId = ++pgRunId;
   const steps = pgPipeline.querySelectorAll('.pg-step');
   steps.forEach(s => { s.classList.remove('pg-step-active', 'pg-step-done'); });
   if (pgAnswerBox) pgAnswerBox.hidden = true;
@@ -654,32 +537,33 @@ function pgRunPipeline(query) {
   if (pgStepRetrieve) pgStepRetrieve.textContent = `${entry.chunks.length} chunks`;
   if (pgStepContext) pgStepContext.textContent = `${entry.chunks.join(', ').slice(0, 28)}…`;
 
-  const delay = prefersReducedMotion ? 0 : 420;
+  pgSetSubmitBusy(true);
+  pgArrows.forEach(a => a.classList.remove('pg-arrow-lit'));
 
-  pgSetStepActive(steps[0], true);
-  setTimeout(() => {
-    pgSetStepDone(steps[0]); pgSetStepActive(steps[1], true);
-    setTimeout(() => {
-      pgSetStepDone(steps[1]); pgSetStepActive(steps[2], true);
-      setTimeout(() => {
-        pgSetStepDone(steps[2]); pgSetStepActive(steps[3], true);
-        setTimeout(() => {
-          pgSetStepDone(steps[3]); pgSetStepActive(steps[4], true);
-          setTimeout(() => {
-            pgSetStepDone(steps[4]);
-            if (pgAnswerBox && pgAnswerText) {
-              pgAnswerBox.hidden = false;
-              if (prefersReducedMotion) {
-                pgAnswerText.textContent = entry.answer;
-              } else {
-                pgTypeText(pgAnswerText, entry.answer);
-              }
-            }
-          }, delay);
-        }, delay);
-      }, delay);
-    }, delay);
-  }, delay);
+  // Retrieve and Generate are half of DemoLabs' measured 0.40s / 2.57s; the
+  // other stages were never timed separately and get a short readable beat.
+  const durations = prefersReducedMotion ? [0, 0, 0, 0, 0] : [140, 140, 200, 140, 1285];
+
+  const runStep = i => {
+    if (runId !== pgRunId) return;
+    if (i > 0) pgSetStepDone(steps[i - 1]);
+    if (i === steps.length) {
+      pgArrows.forEach(a => a.classList.remove('pg-arrow-lit'));
+      if (pgAnswerBox && pgAnswerText) {
+        pgAnswerText.textContent = entry.answer;
+        pgAnswerBox.hidden = false;
+      }
+      pgSetSubmitBusy(false);
+      return;
+    }
+    steps[i].style.setProperty('--pg-dur', `${durations[i]}ms`);
+    pgArrows.forEach((a, n) => a.classList.toggle('pg-arrow-lit', n === i - 1));
+    pgSetStepActive(steps[i], true);
+    setTimeout(() => runStep(i + 1), durations[i]);
+  };
+
+  // Let the reset paint first so a re-run restarts every bar from zero.
+  requestAnimationFrame(() => requestAnimationFrame(() => runStep(0)));
 }
 
 function pgHandleSubmit() {
