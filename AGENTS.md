@@ -70,7 +70,8 @@ portrait in that column drops it to sit beside the *tagline*, leaving the entire
 quadrant empty. It reads as broken even though it is mathematically centred.
 
 If you change one thing here, you will break it. If you must touch it, re-run the verification
-below and confirm the 0px delta still holds before you finish.
+below, confirm `.hero-profile` still computes `align-self: start` with the `calc()` margin above,
+and confirm the photo's top edge is still 0.4 x the nickname font-size above the h1's first-line cap-height before you finish.
 
 ### The second trap — mobile
 
@@ -139,8 +140,12 @@ Two caveats learned the hard way:
   writes a 390px PNG, so the right side looks clipped. That is a harness artifact, *not* a layout
   bug. For real geometry, inject a probe that writes `getBoundingClientRect()` values into the DOM
   and read them back with `--dump-dom` — assert `document.documentElement.scrollWidth ===
-  clientWidth` to rule out horizontal overflow, and compare `.hero-profile` against
-  `.hero-nickname` for the alignment delta.
+  clientWidth` to rule out horizontal overflow, and read `.hero-profile`'s computed `align-self`
+  and `margin-top` (see the invariant above; do not compare it against the `.hero-nickname` box).
+- **A browser tool's viewport resize *is* a real device width.** Playwright's `setViewportSize`
+  at `390,844` gives `innerWidth === 390`, unlike `--window-size`. Measure reveal-dependent
+  overflow *before* scrolling: elements waiting to reveal sit off-screen and can inflate
+  `scrollWidth` until they enter view.
 
 Never commit a `_shot.html` / `_measure.html` harness file. Delete it when done.
 
@@ -150,18 +155,46 @@ Never commit a `_shot.html` / `_measure.html` harness file. Delete it when done.
 
 - **Asset filenames use hyphens, not spaces** — `assets/img/abi-brin.jpeg`. Keep it that way; a
   space forces `%20` URL-encoding in every reference.
-- **`assets/pdf/Abira Wisnunggal CV.pdf` is live.** It is linked from two "Resume" buttons
-  (`index.html:70` and `:88`). Its filename contains real spaces and must be URL-encoded in
-  markup. This file was deleted from the working tree at one point, silently breaking both
-  buttons — if a Resume link 404s, check this file exists before anything else.
+- **The CV lives at `assets/pdf/abi-wisnunggal-cv.pdf`.** The nav and the mobile drawer link
+  to it as "Download CV (PDF)" with a `download` attribute. The hero's "Hire Me →" button also
+  downloads it; that label is inside the locked hero and is left as-is. If the file is ever
+  removed, remove every link to it in the same change.
+- **`case-study-smartfaq.html` is the DemoLabs case study.** The filename is historical: the
+  hero CTA links to it and the hero is locked. Don't rename it without the user's go-ahead.
+- **Every figure on the page must trace to something stated elsewhere in the repo.** No
+  "Verified" badges, no "Request Demo/Credential" links that go to `#contact`, and projects
+  without a measured result get no `.proj-figure`.
 - **`og:image` / `twitter:image` are only 779×595**, below Twitter's preferred ~1200×630 for
   `summary_large_image`. Known limitation, not an oversight. Fixing it means generating a real
   1200×630 social card, not pointing at the existing photo.
-- **`.gitattributes` LFS-tracks `assets/vid/*.mp4` only.** Images commit as ordinary files. There
-  is a 374MB video in `assets/vid/` — do not try to inline or re-encode it casually.
-- **`css/style.css` is ~1700 lines of accumulated overrides**, and later breakpoint blocks win by
+- **⛔ The DemoLabs demo video is hosted on YouTube: `https://youtu.be/T9D7Ta1O9rU`. Do not touch it.**
+  It is linked in three places, all labelled "Demo video (YouTube)": the DemoLabs card in
+  `index.html`, the `projectData.p1.proof` list in `js/main.js`, and the Links section of
+  `case-study-smartfaq.html`. Do not change the URL or label, do not link the local `.mp4`, and do
+  not re-add a "374 MB" download. The local `assets/vid/*.mp4` is a 374MB Git LFS file; GitHub Pages
+  serves only the 134-byte LFS pointer, so the old link returned 404 in production. Do not inline
+  or re-encode the file either. If the video moves, change all three links in the same change.
+- **`.gitattributes` LFS-tracks `assets/vid/*.mp4` only.** Images commit as ordinary files.
+- **`css/style.css` is ~1800 lines of accumulated overrides**, and later breakpoint blocks win by
   source order, not specificity. `max-width: 600px` deliberately overrides the `767px` values.
-  Before changing a responsive value, check whether a later block re-overrides it.
+  Before changing a responsive value, check whether a later block re-overrides it. The
+  "TOUCH + PHONE ADAPTATION" block at the end of the file is last on purpose.
+- **Touch targets are 44px, and small controls get there with an invisible `::after`.** The
+  visible control keeps its size; `.nav-toggle`, `.modal-close`, `.nav-drawer-close`, and the
+  text links in `.proj-proof`, `.cert-btn`, `.honor-actions` follow this pattern. Filled
+  controls (`.proj-open-btn`, `.pg-chip`, `.f-submit`) use `min-height: 44px`. Keep the row gap on
+  wrapped link rows at 18px or more so extended hit areas do not overlap.
+- **Horizontal reveals travel up on phones.** `data-reveal="left|right"` is overridden to
+  `translateY(18px)` at `max-width: 767px`, because 24px of pre-reveal sideways travel makes the
+  page scroll sideways on iOS. `.hero-profile` is excluded and keeps its entrance.
+- **Motion lives in a few deliberate places**: the pipeline demo's stage bars (Retrieve and
+  Generate run at half their measured DemoLabs time), the experience accordion (`grid-template-rows`
+  0fr to 1fr), the `.proj-figure-n` wipe, and the project modal growing from its card. Every one is
+  covered by the `prefers-reduced-motion` rule. Do not add a new section-wide entrance.
+- **Impeccable context**: `PRODUCT.md` holds the product record (audience: hiring managers and
+  engineers; positioning: measured production RAG). `.impeccable/critique/` holds saved critiques.
+  `DESIGN.md`'s front matter is stale: it still lists Clash Display as the display face, while the
+  CSS uses Newsreader for display and Clash only on card titles.
 
 ## Branches
 
