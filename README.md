@@ -1,30 +1,28 @@
-# Abi Portfolio — VS Code Project
+# codebyabi.github.io
 
-## Folder Structure
+Portfolio of Abira Wisnunggal (Abi), AI engineer. Live at https://codebyabi.github.io/
+
+A static site with no build step and no dependencies, served as-is by GitHub Pages.
 
 ```
-abi-portfolio/
-├── index.html          ← Main page
-├── css/
-│   └── style.css       ← All styles
-├── js/
-│   └── main.js         ← All interactions & animations
-└── assets/
-    └── img/            ← Drop your images here
-        ├── proj-rainfall.jpg     ← Project 1 image
-        ├── proj-chatbot.jpg      ← Project 2 image
-        ├── proj-houseprice.jpg   ← Project 3 image
-        ├── proj-ev.jpg           ← Project 4 image
-        ├── cert-bnsp.jpg         ← Certificate 1 image
-        ├── cert-skilvul.jpg      ← Certificate 2 image
-        └── cert-revou.jpg        ← Certificate 3 image
+index.html                 the portfolio
+case-study-smartfaq.html   DemoLabs AI Chatbot case study (filename is historical)
+css/style.css              all styles
+js/main.js                 nav, accordion, project modal, contact form, demo walkthrough
+assets/img/                photos, logos, project images
+assets/pdf/                CV (abi-wisnunggal-cv.pdf)
+assets/vid/                local copy of the demo video (Git LFS, not served; the site links YouTube)
+site.webmanifest           name, theme colour and icon
+PRODUCT.md                 who the site is for and what it must never fake
+DESIGN.md                  the design system
+AGENTS.md                  rules for anyone (or any agent) editing the repo
+.impeccable/               design-tool config and saved critiques
 ```
 
-## How to add images
+## Preview
 
-1. Put your image files inside `assets/img/`
-2. Name them exactly as listed above (or change the `src=` in index.html)
-3. Images will auto-display — if a file is missing, a placeholder is shown instead
+Open `index.html`, or serve the folder with any static server (for example
+`python -m http.server 8765`, then visit http://127.0.0.1:8765/).
 
 ## Go Live (VS Code)
 
