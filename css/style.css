@@ -403,59 +403,23 @@ section {
 .exp-card.open .exp-body > .exp-body-inner { transition-duration: .45s; }
 .exp-card.open .exp-body { grid-template-rows: 1fr; transition-duration: .45s; }
 .exp-body-inner { padding: 20px 26px 26px; border-top: 1px solid var(--line); }
-.exp-body-label { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 12px; }
+.exp-body-label { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 12px; }
 .exp-list { display: flex; flex-direction: column; gap: 9px; }
 .exp-list li { font-size: 13px; line-height: 1.65; color: var(--ink-2); display: flex; gap: 10px; }
 .exp-list li::before { content: '›'; color: var(--gold); font-size: 16px; flex-shrink: 0; line-height: 1.4; }
 
 /* ======================== PROJECTS ======================== */
 #projects { border-top: 1px solid var(--line); }
+/* Two equal columns, always. A bento variant was tried here (flagship span 6,
+   then 3+3, then 2+2+2) and reverted: giving the flagship the full 1064px
+   measure made it read as a different class of object from the other five
+   rather than as the first of six. The flat 2-up grid also keeps every card the
+   same size, which is what the CTA-alignment rule in .proj-body assumes. */
 .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-/* Bento layout (protocol S5: "asymmetrical CSS Grid layouts"). Desktop only.
-
-   COLUMN spans only — deliberately no `grid-row` spans. Row spans on an
-   auto-height grid resolve circularly (the spanning card is what would size the
-   rows it spans), and this repo has already shipped one clipping bug from an
-   over-clever height relationship. Asymmetric widths get the bento read with no
-   circular sizing and no clipping risk.
-
-   The composition is 6 / 3+3 / 2+2+2 on a 6-track grid: the flagship takes the
-   full measure, two half-width features follow, then three third-width. The
-   ordering follows the editorial ranking already in the markup — 001 FLAGSHIP,
-   002 FEATURE KEY, then the supporting work.
-
-   This MUST stay inside min-width:961px. At <=960px .proj-grid is a single
-   column, and a bare `grid-column: span 6` against a 1-column track would
-   generate six IMPLICIT columns and blow the layout apart on mobile. Same class
-   of source-order trap AGENTS.md warns about, in the other direction. */
-@media (min-width: 961px) {
-  .proj-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .proj-card:nth-child(1) { grid-column: span 6; }
-  .proj-card:nth-child(2),
-  .proj-card:nth-child(3) { grid-column: span 3; }
-  .proj-card:nth-child(4),
-  .proj-card:nth-child(5),
-  .proj-card:nth-child(6) { grid-column: span 2; }
-  /* A 200px band across the full 1064px measure reads as a letterbox, so the
-     flagship's media gets proportionally more height. */
-  .proj-card:nth-child(1) .proj-img-slot { height: 340px; }
-  /* ...but that would upscale the flagship's asset ~5.3x, and its source is
-     assets/img/demolablogo.jpg at 200x200. `contain` renders it at natural size
-     on the --bg plate instead of blowing it up into mush. This is scoped to the
-     flagship because its source is a LOGO; the other cards hold real
-     screenshots (1280x716) that want `cover`. If the flagship asset is ever
-     replaced with a real screenshot, drop this rule and the band goes back to
-     cover. */
-  .proj-card:nth-child(1) .proj-img-slot img {
-    object-fit: contain;
-    padding: 48px;
-  }
-}
 .proj-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden; cursor: pointer;
-  transition: box-shadow .3s var(--ease-s), border-color .25s;
+  transition: border-color .2s;
   position: relative;
   /* Flex column so .proj-body can FILL the leftover height below the image band.
      This is what puts the CTA on the card's bottom edge. See .proj-body. */
@@ -465,7 +429,7 @@ section {
    template, and a full-width card that moves also drags the click target out
    from under the pointer mid-gesture. Feedback is the border going to ink plus
    the media easing — enough to read as openable without moving the layout. */
-.proj-card:hover { box-shadow: var(--sh-md); border-color: var(--ink); }
+.proj-card:hover { border-color: var(--ink); }
 .proj-img-slot {
   width: 100%; height: 200px; background: var(--bg);
   border-bottom: 1px solid var(--line);
@@ -473,15 +437,14 @@ section {
   overflow: hidden; position: relative;
   flex-shrink: 0; /* .proj-card is a flex column; the media band keeps its height */
 }
-.proj-img-slot img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease-s); }
-.proj-card:hover .proj-img-slot img { transform: scale(1.04); }
-.proj-img-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  font-family: var(--fm); font-size: 10px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-4); user-select: none;
+.proj-img-slot img { width: 100%; height: 100%; object-fit: cover; }
+/* Shown only if the image fails to load: a plain plate with the project name,
+   never authoring hints like "add image here". */
+.proj-img-placeholder,
+.cert-img-placeholder {
+  display: none; padding: 24px; text-align: center;
+  font-family: var(--fd); font-size: 17px; font-weight: 600; color: var(--ink-3);
 }
-.proj-img-placeholder .ph-ico { opacity: .45; display: flex; }
-.proj-img-placeholder span:not(.ph-ico) { font-size: 9px; opacity: .6; }
 /* Column layout with the CTA pushed to the bottom. Cards in a grid row are
    already the same height, so this lines the "View Technical Details" buttons
    up across the row instead of letting them float at ragged heights.
@@ -494,17 +457,28 @@ section {
    [data-project-open], the only handler that opens the project modal, with
    nothing clickable. Use flex:1 on a flex-column card instead. */
 .proj-body { padding: 24px; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.proj-num   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; color: var(--ink-4); margin-bottom: 12px; }
+.proj-num   { font-family: var(--fm); font-size: 11px; letter-spacing: .1em; color: var(--ink-4); margin-bottom: 12px; }
 .proj-title { font-family: var(--fd); font-size: 19px; font-weight: 600; color: var(--ink); margin-bottom: 10px; line-height: 1.2; }
 .proj-desc  { font-size: 13.5px; line-height: 1.72; color: var(--ink-3); margin-bottom: 18px; }
-.proj-date  { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-4); white-space: nowrap; }
-.proj-tags  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-.proj-tag   { font-family: var(--fm); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); background: var(--bg); border: 1px solid var(--line); padding: 4px 9px; border-radius: 999px; transition: border-color .2s, color .2s; }
-/* 13 per-technology pastel triples removed. Every project tag now carries the
-   same neutral chip; the technology name is the content, the hue was noise. */
-.proj-card:hover .proj-tag { border-color: var(--line-2); }
-.proj-cta   { font-family: var(--fm); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-4); display: flex; align-items: center; gap: 8px; transition: color .2s, gap .2s; }
-.proj-card:hover .proj-cta { color: var(--gold-ink); gap: 12px; }
+
+/* One verified headline number per project, set large, with its sample size
+   beside it. Projects without a measured result simply have no figure — the
+   slot is never filled with a made-up number. */
+.proj-figure { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.proj-figure-n { font-family: var(--fd); font-size: 40px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--ink); }
+.proj-figure-l { font-size: 13px; line-height: 1.45; color: var(--ink-3); max-width: 240px; }
+/* The measured number is the one thing on the card that gets its own entrance:
+   uncovered left to right after the card lands, like a readout settling.
+   Gated on .js like every reveal, so with no script it is simply there. */
+.js .proj-card[data-reveal] .proj-figure-n { clip-path: inset(-.1em 100% -.1em -.1em); }
+.js .proj-card[data-reveal].in .proj-figure-n {
+  clip-path: inset(-.1em -.1em -.1em -.1em);
+  transition: clip-path .7s var(--ease-s) .3s;
+}
+.proj-status { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 16px; }
+/* Plain text labels in a single run, not chips: the stack is context, the
+   numbers above are the point. */
+.proj-tags  { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 16px; }
 
 /* ======================== PROJECT MODAL ======================== */
 .modal-overlay {
@@ -519,17 +493,20 @@ section {
   background: var(--bg-card); border-radius: var(--r8);
   width: 100%; max-width: 880px; max-height: 90vh;
   overflow-y: auto; box-shadow: var(--sh-lg);
-  transform: translateY(32px) scale(.96);
-  transition: transform .4s var(--ease-s);
+  /* --modal-dx/--modal-dy point from the viewport centre to the card that
+     opened the modal (set in openModal), so the detail grows out of its card
+     and shrinks back into it on close. Closing is quicker than opening. */
+  transform: translate(var(--modal-dx, 0px), var(--modal-dy, 32px)) scale(.6);
+  transition: transform .25s var(--ease-s);
 }
-.modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+.modal-overlay.open .modal-box { transform: none; transition-duration: .45s; }
 .modal-bar {
   position: sticky; top: 0; background: var(--bg-card);
   border-bottom: 1px solid var(--line);
   padding: 18px 32px; display: flex; justify-content: space-between; align-items: center;
   z-index: 10;
 }
-.modal-bar-label { font-family: var(--fm); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); }
+.modal-bar-label { font-family: var(--fm); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); }
 .modal-close {
   width: 32px; height: 32px; border: 1.5px solid var(--line); border-radius: var(--r4);
   background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -538,26 +515,11 @@ section {
 .modal-close:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 .modal-content { padding: 40px 32px 56px; }
 .modal-title { font-family: var(--fd); font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 6px; }
-.modal-sub { font-family: var(--fm); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 32px; }
-.modal-sh { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-top: 28px; margin-bottom: 10px; }
+.modal-sub { font-family: var(--fm); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 32px; }
+.modal-sh { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-top: 28px; margin-bottom: 10px; }
 .modal-p { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); }
-.flow-wrap { margin-top: 28px; padding: 26px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8); }
-.flow-label { font-family: var(--fm); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 18px; }
-.flow-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.flow-node {
-  background: #fff; border: 1.5px solid var(--line); border-radius: var(--r4);
-  padding: 9px 14px; font-family: var(--fm); font-size: 11px; color: var(--ink);
-  text-align: center; transition: background .2s, border-color .2s;
-  opacity: 0; animation: nodeIn .4s var(--ease-s) both;
-}
-.flow-node:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
-.flow-node .fn-ico { font-size: 15px; margin-bottom: 3px; }
-.flow-arrow-svg {
-  color: var(--ink-4); opacity: 0; animation: nodeIn .4s var(--ease-s) both;
-}
-.flow-arrow-svg svg { animation: nudge 2s ease-in-out infinite; }
-@keyframes nudge { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
-@keyframes nodeIn  { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.flow-wrap { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+.flow-label { font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; }
 
 /* ======================== CERTIFICATES ======================== */
 #certificates { border-top: 1px solid var(--line); }
@@ -565,7 +527,6 @@ section {
 .cert-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden;
-  transition: box-shadow .3s var(--ease-s), border-color .2s;
   position: relative;
 }
 /* Same hover contract as .proj-card: border to ink, no translate. */
