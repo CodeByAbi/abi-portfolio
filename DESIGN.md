@@ -119,6 +119,8 @@ Motion is quiet and one-directional: content rises into place on a single fast-o
 
 > **De-slop pass (2026-10), and its partial reversal.** An earlier iteration layered eight decorative systems: `.cursor` + `.cursor-trail`, `.noise`, `.grid-bg` (with scroll/mouse parallax), `.aurora` (a 200vh gradient substrate), `.hero-circle`, `.footer-glow`, and a `.scroll-track` scan line — driven by four JavaScript loops. Stacked together they read as generated rather than art-directed, and they cost real work: every `backdrop-filter` surface was forced to re-composite against a moving gradient.
 >
+> **Second de-slop pass (2026-10-22) supersedes the reversals below.** The ambient `body::before`/`body::after` layers (grid, grain, drifting blob), the `[data-d]` domain pastels, `.honor-pill`, the featured-honor gradient, `.cert-status` / `.cert-status-verified`, the `.exp-card::before` stripe, `.footer-big-text`, the About KPI tiles and skill chips, the playground typing effect and green "done" state, and card hover shadows/zooms are all **removed**. Tags are now a plain mono text run (`.proj-tags`), credential and proof links are underlined text links, and projects lead with one verified figure (`.proj-figure`). Sections of this document that describe those systems are historical. **Do not reintroduce any of them.** The hero is unchanged and still governed by AGENTS.md.
+
 > **Three of the eight are now back, deliberately and in a different shape.** A protocol adoption pass reintroduced section depth (a 64px hairline grid, warm grain, and one slow radial blob) and muted pastel chips. Both reversals are documented in full in [Protocol adoption](#protocol-adoption-and-the-three-reversals) — including why the reintroduced versions are *not* the ones that were removed. The remaining five (`.cursor`/`.cursor-trail`, `.aurora`, `.hero-circle`, `.footer-glow`, `.scroll-track`) stay gone. **Do not reintroduce those five without a specific reason.**
 
 **Key Characteristics:**
@@ -154,7 +156,7 @@ A near-monochrome warm-neutral palette. One accent hue (gold) plus a functional 
 - **Gold Light** (`#d4aa6a`): footer logo accent and the `.hero-status-badge` tint. The `.stack-row:hover` border and the `.footer-glow` line gradient that also used it are gone.
 - **Verified Green** (`#22c55e`): `.cert-badge` dot, `.pg-step-done`, `.form-status.success` (`#166534` text on `#e9f8ed`), `.cert-status-verified`.
 - **Error Red** (`#b91c1c`): `.f-err`, `.f-inp.invalid` / `.f-txt.invalid` border, `.form-status.error`.
-- **Chips carry a domain, not a hue.** Every chip has a `data-d` key (`ai` / `llm` / `data` / `infra`) and one of four muted pastels. The four colours map onto the domains the `.stack-card` definition list already establishes, so the hue repeats information the reader gets elsewhere. Measured contrast 4.62:1 – 6.26:1, all AA at 11px. The base chip treatment is unchanged: `999px` radius, `1px` border, 10–11px JetBrains Mono. **A chip added without a `data-d` renders as plain neutral and silently breaks the encoding** — full rationale in [Protocol adoption](#protocol-adoption-and-the-three-reversals).
+- **No tinted chips.** The `[data-d]` pastels were removed in the 2026-10-22 pass. Tags are a single neutral mono text run (`.proj-tags`); the only gold is structural.
 
 ### Named Rules
 
@@ -178,7 +180,7 @@ Three traps in that block, all of which have already bitten once:
 - **The playground cannot be fixed from there at all.** The `.pg-*` block sits *below* the override block, so `.pg-step-label`, `.pg-answer-label`, and `.pg-disclaimer` lose on source order at equal specificity. They are fixed at their own declarations. Anything added after `:1497` needs the same treatment.
 - **The footer is a different surface.** `footer` is `--bg-dark` (`#111110`), so the light-surface repaint is wrong there. `.footer-copy` and `.footer-col-label` had been folded into that block and inherited `#6f6b66` — **3.57:1 on the dark ground**, a failure. Their original `rgba(255,255,255,.3/.4)` was worse at 2.68:1. They now carry `rgba(255,255,255,.5)` (→ ~`#888888`, 5.33:1) and `.footer-back` `rgba(255,255,255,.65)` (→ ~`#acacac`, 8.29:1, matching `.footer-link`). Keep any new footer metadata on a translucent white, never on the `--ink-*` ramp.
 
-`.footer-big-text` is `rgba(255,255,255,.04)` at up to 180px and measures 1.09:1. That is intentional and **exempt** — it is a decorative watermark, not content, and the real name sits in `.footer-brand`. Do not "fix" it.
+`.footer-big-text` was removed in the 2026-10-22 pass; the name appears once, in `.footer-brand`.
 
 ## Typography
 
@@ -220,7 +222,7 @@ Desktop-first declarations with `max-width` overrides doing the responsive work.
 
 **Page furniture.** Fixed 60px nav (`padding: 0 48px`) that gains `border-bottom-color: var(--line)` + `--sh-sm` past 24px of scroll. The nav is **opaque** (`background: var(--bg)`), not translucent. It was previously `rgba(248,247,244,.85)` + `blur(20px)`, which only made sense while a `.aurora` gradient layer sat behind it to refract — that layer is gone, so the blur was fog over flat paper and it made nav text contrast depend on whatever was scrolling underneath.
 
-**Ambient background layers exist again, in a reduced form.** `body::before` carries a 64px hairline grid (`.028`) plus warm grain (`.022`), both static; `body::after` carries one warm radial blob at `.03` drifting on `transform` over `26s`. Both are `position: fixed`, `pointer-events: none`, `z-index: 0`, and the blob is killed in the reduced-motion block. There is still **no** `.aurora`, no `.cursor`/`.cursor-trail`, no `.hero-circle`, and no `.footer-glow` — and crucially no scroll or mouse parallax, which was the expensive part. See [Protocol adoption](#protocol-adoption-and-the-three-reversals). Content sits at `z-index: 1` on the `--bg` ground; opaque cards and the opaque footer hide the layer entirely. `body { overflow-x: hidden }` remains as a guard only.
+**There are no ambient background layers.** The `body::before` grid/grain and the `body::after` drifting blob were removed in the 2026-10-22 pass. Content sits directly on the `--bg` ground; `body { overflow-x: hidden }` remains as a guard only.
 
 **Breakpoints actually present in `css/style.css`:**
 
@@ -260,7 +262,7 @@ Depth is otherwise conveyed by **tonal layering rather than shadow**: `--bg` for
 
 Corners are quiet and never fully rounded except on chips.
 
-- **2px** (`--r2`) — the sharpest step, used only for rectangular action controls: `.btn-solid`, `.btn-outline`, `.nav-btn`, `.nav-link-ghost`, `.f-submit`, `.skip-link`.
+- **2px** (`--r2`) — the sharpest step, used only for rectangular action controls: `.btn-solid`, `.btn-outline`, `.nav-btn`, `.f-submit`, `.skip-link`.
 - **4px** (`--r4`) — inputs and small controls: `.f-inp` / `.f-txt`, `.pg-input`, `.pg-submit`, `.c-link`, `.stack-row`, `.exp-toggle`, `.modal-close`, `.nav-toggle`, `.nav-drawer-close`, `.nav-drawer-links a`, `.proj-open-btn`.
 - **8px** (`--r8`) — every full card: `.stack-card`, `.exp-card`, `.proj-card`, `.cert-card`, `.pg-shell`, `.flow-wrap`, `.pg-pipeline`, `.pg-answer-box`, `.modal-box`, `.about-kpi`.
 - **999px** — every chip, tag, pill, and status badge: `.skill-chip`, `.proj-tag`, `.cert-tag`, `.pg-chip`, `.cert-btn`, `.honor-actions a`, `.proj-proof a`, `.honor-pill`, `.cert-status`, `.hero-status-badge`, `.stack-level`.
@@ -286,8 +288,8 @@ Borders are `1px` for pure hairlines (`--line`), `1.5px` for anything interactiv
 ### Chips / Tags
 
 - **Neutral** (`.proj-tag`, `.cert-tag`, `.pg-chip`): `--bg` or `#faf9f6` / `#fff` fill, `1px solid var(--line)` or `--line-2`, `--ink-3` text, JetBrains Mono `9–11px`, `999px` radius, `padding: 4px 9px` to `6px 12px`.
-- **Tinted** — the four `[data-d]` domain pastels (`.ai` yellow, `.llm` blue, `.data` green, `.infra` red), each a background + hue-tinted border + dark text triple. These are **the only tinted chips on the page**; there are no per-item or per-technology variants. The old `.skill-chip.skill-*` / `.proj-tag-*` / `.cert-tag-*` triples are gone.
-- **Card status** (`.cert-status`): pill with `#f6f4ef` fill and `#d4d0ca` border; `.cert-status-verified` → `#e9f8ed` / `#86d39b` / `#166534`. This is the only place green appears as text.
+- **Tinted** — none. The `[data-d]` pastels were removed (2026-10-22).
+- **Card status** — removed. The page makes no "Verified" claims; a credential carries a link or nothing.
 - **Press feedback**: buttons and pill actions carry `:active { transform: scale(.98) }`. Hover already uses `translate` and press uses `scale`, so the two compose instead of fighting mid-gesture.
 - **`.skill-chip:hover`** inverts fully: `--ink` background, `#fff` text, `translateY(-2px)`.
 
