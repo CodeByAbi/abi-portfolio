@@ -24,15 +24,24 @@ AGENTS.md                  rules for anyone (or any agent) editing the repo
 Open `index.html`, or serve the folder with any static server (for example
 `python -m http.server 8765`, then visit http://127.0.0.1:8765/).
 
-## Go Live (VS Code)
+## How it behaves
 
-1. Install the **Live Server** extension in VS Code
-2. Right-click `index.html` → **Open with Live Server**
-3. Done!
+- **Contact form** posts to Formspree. If the request fails it falls back to opening the
+  visitor's email app, and says so.
+- **RAG demo** is a scripted walkthrough of the pipeline stages. No model is called, and the
+  section says so before anything runs.
+- **Motion** is limited to a few places (the demo stages, the experience accordion, the project
+  figures and the project modal) and all of it respects `prefers-reduced-motion`.
+- **Phones and touch**: every control has at least a 44px tap area, and the layout was checked
+  at 320px, 390px, an 820px tablet and phone landscape.
 
-## Update contact links
+## Before you change things
 
-In `index.html`, search for:
-- `abirawisnunggal@email.com` → replace with your real email
-- `linkedin.com/in/abirawisnunggal` → replace with your real LinkedIn URL
-- `github.com/abirawisnunggal` → replace with your real GitHub URL
+- Read [AGENTS.md](AGENTS.md) before touching anything near the hero. Its alignment rule is
+  easy to break and is verified by measurement, not by eye.
+- Every number and credential on the page must trace to something stated elsewhere in the repo.
+  [PRODUCT.md](PRODUCT.md) explains why: no "Verified" badges, no placeholder demo links, no
+  invented images.
+- The design system is documented in [DESIGN.md](DESIGN.md). Its front matter still lists an older
+  display font; the CSS is the source of truth.
+- Do not commit throwaway test files such as `_shot.html` or `_measure.html`.
