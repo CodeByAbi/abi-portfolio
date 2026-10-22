@@ -1475,9 +1475,10 @@ textarea:focus-visible,
      out of the empty right margin, not out of the copy column ("Wisnunggal" is
      ~5.4em wide and clips if the copy column drops under it at ~1024px). */
   .hero-shell {
-    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 430px);
+    grid-template-columns: minmax(0, 1.05fr) auto;
     align-items: center;
     gap: clamp(36px, 5vw, 78px);
+    max-width: 1240px;
   }
 
   .hero-copy {
@@ -1487,7 +1488,7 @@ textarea:focus-visible,
 
   .hero-profile {
     justify-self: end;
-    width: min(34vw, 420px);
+    width: min(38vw, 500px);
     margin-inline: 0;
   }
 }
@@ -1624,15 +1625,15 @@ textarea:focus-visible,
   flex: 0 0 auto;
   transition: background .2s, transform .2s var(--ease-s);
 }
-.pg-submit:hover { background: #000; transform: translateY(-2px); }
+.pg-submit:hover { background: #000; }
 /* Loading feedback while the simulated pipeline runs (ux: Submit Feedback —
    Loading -> result). Disabled state carries no transform so the button does
    not jump when it becomes unavailable mid-hover. */
 .pg-submit:disabled { opacity: .6; cursor: wait; transform: none; }
 .pg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
 .pg-chip {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-  border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--line-2); border-radius: var(--r4); padding: 8px 12px;
   color: var(--ink-3); background: var(--bg); cursor: pointer;
   transition: border-color .2s, color .2s, background .2s;
 }
@@ -1643,23 +1644,36 @@ textarea:focus-visible,
   margin-bottom: 20px;
 }
 /* aria-hidden connector, but it still has to be visible enough to read the flow. */
-.pg-arrow { font-size: 16px; color: var(--ink-3); }
+.pg-arrow { font-size: 16px; color: var(--ink-3); transition: color .2s; }
+/* The connector into the running stage carries the signal forward. */
+.pg-arrow.pg-arrow-lit { color: var(--gold-ink); }
 .pg-step {
+  position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; border: 1.5px solid var(--line); border-radius: var(--r4);
   background: #fff; min-width: 0;
   transition: border-color .3s var(--ease-s), background .3s;
 }
+/* Stage timer. JS sets --pg-dur per stage. Retrieve and Generate use half of
+   their measured DemoLabs latency, so Generate visibly dominates the run, as
+   it does in the real system. Resetting a run removes the classes and the
+   bar snaps back with no transition. */
+.pg-step::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--gold-ink); transform: scaleX(0); transform-origin: left;
+}
+.pg-step-active::after { transform: scaleX(1); transition: transform var(--pg-dur, .2s) linear; }
+.pg-step-done::after { transform: scaleX(1); opacity: 0; transition: opacity .25s; }
 .pg-step-ico {
   width: 28px; height: 28px; border-radius: 50%; background: var(--bg);
   border: 1.5px solid var(--line-2); display: flex; align-items: center; justify-content: center;
-  font-family: var(--fm); font-size: 10px; font-weight: 500; color: var(--ink-3); flex-shrink: 0;
+  font-family: var(--fm); font-size: 11px; font-weight: 500; color: var(--ink-3); flex-shrink: 0;
   transition: background .3s, border-color .3s, color .3s;
 }
 .pg-step-info { min-width: 0; }
 .pg-step-label {
-  font-family: var(--fm); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
-  color: #6f6b66; margin-bottom: 2px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 2px;
 }
 .pg-step-val {
   font-family: var(--fb); font-size: 12px; color: var(--ink-2);
@@ -1669,18 +1683,32 @@ textarea:focus-visible,
 /* White on --gold is 2.90:1. The step letter is 10px, so the active fill uses
    the darker step: white on --gold-ink is 5.04:1. */
 .pg-step-active .pg-step-ico { background: var(--gold-ink); border-color: var(--gold-ink); color: #fff; }
-.pg-step-done { border-color: #86d39b; background: #f0fbf3; }
-.pg-step-done .pg-step-ico { background: #22c55e; border-color: #22c55e; color: #fff; }
+/* Done is ink, not green: a finished step is a state, not a success claim, and
+   a fifth hue on the page buys nothing. */
+.pg-step-done { border-color: var(--line-2); }
+.pg-step-done .pg-step-ico { background: var(--ink); border-color: var(--ink); color: #fff; }
 .pg-answer-box {
   background: var(--bg); border: 1px solid var(--line); border-radius: var(--r8); padding: 24px;
 }
 .pg-answer-label {
-  font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-  color: #6f6b66; margin-bottom: 12px;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 12px;
 }
-.pg-answer-text { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); margin-bottom: 14px; min-height: 1.8em; }
-.pg-disclaimer { font-family: var(--fm); font-size: 10px; color: #6f6b66; letter-spacing: .04em; }
-.pg-disclaimer a { color: var(--gold-ink); text-decoration: underline; text-underline-offset: 2px; }
+.pg-answer-text { font-size: 14.5px; line-height: 1.8; color: var(--ink-2); min-height: 1.8em; }
+/* The answer is uncovered top-down, the way generated text arrives. There is
+   no fill-mode, so if the animation never runs the box is simply visible. */
+.pg-answer-box:not([hidden]) { animation: pgAnswerIn .45s var(--ease-s); }
+@keyframes pgAnswerIn {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); }
+  to   { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+.pg-timing {
+  font-family: var(--fm); font-size: 12px; letter-spacing: .04em; color: var(--ink-3);
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
+}
+/* Stated before anything runs, not after: a reader must know it is scripted
+   before deciding whether the output means anything. */
+.pg-disclaimer { font-family: var(--fm); font-size: 11px; color: var(--ink-3); letter-spacing: .04em; margin-top: 12px; }
 @media (max-width: 960px) {
   .pg-shell { padding: 20px; }
   .pg-arrow { display: none; }
@@ -1693,11 +1721,133 @@ textarea:focus-visible,
 /* ======================== MOBILE MICRO-TEXT IMPROVEMENTS ======================== */
 @media (max-width: 600px) {
   .sec-label { font-size: 12px; }
-  .proj-num, .proj-tag, .cert-date, .cert-issuer,
+  .proj-num, .proj-tags, .cert-issuer,
   .exp-meta, .exp-company, .honor-meta, .honor-org,
   .modal-sh, .stack-title, .f-lbl, .pg-step-label,
   .pg-disclaimer { font-size: 12px; }
-  .skill-chip { font-size: 12px; }
   .exp-list li, .modal-lessons li { font-size: 14px; }
   .modal-p { font-size: 15px; }
+}
+
+/* ======================== CASE STUDY (case-study-smartfaq.html) ========================
+   Uses the same tokens and type tiers as the portfolio. The KPI row is a <dl>:
+   each number sits with the test it came from, never on its own. */
+.case-wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+.case-nav {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 64px;
+}
+.case-nav a {
+  font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-2); border-bottom: 1px solid var(--line-2); padding: 6px 0;
+  transition: border-color .2s, color .2s;
+}
+.case-nav a:hover { color: var(--ink); border-color: var(--ink); }
+.case-eyebrow {
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gold-ink); margin-bottom: 16px;
+}
+.case-title {
+  font-family: var(--fserif); font-weight: 600;
+  font-size: clamp(38px, 6vw, 68px); line-height: 1.05; letter-spacing: -.025em;
+  color: var(--ink); margin-bottom: 20px;
+}
+.case-sub { font-size: 18px; line-height: 1.7; color: var(--ink-2); max-width: 720px; }
+.case-kpi {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 48px 0 16px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line);
+}
+.case-kpi-item { padding: 22px 20px 22px 0; }
+.case-kpi-item + .case-kpi-item { padding-left: 20px; border-left: 1px solid var(--line); }
+.case-kpi-label {
+  font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 10px;
+}
+.case-kpi-value {
+  font-family: var(--fd); font-size: clamp(32px, 4vw, 44px); font-weight: 700;
+  letter-spacing: -.03em; line-height: 1; color: var(--ink); margin: 0 0 10px;
+}
+.case-kpi-note { font-size: 14px; line-height: 1.5; color: var(--ink-3); margin: 0; }
+.case-section { margin-top: 56px; }
+.case-h {
+  font-family: var(--fd); font-size: 24px; font-weight: 600; letter-spacing: -.015em;
+  color: var(--ink); margin-bottom: 14px;
+}
+.case-p { font-size: 16px; line-height: 1.8; color: var(--ink-2); margin-bottom: 14px; max-width: 720px; }
+.case-list { display: flex; flex-direction: column; gap: 10px; max-width: 720px; }
+.case-list li { font-size: 16px; line-height: 1.7; color: var(--ink-2); display: flex; gap: 10px; }
+.case-list li::before { content: '›'; color: var(--gold); flex-shrink: 0; }
+.case-flow {
+  list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 22px; border: 1px solid var(--line); border-radius: var(--r8);
+  background: var(--bg-card); counter-reset: flow;
+}
+.case-flow li { padding: 16px 14px; counter-increment: flow; }
+.case-flow li + li { border-left: 1px solid var(--line); }
+.case-flow b {
+  display: block; font-family: var(--fd); font-size: 15px; font-weight: 600;
+  color: var(--ink); margin-bottom: 4px;
+}
+.case-flow b::before {
+  content: counter(flow) ' '; font-family: var(--fm); font-size: 11px; font-weight: 400; color: var(--ink-3);
+}
+.case-flow span { font-size: 13px; line-height: 1.45; color: var(--ink-3); }
+@media (max-width: 760px) {
+  .case-kpi { grid-template-columns: minmax(0, 1fr); }
+  .case-kpi-item + .case-kpi-item { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .case-flow { grid-template-columns: minmax(0, 1fr); }
+  .case-flow li + li { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* ======================== TOUCH + PHONE ADAPTATION ========================
+   Last in the file so it wins by source order over the earlier breakpoint
+   blocks. The query is (pointer: coarse) OR a phone-width viewport, so a
+   narrow desktop window gets the same larger hit areas; they are invisible.
+
+   Hit areas follow the existing nav-toggle / modal-close pattern: the visible
+   control keeps its size and an ::after extends the tappable box to 44px.
+   Text links sit on an 18px row gap or more, so extended areas never overlap. */
+@media (pointer: coarse), (max-width: 767px) {
+  a, button { touch-action: manipulation; -webkit-tap-highlight-color: rgba(184, 146, 74, .2); }
+
+  .proj-proof a, .cert-btn, .honor-actions a, .footer-back, .nav-logo { position: relative; }
+  .proj-proof a::after, .cert-btn::after, .honor-actions a::after { content: ''; position: absolute; inset: -9px 0; }
+  .footer-back::after { content: ''; position: absolute; inset: -15px 0; }
+  .nav-logo::after { content: ''; position: absolute; inset: -11px -6px; }
+
+  .proj-proof { row-gap: 18px; }
+  .honor-actions { row-gap: 18px; }
+  .cert-actions { row-gap: 18px; }
+
+  /* Filled controls grow for real: their whole box is the visible shape. */
+  .proj-open-btn, .pg-chip, .pg-submit, .f-submit, .btn-solid, .btn-outline, .skip-link {
+    min-height: 44px;
+  }
+  .pg-chip { display: inline-flex; align-items: center; }
+  .footer-link, .nav-drawer-links a { min-height: 44px; }
+}
+
+/* Phone type floor. Hero text is left as set. Everything else that was 11px
+   or below reads at 12px, matching the micro-label bump the 600px block
+   already gave other labels. */
+@media (max-width: 767px) {
+  .proj-proof a, .honor-actions a, .cert-btn, .cert-level, .honor-year,
+  .stack-tools, .exp-body-label, .proj-status, .proj-tags, .c-label,
+  .footer-col-label, .footer-copy, .footer-back, .pg-chip, .pg-submit, .f-submit,
+  .pg-step-ico, .pg-timing, .pg-disclaimer, .modal-bar-label { font-size: 12px; }
+
+  /* Horizontal reveals travel up on a phone. Entering from 24px off the right
+     edge adds 24px of scrollable width until the element is revealed, which
+     iOS Safari does not hide behind overflow-x:hidden on <body>. The hero
+     portrait is excluded: it is revealed on load and its entrance stays as set. */
+  .js [data-reveal="left"]:not(.in):not(.hero-profile),
+  .js [data-reveal="right"]:not(.in):not(.hero-profile) { transform: translateY(18px); }
+}
+
+/* Portrait tablet: the project cards were already built to fit a 390px phone,
+   so two of them fit across 700-960px instead of one card floating in a
+   770px-wide column. Experience stays single-column: opening one entry would
+   stretch the card beside it. */
+@media (min-width: 700px) and (max-width: 960px) {
+  .proj-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
