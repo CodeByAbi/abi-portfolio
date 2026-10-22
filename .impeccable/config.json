@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "newsreader",
+        "createdAt": "2026-10-22T13:13:18.215Z",
+        "reason": "agent: same as Newsreader (case variant)"
+      }
+    ]
+  }
+}
