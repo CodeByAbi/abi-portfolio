@@ -353,28 +353,25 @@ function validateContactForm() {
 
   if (name.length < 2) {
     errors.push('name');
-    setFieldError('name', 'Please enter your full name.');
+    setFieldError('name', 'Enter your name.');
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push('email');
-    setFieldError('email', 'Please enter a valid email address.');
+    setFieldError('email', 'Enter an email address in the format name@company.com.');
   }
 
   if (message.length < 20) {
     errors.push('message');
-    setFieldError('message', 'Message should be at least 20 characters.');
+    setFieldError('message', 'Add a little more detail: the message needs at least 20 characters.');
   }
 
   if (errors.length) {
     showFormSummary(errors);
     // Focus the summary, not the first input: a screen reader then reads the
     // problem and the full list of failures before the user starts fixing them.
+    // The status line stays empty here: the summary already says it once.
     formSummary?.focus();
-    if (formStatus) {
-      formStatus.className = 'form-status error';
-      formStatus.textContent = 'Please fix the highlighted fields and try again.';
-    }
     return null;
   }
 
@@ -401,7 +398,7 @@ if (contactForm) {
       if (res.ok) {
         if (formStatus) {
           formStatus.className = 'form-status success';
-          formStatus.textContent = 'Message sent — I will get back to you shortly!';
+          formStatus.textContent = `Message sent. I’ll reply to ${values.email}.`;
         }
         contactForm.reset();
         trackEvent('contact_submit', { method: 'formspree' });
@@ -413,10 +410,9 @@ if (contactForm) {
       const body = encodeURIComponent(`Name: ${values.name}\nEmail: ${values.email}\n\nMessage:\n${values.message}`);
       window.location.href = `mailto:abirawisnu@gmail.com?subject=${subject}&body=${body}`;
       if (formStatus) {
-        formStatus.className = 'form-status success';
-        formStatus.textContent = 'Your email app has been opened. Thank you!';
+        formStatus.className = 'form-status error';
+        formStatus.textContent = 'The form couldn’t send your message, so your mail app should open with it as a draft. If no draft appears, email me at abirawisnu@gmail.com.';
       }
-      contactForm.reset();
       trackEvent('contact_submit', { method: 'mailto_fallback' });
     } finally {
       if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send Message →'; }
@@ -463,12 +459,15 @@ const pgStepQuery = document.getElementById('pgStepQuery');
 const pgStepRetrieve = document.getElementById('pgStepRetrieve');
 const pgStepContext = document.getElementById('pgStepContext');
 const pgPipeline = document.getElementById('pgPipeline');
+const pgArrows = pgPipeline ? Array.from(pgPipeline.querySelectorAll('.pg-arrow')) : [];
 
+/* Answers only restate facts from this page. The keyword match is deliberately
+   simple: this is a labelled walkthrough of the pipeline stages, not a model. */
 const ragKB = [
   {
-    keywords: ['rag', 'retrieval', 'pipeline', 'how'],
-    chunks: ['SmartFAQ architecture', 'Demolabs pipeline', 'LangChain integration'],
-    answer: 'I build RAG pipelines using LangChain for orchestration, PostgreSQL + Elasticsearch for chunk storage, and FastAPI for the service layer. The core loop is: embed the query → cosine similarity retrieval → assemble top-k chunks into a context window → generate with GPT-4o-mini. I tune chunk size, retrieval depth, and context window size independently based on answer-quality evaluation metrics.'
+    keywords: ['rag', 'retrieval', 'pipeline'],
+    chunks: ['DemoLabs architecture', 'BRIN QA system', 'Stack card'],
+    answer: 'In the DemoLabs chatbot at Nawatech, questions are embedded with Azure OpenAI embeddings, matched against chunks stored in PostgreSQL with pgvector, and the retrieved context goes to an Azure OpenAI model. For SQL questions the pipeline retrieves the relevant schema first and generates SQL from few-shot examples. Measured on 60 benchmark queries: 3.23s mean end-to-end, of which 0.40s is retrieval. At BRIN, an LLM router chooses between SQL, vector, semantic and knowledge-graph search.'
   },
   {
     keywords: ['tech', 'stack', 'skill', 'strongest', 'best', 'use'],
