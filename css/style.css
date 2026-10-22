@@ -10,7 +10,7 @@
    display tier needs 600/700. Newsreader is variable (200-800) with optical
    sizing, so the 94px hero wordmark still has weight to spare. Instrument Serif
    is kept as the fallback. */
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap');
 
 /* ======================== VARIABLES ======================== */
 :root {
@@ -37,9 +37,8 @@
   /* Editorial serif — the display tier. Identity/section titles only; Clash
      Display stays for card titles and the logo, where the geometric grotesque
      is doing a different job. */
-  --fserif: 'Newsreader', 'Instrument Serif', Georgia, serif;
+  --fserif: 'Newsreader', Georgia, serif;
 
-  --ease:   cubic-bezier(.22,.68,0,1.2);
   --ease-s: cubic-bezier(.16,1,.3,1);
   --ease-i: cubic-bezier(.4,0,.2,1);
 
@@ -70,65 +69,6 @@ body {
 img { display:block; width:100%; }
 a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
-
-/* ======================== AMBIENT BACKGROUND LAYER ========================
-   Protocol S6/S7 ask for section depth via low-opacity imagery, minimal
-   geometric line patterns, and one slow drifting radial blob.
-
-   This REVERSES the de-slop pass recorded in DESIGN.md, which removed
-   .noise / .grid-bg / .aurora because "stacked together they read as generated
-   rather than art-directed". Applied here under the protocol they are collapsed
-   into TWO fixed layers on body pseudo-elements instead of three JS-driven divs,
-   and every opacity sits at or below the protocol's 0.03 ceiling:
-
-     ::before  64px hairline grid (.028) + warm grain (.022) — fully static
-     ::after   one warm radial blob (.03) drifting on transform over 26s
-
-   Differences from the removed versions that keep this from regressing:
-     - no scroll or mouse parallax (the old .grid-bg transitioned transform on
-       scroll, which was the actual cost — a full-screen repaint per frame)
-     - not on a scrolling container; position:fixed, so it costs nothing to scroll
-     - pointer-events:none and z-index:0, so all content sits above it
-     - opaque cards and the opaque footer hide it entirely; it only shows on the
-       paper ground between sections
-     - the blob animation is explicitly killed in the reduced-motion block
-   Keep total contrast impact below ~0.03. Anything stronger stops being
-   "ambient" and starts being visible texture. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.022'/%3E%3C/svg%3E"),
-    linear-gradient(rgba(26,25,24,.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26,25,24,.028) 1px, transparent 1px);
-  background-size: 200px 200px, 64px 64px, 64px 64px;
-}
-body::before { opacity: 1; }
-
-body::after {
-  content: '';
-  position: fixed;
-  top: -18vh;
-  left: 52%;
-  width: 78vw;
-  height: 78vw;
-  max-width: 1100px;
-  max-height: 1100px;
-  z-index: 0;
-  pointer-events: none;
-  opacity: .03;
-  background: radial-gradient(circle at 50% 50%, rgba(184,146,74,.55), rgba(184,146,74,0) 62%);
-  will-change: transform;
-  animation: ambientDrift 26s ease-in-out infinite alternate;
-}
-/* Transform only — no layout-triggering properties (protocol S7). */
-@keyframes ambientDrift {
-  from { transform: translate3d(-4%, -2%, 0) scale(1); }
-  to   { transform: translate3d(5%, 4%, 0) scale(1.12); }
-}
 
 /* ======================== NAV ======================== */
 nav {
@@ -164,15 +104,12 @@ nav.scrolled { border-bottom-color: var(--line); box-shadow: var(--sh-sm); }
 .nav-links a:focus-visible { color: var(--ink); }
 .nav-links a:focus-visible::after { width: 100%; }
 .nav-btn {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .1em;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--ink);
   border: 1.5px solid var(--ink); padding: 8px 18px; border-radius: var(--r2);
   transition: background .2s, color .2s, transform .2s var(--ease-s), box-shadow .2s;
 }
-.nav-btn:hover {
-  background: var(--ink); color: #fff;
-  transform: translateY(-1px); box-shadow: var(--sh-sm);
-}
+.nav-btn:hover { background: var(--ink); color: #fff; }
 
 /* ======================== SECTION BASE ======================== */
 section {
@@ -182,7 +119,7 @@ section {
 }
 .sec-label {
   display: inline-flex; align-items: center; gap: 14px;
-  font-family: var(--fm); font-size: 10px; font-weight: 400;
+  font-family: var(--fm); font-size: 11px; font-weight: 400;
   letter-spacing: .18em; text-transform: uppercase; color: var(--ink-4);
   margin-bottom: 56px;
 }
@@ -210,9 +147,6 @@ section {
 [data-delay="1"] { transition-delay: .06s; }
 [data-delay="2"] { transition-delay: .12s; }
 [data-delay="3"] { transition-delay: .18s; }
-[data-delay="4"] { transition-delay: .24s; }
-[data-delay="5"] { transition-delay: .3s; }
-[data-delay="6"] { transition-delay: .36s; }
 
 /* ======================== HERO ======================== */
 #hero {
@@ -380,23 +314,7 @@ section {
 /* ======================== ABOUT ======================== */
 #about { border-top: 1px solid var(--line); }
 .about-grid { display: grid; grid-template-columns: 1fr 440px; gap: 80px; align-items: start; }
-.about-text h2 {
-  font-family: var(--fd); font-size: clamp(36px, 4.5vw, 58px);
-  font-weight: 700; line-height: 1.05; letter-spacing: -.035em;
-  color: var(--ink); margin-bottom: 28px;
-}
-.about-text h2 .line { display: block; }
-.about-text p { font-size: 15.5px; line-height: 1.82; color: var(--ink-2); margin-bottom: 18px; }
-.skill-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 32px; }
-.skill-chip {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--ink-2); background: var(--bg); border: 1.5px solid var(--line);
-  padding: 7px 14px; border-radius: 999px;
-  transition: background .2s, border-color .2s, color .2s, transform .2s var(--ease-s);
-}
-.skill-chip:hover {
-  background: var(--ink); color: #fff; border-color: var(--ink); transform: translateY(-2px);
-}
+
 
 /* Stack diagram */
 .stack-card {
@@ -405,7 +323,7 @@ section {
   position: relative;
 }
 .stack-title {
-  font-family: var(--fm); font-size: 10px; letter-spacing: .14em;
+  font-family: var(--fm); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--ink-4); margin-bottom: 20px;
 }
 .stack-rows { display: flex; flex-direction: column; margin: 0; }
@@ -422,7 +340,30 @@ section {
 .stack-row:last-child { border-bottom: 1px solid var(--line); }
 .stack-row:hover { border-color: var(--line-2); }
 .stack-domain { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); flex-shrink: 0; min-width: 152px; }
-.stack-tools { font-family: var(--fm); font-size: 11px; letter-spacing: .04em; color: var(--ink-3); margin: 0; }
+.stack-tools { font-family: var(--fm); font-size: 11px; letter-spacing: .04em; color: var(--ink-3); margin: 0; min-width: 0; }
+/* Each tool is an unbreakable item, so "Looker Studio" and "Knowledge Graphs" never
+   split across lines. The middle dot is drawn in the gap before every item rather
+   than typed between them: a typed dot can strand at the end or start of a wrapped
+   line. Here the list clips on its own left edge, so the dot that would sit before
+   the first item on each line falls outside the box and is never painted. The
+   decorative dot gets an empty alt (`/ ''`) so screen readers read a plain list. */
+.stack-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 3px 20px;
+  overflow: hidden; line-height: 1.7;
+}
+.stack-list li { position: relative; white-space: nowrap; }
+.stack-list li::before {
+  content: '\00b7'; content: '\00b7' / '';
+  position: absolute; left: -13px; color: var(--ink-4);
+}
+/* On a phone the 152px label column leaves the tool list ~100px, which puts every
+   tool on its own line and clips the longer nowrap items. The label stacks above
+   its tools instead, so the list gets the full row. */
+@media (max-width: 600px) {
+  .stack-row { flex-direction: column; align-items: stretch; gap: 6px; }
+  .stack-domain { min-width: 0; }
+}
 
 /* ======================== EXPERIENCE ======================== */
 #experience { border-top: 1px solid var(--line); }
@@ -430,25 +371,18 @@ section {
 .exp-card {
   background: var(--bg-card); border: 1.5px solid var(--line);
   border-radius: var(--r8); overflow: hidden; cursor: pointer;
-  transition: border-color .25s, box-shadow .3s var(--ease-s);
+  transition: border-color .2s;
   position: relative;
 }
-.exp-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px; background: var(--gold);
-  transform: scaleY(0); transform-origin: top;
-  transition: transform .35s var(--ease-s);
-}
-.exp-card:hover::before, .exp-card.open::before { transform: scaleY(1); }
-.exp-card:hover { border-color: var(--line-2); box-shadow: var(--sh-md); }
-.exp-card.open  { border-color: var(--ink); box-shadow: var(--sh-md); }
+.exp-card:hover { border-color: var(--line-2); }
+.exp-card.open  { border-color: var(--ink); }
 .exp-head {
   padding: 26px 26px 20px;
   display: flex; justify-content: space-between; align-items: flex-start;
 }
 .exp-role    { font-family: var(--fd); font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-.exp-company { font-family: var(--fm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 5px; }
-.exp-meta    { font-family: var(--fm); font-size: 10px; color: var(--ink-4); line-height: 1.7; }
+.exp-company { font-family: var(--fm); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 5px; }
+.exp-meta    { font-family: var(--fm); font-size: 11px; color: var(--ink-4); line-height: 1.7; }
 .exp-toggle  {
   width: 28px; height: 28px; flex-shrink: 0;
   border: 1.5px solid var(--line); border-radius: var(--r4);
@@ -458,8 +392,16 @@ section {
 }
 .exp-card.open .exp-toggle { background: var(--ink); color: #fff; border-color: var(--ink); transform: rotate(45deg); }
 .exp-preview { padding: 0 26px 20px; font-size: 13px; line-height: 1.7; color: var(--ink-3); }
-.exp-body { max-height: 0; overflow: hidden; transition: max-height .5s var(--ease-s); }
-.exp-card.open .exp-body { max-height: 800px; }
+/* 0fr -> 1fr animates to the body's real height, so open and close take the
+   stated time for every role. max-height:800px finished early on short bodies
+   and clipped long ones. Closing is quicker than opening. */
+.exp-body { display: grid; grid-template-rows: 0fr; overflow: hidden; transition: grid-template-rows .3s var(--ease-s); }
+.exp-body > .exp-body-inner { min-height: 0; overflow: hidden; transition: padding .3s var(--ease-s), border-color .3s; }
+/* A grid item can't shrink below its own padding, so a closed body drops its
+   vertical padding; otherwise ~47px of it stays visible under the trigger. */
+.exp-card:not(.open) .exp-body > .exp-body-inner { padding-top: 0; padding-bottom: 0; border-top-color: transparent; }
+.exp-card.open .exp-body > .exp-body-inner { transition-duration: .45s; }
+.exp-card.open .exp-body { grid-template-rows: 1fr; transition-duration: .45s; }
 .exp-body-inner { padding: 20px 26px 26px; border-top: 1px solid var(--line); }
 .exp-body-label { font-family: var(--fm); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 12px; }
 .exp-list { display: flex; flex-direction: column; gap: 9px; }
