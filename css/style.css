@@ -725,16 +725,6 @@ footer {
 }
 .footer-back:hover { color: var(--gold-lt); }
 
-/* Big decorative text */
-.footer-big-text {
-  font-family: var(--fd); font-weight: 700;
-  font-size: clamp(60px, 12vw, 180px);
-  letter-spacing: -.05em; color: rgba(255,255,255,.04);
-  white-space: nowrap; text-align: center;
-  padding: 0 48px 20px; line-height: 1; user-select: none;
-  overflow: hidden;
-}
-
 /* ======================== RESPONSIVE ======================== */
 @media (max-width: 960px) {
   nav { padding: 0 24px; }
@@ -759,7 +749,6 @@ footer {
   .hero-name { font-size: clamp(30px, 10vw, 54px); margin-bottom: 16px; }
   .hero-role { font-size: clamp(17px, 6vw, 24px); }
   .hero-desc { font-size: 15px; line-height: 1.65; }
-  .footer-big-text { font-size: 60px; }
 }
 
 /* ======================== ACCESSIBILITY + STRUCTURE OVERRIDES ======================== */
@@ -823,11 +812,7 @@ footer {
 .about-title .line { display: block; }
 .about-em { font-style: italic; color: var(--gold-ink); }
 .about-intro { margin-top: 24px; }
-.about-skill-grid { margin-top: 32px; }
 
-#about {
-  background: linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 100%);
-}
 /* Desktop-only two-column About. This MUST stay inside a min-width query.
    It used to be unscoped, so it sat after the max-width:960px block and won on
    source order at every phone width — re-imposing a 350px second column that
@@ -848,46 +833,6 @@ footer {
   color: var(--ink-2);
   margin-bottom: 16px;
 }
-.about-kpi-grid {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.about-kpi {
-  border: 1px solid var(--line);
-  border-radius: var(--r8);
-  background: rgba(255,255,255,.7);
-  padding: 12px;
-  box-shadow: var(--sh-sm);
-}
-.kpi-v {
-  display: block;
-  font-family: var(--fd);
-  font-size: 18px;
-  letter-spacing: -.02em;
-  color: var(--ink);
-}
-.kpi-l {
-  display: block;
-  margin-top: 4px;
-  font-family: var(--fm);
-  font-size: 11px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.skill-chip {
-  font-size: 11px;
-  letter-spacing: .06em;
-  border-width: 1px;
-}
-/* 12 per-skill pastel triples removed. Ten technologies in ten unrelated hues
-   read as confetti and encoded nothing — the chip text is already the label.
-   One neutral chip also stops the About section competing with the gold accent,
-   which is the only colour with a job to do. */
-
 /* The stack rows now reveal with their parent card via [data-reveal]; the
    per-row transform/opacity reset and the 5-step stackRise ladder are gone,
    along with .stack-level (self-assessed proficiency) and the five coloured
@@ -948,35 +893,34 @@ footer {
 .hero-profile {
   justify-self: end;
   align-self: start;
-  /* NEGATIVE, and deliberately so. See the cap-height arithmetic below.
-     The invariant this repo holds is: the photograph's top edge sits level with
-     the cap-height of the "Abira Wisnunggal" wordmark.
+  /* The invariant this repo holds: the photograph's top edge sits 0.4 x the
+     nickname font-size (about 38px at the 94px ceiling) ABOVE the cap-height of
+     the first h1 line ("I build AI systems"). It was exactly level with that
+     cap-height, and before that level with the "Abira Wisnunggal" cap-height;
+     the user asked for it a little higher, so 0.4 x is a tuned nudge, not a
+     typographic alignment.
 
-     Two offsets stack between the wordmark's cap and the photo's top edge:
+     align-self stays `start`, so the cell top == .hero-copy top and the margin
+     is the whole offset. Terms, in order:
 
-       cap-height offset = (lineHeight - fontBBox) / 2 + fontBBoxAscent - capHeight
-       frame inset       = --hero-media-inset x aspectRatio / 2  (constant 12.22px)
+       1.64 x nicknameFS = 2 lines x 1.02 line-height (the nickname wraps to two
+                           lines at every desktop width, measured) minus the
+                           0.4 x nudge
+       16px              = .hero-nickname margin-bottom
+       0.07 x h1FS       = gap from the h1 box top to the cap-height of its first
+                           line, canvas measureText in Newsreader 500 at line-height
+                           1.08. Chrome rounds ascent/descent to whole pixels, so
+                           the true ratio wobbles 0.065-0.075 with size; 0.07
+                           keeps the error under 0.3px.
+       -12.22px          = the gold plate's constant frame inset
+                           (--hero-media-inset x aspectRatio / 2), because the
+                           visible photo sits that far inside the cell.
 
-     The frame inset is constant at every viewport because .hero-profile and
-     .hero-profile-frame share --hero-media-ar, so the band's vertical size does
-     not depend on how wide the portrait is. The cap-height offset is not: it
-     scales with font-size. Measured in Newsreader 600 —
-       fontBBox 69/25 per 94px, capHeight 68 per 94px, lineHeight 1.02
-       => cap sits (0.02 x fontSize) below the element's top edge.
-     At the 94px ceiling that is 1.94px, against a 12.22px frame inset, so the
-     margin must be NEGATIVE: 1.94 - 12.22 = -10.28px. Under Clash Display the
-     cap sat far lower and the old +16px sufficed; the serif is what inverts it.
-
-     Re-measure this if the display face or the hero type scale changes.
-
-     The margin is expressed as the formula rather than the solved constant
-     (-10.28px at the 94px ceiling) because the cap offset scales with
-     font-size while the frame inset does not. A single tuned constant is exact
-     only at the width it was measured at and drifts in between — measured
-     +0.37px at 1078px, where 7.2vw yields 77.6px rather than the 94px ceiling.
-     The calc() below holds it at 0.00 across the whole desktop range. The
-     0.0206 factor is capOffset / fontSize, measured in Newsreader 600. */
-  margin-top: calc(0.0206 * clamp(48px, 7.2vw, 94px) - 12.22px);
+     Expressed as a formula because both font sizes are vw clamps while the 16px
+     and 12.22px terms are constant. If the wordmark ever fits on one line, or
+     either type scale or the display face changes, re-measure. Do not switch to
+     align-self: center. */
+  margin-top: calc(1.64 * clamp(48px, 7.2vw, 94px) + 16px + 0.07 * clamp(30px, 4.2vw, 58px) - 12.22px);
   width: min(34vw, 420px);
   aspect-ratio: var(--hero-media-ar);
   display: grid;
@@ -1036,37 +980,12 @@ footer {
   flex-wrap: wrap;
   gap: 18px;
 }
-.text-cta {
-  font-family: var(--fm);
-  font-size: 12px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  transition: color .2s;
-}
-.text-cta:hover { color: var(--ink); }
 
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.nav-link-ghost {
-  font-family: var(--fm);
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  border: 1px solid var(--line-2);
-  padding: 8px 14px;
-  border-radius: var(--r2);
-  transition: border-color .2s, color .2s;
-}
-.nav-link-ghost:hover {
-  color: var(--ink);
-  border-color: var(--ink);
-}
-
 .nav-toggle {
   width: 40px;
   height: 40px;
@@ -1174,9 +1093,8 @@ footer {
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1.5px solid var(--line-2);
-  box-shadow: var(--sh-sm);
-  background: radial-gradient(circle at 25% 20%, #ffffff, #ebe6dc);
+  border: 1px solid var(--line);
+  background: var(--bg-card);
   display: grid;
   place-items: center;
 }
@@ -1190,10 +1108,10 @@ footer {
   place-items: center;
   text-align: center;
   font-family: var(--fm);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: #7b756f;
+  color: var(--ink-3);
 }
 
 .proj-card {
@@ -1228,22 +1146,18 @@ footer {
   gap: 8px;
   margin-bottom: 16px;
 }
+.proj-proof { gap: 18px; }
 .proj-proof a {
   font-family: var(--fm);
   font-size: 11px;
   letter-spacing: .06em;
   text-transform: uppercase;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 6px 10px;
-  color: var(--ink-2);
-  transition: border-color .2s, color .2s, background .2s;
-}
-.proj-proof a:hover {
-  border-color: var(--ink);
   color: var(--ink);
-  background: #fff;
+  border-bottom: 1px solid var(--line-2);
+  padding: 6px 0;
+  transition: border-color .2s;
 }
+.proj-proof a:hover { border-color: var(--ink); }
 
 .proj-open-btn {
   margin-top: auto;
