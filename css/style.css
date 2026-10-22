@@ -1181,7 +1181,6 @@ footer {
    and links to each invalid field. Inline .f-err messages are retained. */
 .f-summary {
   border: 1.5px solid #b91c1c;
-  border-left-width: 3px;
   border-radius: var(--r4);
   background: #fdf5f5;
   padding: 14px 16px;
@@ -1227,10 +1226,6 @@ footer {
 .form-status.success { color: #166534; }
 .form-status.error { color: #b91c1c; }
 
-/* Icon glyphs are inline SVG (Phosphor, regular weight, 1.5px-equivalent stroke).
-   Fixed boxes keep the mono text rhythm of the surrounding labels. */
-.proj-img-placeholder .ph-ico svg { width: 28px; height: 28px; display: block; }
-.cert-img-placeholder .ph-ico svg { width: 24px; height: 24px; display: block; }
 
 .c-icon {
   font-family: var(--fm);
@@ -1256,14 +1251,11 @@ footer {
 .exp-meta,
 .exp-body-label,
 .proj-num,
-.proj-tag,
-.proj-cta,
 .modal-bar-label,
 .modal-sub,
 .modal-sh,
 .flow-label,
 .cert-issuer,
-.cert-date,
 .honor-org,
 .c-label,
 .f-lbl,
@@ -1286,14 +1278,10 @@ footer {
 /* Second pass: metadata that was still inheriting --ink-4. --ink-4 (#b0ada8) is
    2.1:1 on paper and 2.2:1 on white, so it is decoration-only from here on. */
 .exp-body-label,
-.proj-cta,
-.cert-date,
 .stack-title,
 .honor-year,
-.honor-meta,
-.proj-img-placeholder,
-.cert-img-placeholder {
-  color: #6f6b66;
+.honor-meta {
+  color: var(--ink-3);
 }
 
 /* The footer is --bg-dark (#111110), so the light-surface repaint above is wrong
@@ -1310,47 +1298,6 @@ footer {
    repainted from here — they lose on source order at equal specificity. They are
    fixed at their own declarations instead. */
 
-/* ======================== DOMAIN-CODED CHIPS (protocol S4) ========================
-   Muted pastels, reintroduced. The earlier de-slop pass deleted 34 per-item
-   tints and DESIGN.md said "do not reintroduce per-item tints" — this reverses
-   that, but NOT the failure it was correcting.
-
-   The reason the original tints read as confetti was that the hue was assigned
-   per ITEM and encoded nothing: ten technologies in ten unrelated pastels, none
-   of which corresponded to anything. Here every chip carries a `data-d` domain
-   key, and the four pastels map onto the five domains the .stack-card
-   definition list already establishes (Storage folds into Infra as "plumbing"):
-
-     data-d="ai"     AI / ML            yellow   PyTorch, YOLOv8, LSTM, SARIMA
-     data-d="llm"    LLM Systems        blue     RAG, LangChain, Azure OpenAI
-     data-d="data"   Data & analytics  green    Pandas, Tableau, Looker Studio
-     data-d="infra"  Infra & retrieval  red      PostgreSQL, Docker, Supabase
-
-   So the colour now repeats information the reader already gets from the chip's
-   place in the tech stack. Read a project row and the hue tells you which parts
-   of the stack it leans on. That is the difference between encoding and confetti.
-
-   Text/background pairings are the protocol's own and all clear WCAG AA at the
-   10-11px these chips render at. Borders are the pastel hue at .20 alpha rather
-   than a flat grey, so the chip edge belongs to its own fill. */
-
-[data-d="ai"] {
-  background: #FBF3DB; color: #956400; border-color: rgba(149,100,0,.20);
-}
-[data-d="llm"] {
-  background: #E1F3FE; color: #1F6C9F; border-color: rgba(31,108,159,.20);
-}
-[data-d="data"] {
-  background: #EDF3EC; color: #346538; border-color: rgba(52,101,56,.20);
-}
-[data-d="infra"] {
-  background: #FDEBEC; color: #9F2F2D; border-color: rgba(159,47,45,.20);
-}
-
-/* The old hover rule recoloured every .proj-tag border to --line-2, which would
-   flatten the pastel edges to grey on hover. Scoped to untagged chips only. */
-.proj-card:hover .proj-tag:not([data-d]) { border-color: var(--line-2); }
-
 /* ======================== BUTTON PRESS FEEDBACK (protocol S5/S7) ========================
    Hover already lifts these (-2px/-3px). There was no :active state at all, so a
    tap on a touch device got no acknowledgement beyond a hover that may never
@@ -1362,10 +1309,6 @@ footer {
 .f-submit:active,
 .pg-submit:active,
 .nav-btn:active,
-.cert-btn:active,
-.cert-btn-primary:active,
-.honor-actions a:active,
-.proj-proof a:active,
 .pg-chip:active {
   transform: scale(.98);
 }
@@ -1381,7 +1324,10 @@ textarea:focus-visible,
 .cert-btn:focus-visible,
 .pg-chip:focus-visible,
 .pg-submit:focus-visible {
-  outline: 3px solid var(--gold);
+  /* --gold-ink, not --gold (2.7:1 on paper, fails WCAG 1.4.11) and not --ink
+     (16:1 on paper but 1.08:1 on the #111110 footer, where the ring vanishes).
+     --gold-ink is 4.7:1 on --bg, 5.0:1 on white, 3.75:1 on --bg-dark. */
+  outline: 3px solid var(--gold-ink);
   outline-offset: 3px;
 }
 
@@ -1402,9 +1348,9 @@ textarea:focus-visible,
   position: absolute;
 }
 .exp-toggle::after { inset: -8px; }      /* 28px -> 44px */
-.modal-close::after { inset: -6px; }    /* 32px -> 44px */
-.nav-drawer-close::after { inset: -5px; } /* 34px -> 44px */
-.nav-toggle::after { inset: -2px; }      /* 40px -> 44px */
+.modal-close::after { inset: -8px; }    /* 29-32px -> 44px+ */
+.nav-drawer-close::after { inset: -8px; } /* 33-34px -> 44px+ */
+.nav-toggle::after { inset: -3px; }      /* 39-40px -> 44px */
 
 @media (max-width: 960px) {
   .hero-section {
@@ -1429,9 +1375,6 @@ textarea:focus-visible,
        So this range is still the side-by-side hero, the cap-height invariant
        still applies, and .hero-profile keeps its base calc() offset. The reset
        belongs at 767px, where the shell actually becomes a flex column. */
-  }
-  .about-kpi-grid {
-    grid-template-columns: 1fr;
   }
   .about-grid {
     grid-template-columns: minmax(0,1fr);
@@ -1498,8 +1441,8 @@ textarea:focus-visible,
     margin-top: -10px;
     font-size: 13px;
   }
-  .cert-meta-row,
   .honor-actions {
+
     align-items: flex-start;
   }
 }
@@ -1515,17 +1458,6 @@ textarea:focus-visible,
      so nothing depends on an IntersectionObserver firing to become readable.
      This is the safety net for JS being disabled or slow. */
   [data-reveal] { opacity: 1 !important; transform: none !important; }
-  /* The ambient blob is a 26s infinite loop, so it is named explicitly rather
-     than relying on the generic duration collapse above. The grid and grain in
-     body::before are static and need no override. */
-  body::after { animation: none !important; transform: none !important; will-change: auto; }
-  .proj-card,
-  .flow-arrow-svg svg {
-    transform: none !important;
-    animation: none !important;
-  }
-  .proj-img-slot img,
-  .cert-img-slot img { transition: none !important; }
 }
 
 /* ======================== HERO LAYOUT BREAKPOINT FIX ======================== */
@@ -1537,6 +1469,11 @@ textarea:focus-visible,
     padding-bottom: 72px;
   }
 
+  /* The portrait column is `auto` so it is exactly as wide as the portrait
+     (min(38vw, 500px)) instead of a fixed 430px track the photo never filled.
+     The shell is 80px wider than the base 1160px so the extra photo width comes
+     out of the empty right margin, not out of the copy column ("Wisnunggal" is
+     ~5.4em wide and clips if the copy column drops under it at ~1024px). */
   .hero-shell {
     grid-template-columns: minmax(0, 1.05fr) minmax(360px, 430px);
     align-items: center;
