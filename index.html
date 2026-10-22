@@ -672,8 +672,9 @@
       <div class="sec-label">06 &nbsp; Demo</div>
 
       <div class="pg-header" data-reveal>
-        <h3 class="pg-title">See the RAG Pipeline in Action</h3>
-        <p class="pg-sub">Ask anything about my work — this simulates the retrieval-augmented generation flow from my SmartFAQ chatbot: query embedding, chunk retrieval, context assembly, and response generation.</p>
+        <h3 class="pg-title">How a question moves through the pipeline</h3>
+        <p class="pg-sub">The same stages as the DemoLabs chatbot: embed the question, retrieve chunks from pgvector, assemble the context, generate an answer. Ask about my work to step through it.</p>
+        <p class="pg-disclaimer">Scripted simulation. No model is called; the answers are pre-written from the content of this page.</p>
       </div>
 
       <div class="pg-shell" data-reveal data-delay="2">
@@ -682,10 +683,10 @@
           <button type="button" id="pgSubmit" class="pg-submit">Ask →</button>
         </div>
         <div class="pg-chips" aria-label="Example questions">
-          <button type="button" class="pg-chip" data-q="What is Abi's strongest technical skill?">Strongest skill?</button>
-          <button type="button" class="pg-chip" data-q="How does Abi build a RAG pipeline?">How does RAG work here?</button>
-          <button type="button" class="pg-chip" data-q="What was the SmartFAQ chatbot built for?">SmartFAQ project?</button>
-          <button type="button" class="pg-chip" data-q="What companies has Abi worked at?">Work experience?</button>
+          <button type="button" class="pg-chip" data-q="What's Abi's strongest skill?">What's Abi's strongest skill?</button>
+          <button type="button" class="pg-chip" data-q="How does Abi build RAG?">How does Abi build RAG?</button>
+          <button type="button" class="pg-chip" data-q="What is DemoLabs?">What is DemoLabs?</button>
+          <button type="button" class="pg-chip" data-q="Where has Abi worked?">Where has Abi worked?</button>
         </div>
 
         <div class="pg-pipeline" id="pgPipeline" aria-live="polite" aria-label="Pipeline steps">
@@ -701,7 +702,7 @@
             <div class="pg-step-ico">E</div>
             <div class="pg-step-info">
               <div class="pg-step-label">Embed</div>
-              <div class="pg-step-val">text-embedding-3</div>
+              <div class="pg-step-val">Azure OpenAI</div>
             </div>
           </div>
           <div class="pg-arrow" aria-hidden="true">→</div>
@@ -725,7 +726,7 @@
             <div class="pg-step-ico">G</div>
             <div class="pg-step-info">
               <div class="pg-step-label">Generate</div>
-              <div class="pg-step-val">GPT-4o-mini</div>
+              <div class="pg-step-val">Azure OpenAI</div>
             </div>
           </div>
         </div>
@@ -733,7 +734,7 @@
         <div class="pg-answer-box" id="pgAnswerBox" hidden>
           <div class="pg-answer-label">Response</div>
           <p class="pg-answer-text" id="pgAnswerText"></p>
-          <p class="pg-disclaimer">Simulation only — pre-scripted responses demonstrating the pipeline flow. <a href="#contact">Request a live demo →</a></p>
+          <p class="pg-timing">Retrieve and Generate play at half their measured DemoLabs durations (0.40s retrieval, 2.57s generation, 3.23s mean end-to-end).</p>
         </div>
       </div>
     </section>
@@ -749,8 +750,8 @@
             or opportunity?
           </h3>
           <p class="contact-sub">
-            I am open to internship, freelance, and collaborative AI engineering work.
-            Share your use case and I will respond quickly.
+            I'm looking for an AI engineering internship or junior role, and I take on freelance work.
+            Email and the form both reach me directly.
           </p>
           <div class="contact-links">
             <a href="mailto:abirawisnu@gmail.com" class="c-link">
@@ -779,22 +780,22 @@
 
         <form id="contactForm" class="form-wrap" action="https://formspree.io/f/xdkgoqzj" method="POST" data-reveal="right" novalidate>
           <div class="f-summary" id="formSummary" role="alert" tabindex="-1" aria-labelledby="formSummaryTitle" hidden>
-            <div class="f-summary-title" id="formSummaryTitle">There is a problem</div>
+            <div class="f-summary-title" id="formSummaryTitle">Message not sent. Fix these fields:</div>
             <ul class="f-summary-list" id="formSummaryList"></ul>
           </div>
           <div class="f-grp">
-            <label class="f-lbl" for="contactName">Your Name</label>
-            <input id="contactName" name="name" type="text" class="f-inp" placeholder="Your full name" autocomplete="name" required minlength="2" aria-describedby="nameError" />
+            <label class="f-lbl" for="contactName">Name</label>
+            <input id="contactName" name="name" type="text" class="f-inp" autocomplete="name" required minlength="2" aria-describedby="nameError" />
             <p class="f-err" id="nameError"></p>
           </div>
           <div class="f-grp">
-            <label class="f-lbl" for="contactEmail">Email Address</label>
-            <input id="contactEmail" name="email" type="email" class="f-inp" placeholder="your@email.com" autocomplete="email" required aria-describedby="emailError" />
+            <label class="f-lbl" for="contactEmail">Email</label>
+            <input id="contactEmail" name="email" type="email" class="f-inp" placeholder="name@company.com" autocomplete="email" required aria-describedby="emailError" />
             <p class="f-err" id="emailError"></p>
           </div>
           <div class="f-grp">
             <label class="f-lbl" for="contactMessage">Message</label>
-            <textarea id="contactMessage" name="message" class="f-txt" placeholder="Tell me about your project or opportunity..." required minlength="20" rows="5" aria-describedby="messageError"></textarea>
+            <textarea id="contactMessage" name="message" class="f-txt" placeholder="The role or project, and your timeline" required minlength="20" rows="5" aria-describedby="messageError"></textarea>
             <p class="f-err" id="messageError"></p>
           </div>
           <button type="submit" class="f-submit">Send Message →</button>
@@ -805,15 +806,14 @@
   </main>
 
   <footer>
-    <div class="footer-big-text" aria-hidden="true">ABIRA WISNUNGGAL</div>
-
     <div class="footer-top">
       <div class="footer-brand">
         <div class="f-logo">AW<em>.</em></div>
         <p>
-          AI Engineer in training building with Python, ML, and curiosity.
-          Nusa Mandiri University, Jakarta.
+          AI Engineer Intern at BRIN. Final-year Data Science student
+          at Nusa Mandiri University, Jakarta.
         </p>
+
       </div>
 
       <div>
@@ -821,15 +821,15 @@
         <div class="footer-links-col">
           <a href="mailto:abirawisnu@gmail.com" class="footer-link">
             Email
-            <span class="fl-arr">→</span>
+            <span class="fl-arr" aria-hidden="true">→</span>
           </a>
           <a href="https://www.linkedin.com/in/abiwisnu" target="_blank" rel="noopener noreferrer" class="footer-link">
             LinkedIn
-            <span class="fl-arr">→</span>
+            <span class="fl-arr" aria-hidden="true">→</span>
           </a>
           <a href="https://github.com/CodeByAbi" target="_blank" rel="noopener noreferrer" class="footer-link">
             GitHub
-            <span class="fl-arr">→</span>
+            <span class="fl-arr" aria-hidden="true">→</span>
           </a>
         </div>
       </div>
