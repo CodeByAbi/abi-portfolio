@@ -8,8 +8,22 @@ served as-is by GitHub Pages. There is nothing to install and nothing to compile
 ## ⛔ DO NOT TOUCH THE HERO SECTION
 
 The hero is finished, tuned, and verified. It is the most-changed component in the repo and it is
-**correct as it stands**. Do not refactor it, "clean it up", restyle it, or adjust its alignment
-unless the user explicitly asks for that specific change.
+**correct as it stands**.
+
+**Do not change anything in the hero without the user's explicit permission first. Ask, and wait for a
+yes, before you edit.** This covers the `#hero` markup in `index.html`, every `.hero-*` rule in
+`css/style.css` (including the breakpoint blocks and the `--hero-media-*` tokens), and any hero
+behaviour in `js/main.js`. It covers size, position, alignment, spacing, copy, colour, motion, and
+the portrait. It does not matter how small, safe, or obviously better the change looks.
+
+- A request about another part of the page is **not** permission to touch the hero, even if the hero
+  is "nearby", shares a rule, or would look better with it. If a change elsewhere would spill into the
+  hero (a shared rule, a later breakpoint block, a global token), stop and tell the user before
+  proceeding.
+- Never refactor, "clean up", restyle, or "fix" the hero on your own initiative, and never act on a
+  hero problem you spotted yourself. Report it and let the user decide.
+- Permission is per change. A yes for one hero edit does not carry over to the next one.
+- Once the user does say yes, make only the change they approved, then re-run the verification below.
 
 This is not a soft preference. The hero has been changed three times in one session by two
 different agents, and each "improvement" made it worse before it made it better. Read this
@@ -17,17 +31,36 @@ section before touching anything near `#hero`.
 
 ### The invariant that must hold
 
-**The photograph's top edge sits exactly level with the cap-height of the "Abira Wisnunggal"
-wordmark.** Verified at 0px delta at 1280px, 1512px and 1920px viewports.
+**The photograph's top edge sits 0.4 x the nickname font-size (about 38px at the 94px ceiling) ABOVE
+the cap-height of the first h1 line, "I build AI systems".** This is a tuned nudge, not a typographic
+alignment: it started level with the "Abira Wisnunggal" cap-height, was moved down to level with the
+h1 cap-height, then moved up slightly, all at the user's explicit request. Measured within 1px of the
+formula at 800, 1024, 1078, 1280, 1512 and 1920px. The portrait is also larger than it was:
+`width: min(38vw, 500px)` (was 420px) in a shell widened to 1240px with an `auto` portrait column.
 
-The whole point of the current CSS is to produce that alignment:
+The whole point of the current CSS is to produce that placement:
 
 ```css
 .hero-profile {
   align-self: start;      /* pin cell to row top == .hero-copy top */
-  margin-top: 16px;       /* cancel the 16px leading above .hero-nickname */
+  margin-top: calc(1.64 * clamp(48px, 7.2vw, 94px) + 16px + 0.07 * clamp(30px, 4.2vw, 58px) - 12.22px);
 }
 ```
+
+`1.64 x nicknameFS` is two nickname lines (2 x 1.02) minus the 0.4 nudge; `16px` is the nickname's
+margin-bottom; `0.07 x h1FS` is the h1's cap-height offset (Newsreader 500); `12.22px` is the gold
+plate's constant frame inset. The long comment on `.hero-profile` in `style.css` has the arithmetic.
+**It assumes "Abira Wisnunggal" wraps to two lines**, which holds at every desktop width measured;
+if the wordmark ever fits on one line, or the display face or hero type scale changes, re-measure.
+
+**Do not "correct" it back** to the old wordmark alignment (`0.0206 * font-size - 12.22px`) or to the
+exact h1 cap-height (`2 * 1.02`, no nudge). Those were earlier states. And do not measure against the
+`.hero-nickname` or `.hero-name` *box*: the box includes leading above the cap-height, so use a canvas
+`measureText` cap-height at the live font-size.
+
+**Why the portrait column is `auto` and the shell is 1240px:** a fixed 430px track left the 388px photo
+floating in dead space. Do not widen the photo by growing a fixed track; it comes out of the copy
+column, and "Wisnunggal" (~5.4em wide) clips once the copy column drops under it at ~1024px.
 
 ### The trap — read this before "fixing" the alignment
 
